@@ -1,0 +1,86 @@
+name: ranikun-platform
+
+services:
+  gateway-app:
+    image: ${PLATFORM_GATEWAY_IMAGE:-ranikunlabs/platform-gateway:local}
+    build:
+      context: ./gateway-app
+    environment:
+      PLATFORM_GATEWAY_PORT: ${PLATFORM_GATEWAY_PORT:-8080}
+      PLATFORM_GATEWAY_REDIS_HOST: redis
+      PLATFORM_GATEWAY_REDIS_PORT: 6379
+      PLATFORM_GATEWAY_REDIS_KEY_PREFIX: "platform:gateway:"
+    ports:
+      - "${PLATFORM_GATEWAY_PUBLISHED_PORT:-8080}:${PLATFORM_GATEWAY_PORT:-8080}"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_GATEWAY_PORT}/actuator/health/readiness || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    networks:
+      - platform
+
+  identity:
+    image: ${PLATFORM_IDENTITY_IMAGE:-ranikunlabs/platform-identity:local}
+    build:
+      context: ./platform-core/identity
+    environment:
+      PLATFORM_IDENTITY_PORT: ${PLATFORM_IDENTITY_PORT:-8081}
+      PLATFORM_IDENTITY_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PLATFORM_POSTGRES_DB:-platform}
+      PLATFORM_IDENTITY_DATASOURCE_USERNAME: ${PLATFORM_POSTGRES_USER:-platform}
+      PLATFORM_IDENTITY_DATASOURCE_PASSWORD: ${PLATFORM_POSTGRES_PASSWORD:?PLATFORM_POSTGRES_PASSWORD must be set}
+      PLATFORM_IDENTITY_REDIS_HOST: redis
+      PLATFORM_IDENTITY_REDIS_PORT: 6379
+      PLATFORM_IDENTITY_REDIS_KEY_PREFIX: "platform:identity:"
+    ports:
+      - "${PLATFORM_IDENTITY_PUBLISHED_PORT:-8081}:${PLATFORM_IDENTITY_PORT:-8081}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_IDENTITY_PORT}/actuator/health/readiness || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    networks:
+      - platform
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${PLATFORM_POSTGRES_DB:-platform}
+      POSTGRES_USER: ${PLATFORM_POSTGRES_USER:-platform}
+      POSTGRES_PASSWORD: ${PLATFORM_POSTGRES_PASSWORD:?PLATFORM_POSTGRES_PASSWORD must be set}
+    volumes:
+      - platform-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - platform
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - platform
+
+volumes:
+  platform-postgres-data:
+
+networks:
+  platform:
+    driver: bridge
