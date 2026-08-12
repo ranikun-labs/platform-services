@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: platform-identity
+  main:
+    web-application-type: servlet
+
+server:
+  port: ${PLATFORM_IDENTITY_PORT}
+
+platform:
+  identity:
+    datasource:
+      url: ${PLATFORM_IDENTITY_DATASOURCE_URL:}
+      username: ${PLATFORM_IDENTITY_DATASOURCE_USERNAME:}
+      password: ${PLATFORM_IDENTITY_DATASOURCE_PASSWORD:}
+    redis-host: ${PLATFORM_IDENTITY_REDIS_HOST:}
+    redis-port: ${PLATFORM_IDENTITY_REDIS_PORT}
+    redis-key-prefix: ${PLATFORM_IDENTITY_REDIS_KEY_PREFIX:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
