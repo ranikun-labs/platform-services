@@ -10,9 +10,14 @@ import org.springframework.test.web.reactive.server.WebTestClient;
         classes = GatewayApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
-                "platform.gateway.redis-host=redis",
-                "platform.gateway.redis-port=6379",
-                "platform.gateway.redis-key-prefix=platform:gateway:"
+                "PLATFORM_GATEWAY_PORT=0",
+                "PLATFORM_GATEWAY_REDIS_HOST=redis",
+                "PLATFORM_GATEWAY_REDIS_PORT=6379",
+                "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
+                "PLATFORM_GATEWAY_CARELOG_BE_URI=http://localhost:8080",
+                "PLATFORM_GATEWAY_CARELOG_RAG_URI=http://localhost:8081",
+                "PLATFORM_GATEWAY_INTERNAL_SECRET=readiness-test-secret",
+                "PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET=platform-gateway-readiness-test-secret-key-long-enough"
         })
 @AutoConfigureWebTestClient
 class GatewayReadinessIntegrationTest {

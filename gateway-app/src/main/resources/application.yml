@@ -3,20 +3,76 @@ spring:
     name: gateway-app
   main:
     web-application-type: reactive
+  data:
+    redis:
+      host: ${PLATFORM_GATEWAY_REDIS_HOST}
+      port: ${PLATFORM_GATEWAY_REDIS_PORT}
   cloud:
     gateway:
       discovery:
         locator:
           enabled: false
+      routes:
+        - id: kakao-oauth-authorization
+          uri: ${PLATFORM_GATEWAY_CARELOG_BE_URI}
+          order: -20
+          predicates:
+            - Path=/api/v1/auth/oauth/kakao/authorization
+            - Method=POST
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@oauthClientIpKeyResolver}"
+                rate-limiter: "#{@oauthFailClosedRateLimiter}"
+                redis-rate-limiter.replenishRate: ${platform.gateway.oauth-rate-limit.authorization.replenish-rate}
+                redis-rate-limiter.burstCapacity: ${platform.gateway.oauth-rate-limit.authorization.burst-capacity}
+        - id: kakao-oauth-exchange
+          uri: ${PLATFORM_GATEWAY_CARELOG_BE_URI}
+          order: -20
+          predicates:
+            - Path=/api/v1/auth/oauth/kakao/exchange
+            - Method=POST
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@oauthClientIpKeyResolver}"
+                rate-limiter: "#{@oauthFailClosedRateLimiter}"
+                redis-rate-limiter.replenishRate: ${platform.gateway.oauth-rate-limit.exchange.replenish-rate}
+                redis-rate-limiter.burstCapacity: ${platform.gateway.oauth-rate-limit.exchange.burst-capacity}
+        - id: carelog-be
+          uri: ${PLATFORM_GATEWAY_CARELOG_BE_URI}
+          order: 0
+          predicates:
+            - Path=/api/**
+        - id: carelog-rag
+          uri: ${PLATFORM_GATEWAY_CARELOG_RAG_URI}
+          predicates:
+            - Path=/rag/**
 
 server:
   port: ${PLATFORM_GATEWAY_PORT}
 
 platform:
   gateway:
-    redis-host: ${PLATFORM_GATEWAY_REDIS_HOST:}
+    redis-host: ${PLATFORM_GATEWAY_REDIS_HOST}
     redis-port: ${PLATFORM_GATEWAY_REDIS_PORT}
-    redis-key-prefix: ${PLATFORM_GATEWAY_REDIS_KEY_PREFIX:}
+    redis-key-prefix: ${PLATFORM_GATEWAY_REDIS_KEY_PREFIX}
+    public-paths:
+      - /api/v1/auth/login
+      - /api/v1/auth/refresh
+      - /api/v1/users/managers
+      - /api/v1/swagger-ui
+      - /api/v1/v3/api-docs
+    internal-secret: ${PLATFORM_GATEWAY_INTERNAL_SECRET}
+    jwt-verification-secret: ${PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET}
+    oauth-rate-limit:
+      trusted-proxy-hops: ${PLATFORM_GATEWAY_OAUTH_RATE_LIMIT_TRUSTED_PROXY_HOPS:1}
+      authorization:
+        replenish-rate: 5
+        burst-capacity: 10
+      exchange:
+        replenish-rate: 3
+        burst-capacity: 6
 
 management:
   endpoints:
