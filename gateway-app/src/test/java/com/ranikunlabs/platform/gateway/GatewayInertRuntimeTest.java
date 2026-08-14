@@ -15,9 +15,14 @@ import static org.assertj.core.api.Assertions.assertThat;
         classes = GatewayApplication.class,
         properties = {
                 "server.port=0",
-                "platform.gateway.redis-host=redis",
-                "platform.gateway.redis-port=6379",
-                "platform.gateway.redis-key-prefix=platform:gateway:"
+                "PLATFORM_GATEWAY_PORT=0",
+                "PLATFORM_GATEWAY_REDIS_HOST=redis",
+                "PLATFORM_GATEWAY_REDIS_PORT=6379",
+                "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
+                "PLATFORM_GATEWAY_CARELOG_BE_URI=http://localhost:8080",
+                "PLATFORM_GATEWAY_CARELOG_RAG_URI=http://localhost:8081",
+                "PLATFORM_GATEWAY_INTERNAL_SECRET=runtime-test-secret",
+                "PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET=platform-gateway-runtime-test-secret-key-long-enough"
         })
 class GatewayInertRuntimeTest {
 
@@ -25,11 +30,12 @@ class GatewayInertRuntimeTest {
     private RouteLocator routeLocator;
 
     @Test
-    void exposesNoExecutableProductRoutesInG1() {
+    void bootsWithExecutableGatewayRoutesAfterG1RuntimeFoundation() {
         List<Route> routes = routeLocator.getRoutes()
                 .collectList()
                 .block(Duration.ofSeconds(5));
 
-        assertThat(routes).isEmpty();
+        assertThat(routes).extracting(Route::getId)
+                .contains("carelog-be", "carelog-rag");
     }
 }
