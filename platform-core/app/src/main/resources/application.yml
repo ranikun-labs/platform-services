@@ -1,11 +1,11 @@
 spring:
   application:
-    name: platform-identity
+    name: platform-core-app
   main:
     web-application-type: servlet
 
 server:
-  port: ${PLATFORM_IDENTITY_PORT}
+  port: ${PLATFORM_CORE_PORT}
 
 platform:
   identity:

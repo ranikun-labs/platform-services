@@ -1,11 +1,7 @@
 plugins {
-    java
-    id("org.springframework.boot")
-    id("io.spring.dependency-management")
+    `java-library`
+    alias(libs.plugins.spring.dependency.management)
 }
-
-group = "com.ranikunlabs.platform"
-version = "0.1.0-SNAPSHOT"
 
 java {
     toolchain {
@@ -13,10 +9,14 @@ java {
     }
 }
 
+dependencyManagement {
+    imports {
+        mavenBom(libs.spring.boot.dependencies.get().toString())
+    }
+}
+
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-web")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
