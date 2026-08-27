@@ -38,7 +38,8 @@ import java.util.Optional;
 @Import({
         ExternalIdentityLookupJpaAdapter.class,
         ProductClientReaderJpaAdapter.class,
-        TokenSessionJpaAdapter.class
+        TokenSessionJpaAdapter.class,
+        PlatformAccountStatusJpaAdapter.class
 })
 public class IdentityPersistenceConfiguration {
 

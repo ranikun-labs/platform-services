@@ -7,6 +7,6 @@ import org.springframework.context.annotation.Import;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(IdentityRuntimeProperties.class)
-@Import(IdentityPersistenceConfiguration.class)
+@Import({IdentityPersistenceConfiguration.class, IdentityAuthConfiguration.class})
 public class IdentityModuleConfiguration {
 }
