@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 class SpringAiModelGateway(
     private val chatClient: ChatClient,
+    private val providerReference: String,
     private val modelReference: String,
 ) : ModelGateway, StreamingModelGateway {
     override fun interpret(request: ModelRequest): ModelResult {
@@ -134,9 +135,9 @@ class SpringAiModelGateway(
         )
         .user(renderEvidence(request))
 
-    private fun sourceReference(): String = "bedrock-converse:model:$modelReference"
+    private fun sourceReference(): String = "$providerReference:model:$modelReference"
 
-    private fun producerReference(): String = "bedrock-converse:$modelReference"
+    private fun producerReference(): String = "$providerReference:$modelReference"
 
     private fun renderEvidence(request: ModelRequest): String = buildString {
         appendLine("BEGIN_UNTRUSTED_INPUT")

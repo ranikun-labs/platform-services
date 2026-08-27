@@ -1,42 +1,66 @@
 package com.ranikunlabs.platform.sharedai.adapters.model
 
+import com.openai.errors.BadRequestException
+import com.openai.errors.InternalServerException
+import com.openai.errors.OpenAIIoException
+import com.openai.errors.OpenAIServiceException
+import com.openai.errors.RateLimitException
+import com.openai.errors.UnauthorizedException
 import com.ranikunlabs.platform.sharedai.ports.ModelFailureCategory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import software.amazon.awssdk.core.exception.ApiCallTimeoutException
-import software.amazon.awssdk.core.exception.SdkClientException
-import software.amazon.awssdk.services.bedrockruntime.model.ServiceUnavailableException
-import software.amazon.awssdk.services.bedrockruntime.model.ValidationException
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import java.net.http.HttpTimeoutException
 import java.util.concurrent.CancellationException
 
 class ModelProviderFailureMapperTest {
     @Test
-    fun `maps authentication failure`() {
-        val failure = SdkClientException.builder().message("Unable to load credentials from chain").build()
-        assertThat(ModelProviderFailureMapper.map(failure)).isEqualTo(ModelFailureCategory.AUTHENTICATION)
+    fun `maps OpenAI authentication failure`() {
+        assertThat(ModelProviderFailureMapper.map(serviceFailure(UnauthorizedException::class.java, 401)))
+            .isEqualTo(ModelFailureCategory.AUTHENTICATION)
+    }
+
+    @Test
+    fun `maps OpenAI rate limited failure`() {
+        assertThat(ModelProviderFailureMapper.map(serviceFailure(RateLimitException::class.java, 429)))
+            .isEqualTo(ModelFailureCategory.RATE_LIMITED)
     }
 
     @Test
     fun `maps timeout failure`() {
-        val failure = ApiCallTimeoutException.builder().message("timed out").build()
-        assertThat(ModelProviderFailureMapper.map(failure)).isEqualTo(ModelFailureCategory.TIMEOUT)
+        assertThat(ModelProviderFailureMapper.map(HttpTimeoutException("timed out")))
+            .isEqualTo(ModelFailureCategory.TIMEOUT)
     }
 
     @Test
-    fun `maps provider unavailable failure`() {
-        val failure = ServiceUnavailableException.builder().statusCode(503).build()
-        assertThat(ModelProviderFailureMapper.map(failure)).isEqualTo(ModelFailureCategory.PROVIDER_UNAVAILABLE)
+    fun `maps OpenAI server failure`() {
+        val failure = serviceFailure(InternalServerException::class.java, 503)
+        assertThat(ModelProviderFailureMapper.map(failure))
+            .isEqualTo(ModelFailureCategory.PROVIDER_UNAVAILABLE)
     }
 
     @Test
-    fun `maps invalid request failure`() {
-        val failure = ValidationException.builder().statusCode(400).build()
-        assertThat(ModelProviderFailureMapper.map(failure)).isEqualTo(ModelFailureCategory.INVALID_REQUEST)
+    fun `maps OpenAI connection failure`() {
+        assertThat(ModelProviderFailureMapper.map(OpenAIIoException("connection failed")))
+            .isEqualTo(ModelFailureCategory.PROVIDER_UNAVAILABLE)
+    }
+
+    @Test
+    fun `maps OpenAI invalid request failure`() {
+        assertThat(ModelProviderFailureMapper.map(serviceFailure(BadRequestException::class.java, 400)))
+            .isEqualTo(ModelFailureCategory.INVALID_REQUEST)
     }
 
     @Test
     fun `maps cancellation failure`() {
         assertThat(ModelProviderFailureMapper.map(CancellationException()))
             .isEqualTo(ModelFailureCategory.CANCELLED)
+    }
+
+    private fun <T : OpenAIServiceException> serviceFailure(type: Class<T>, statusCode: Int): T {
+        val failure = mock(type)
+        `when`(failure.statusCode()).thenReturn(statusCode)
+        return failure
     }
 }

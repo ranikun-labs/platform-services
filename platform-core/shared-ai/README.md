@@ -1,10 +1,10 @@
 # Shared AI provider and streaming runtime
 
 Shared AI remains an imperative Kotlin/JVM 21 library hosted by the Spring MVC
-Platform Core application. The first real provider adapter uses Spring AI
-2.0.1 with AWS Bedrock Converse. That provider choice demonstrates the neutral
-gateway boundary; it does not make Bedrock the permanent or exclusive
-canonical provider.
+Platform Core application. The first deployment provider adapter uses Spring AI
+2.0.1 with the OpenAI API. This implementation demonstrates the neutral gateway
+boundary; it does not make OpenAI canonical provider ownership or prevent a
+future adapter decision.
 
 ## Runtime modes
 
@@ -13,25 +13,20 @@ Exactly one execution mode may be active:
 | Mode | Configuration | Runtime result |
 | --- | --- | --- |
 | Disabled | both enable flags false | no Shared AI execution beans |
-| Foundation | `SHARED_AI_FOUNDATION_ENABLED=true` | deterministic sync and streaming gateways; no AWS clients or credentials |
-| Bedrock | `SHARED_AI_BEDROCK_ENABLED=true` | Spring AI Bedrock Converse sync and streaming gateways |
+| Foundation | `SHARED_AI_FOUNDATION_ENABLED=true` | deterministic sync and streaming gateways; no API key |
+| OpenAI | `SHARED_AI_OPENAI_ENABLED=true` | Spring AI OpenAI sync and streaming gateways |
 
-Bedrock mode additionally requires externally supplied `AWS_REGION` and
-`SHARED_AI_BEDROCK_MODEL_ID`. The model ID is runtime configuration and is not
-hardcoded. Optional controls are:
+OpenAI mode requires externally supplied `OPENAI_API_KEY` and
+`SHARED_AI_OPENAI_MODEL`. The model is runtime configuration and is not
+hardcoded. Optional bounded controls are:
 
-- `SHARED_AI_BEDROCK_MAX_TOKENS` (default `128`)
-- `SHARED_AI_BEDROCK_TIMEOUT` (default `30s`)
-- `SHARED_AI_BEDROCK_CONNECTION_TIMEOUT` (default `5s`)
-- `SHARED_AI_BEDROCK_READ_TIMEOUT` (default `30s`)
-- `SHARED_AI_BEDROCK_MAX_CONCURRENT_REQUESTS` (default `8`, validated `1..64`)
+- `SHARED_AI_OPENAI_MAX_OUTPUT_TOKENS` (default `128`)
+- `SHARED_AI_OPENAI_TIMEOUT` (default `30s`)
 
-The adapter uses the AWS SDK default credential provider chain. Local
-development can use AWS CLI/profile or environment credentials; deployed
-runtimes can use workload-role credentials. Static access keys, secret keys,
-and session tokens must not be committed or baked into the image.
-SDK retries are disabled for this slice; retry and rate-limit policy remains a
-later reliability decision.
+The adapter sets the OpenAI client retry count to zero for this slice. Retry,
+rate-limit, and fallback policy remain later reliability decisions. The API key
+must not be committed, logged, or baked into an image. Foundation mode never
+creates an OpenAI client and remains credential-free.
 
 ## Streaming boundary
 
@@ -41,31 +36,34 @@ observer, and cancellation. The Spring AI adapter alone consumes Reactor
 projection is test-only and proves named `started`, `delta`, `completed`, and
 `error` events; it is not a Finance or Carelog public wire contract.
 
-Delivery is direct and does not introduce an application chunk queue. The AWS
-async client has bounded concurrency, and client disconnect/delivery failure
-cancels the provider subscription. Streaming deltas are never Evidence. The
-application creates one reference-first model-interpretation Evidence item at
-successful completion, correlated to the validated Tool/Retriever source
-Evidence.
+Delivery is direct and does not introduce an application chunk queue. Client
+disconnect or delivery failure cancels the provider subscription. Streaming
+deltas are never Evidence. The application creates one reference-first
+model-interpretation Evidence item at successful completion, correlated to the
+validated Tool/Retriever source Evidence.
 
 ## Opt-in live smoke
 
-Default tests never call AWS. A live smoke makes one small synchronous
-inference with max output tokens fixed to `32`:
+Default tests never call the paid OpenAI API. The live smoke makes one bounded
+synchronous inference and one bounded streaming inference, each limited to 32
+output tokens:
 
 ```powershell
-$env:SHARED_AI_LIVE_BEDROCK = 'true'
-$env:AWS_REGION = 'your-region'
-$env:SHARED_AI_BEDROCK_MODEL_ID = 'your-enabled-model-or-inference-profile-id'
-.\gradlew.bat -p platform-core :app:test --tests '*LiveBedrockSmokeTest'
+$env:SHARED_AI_LIVE_OPENAI = 'true'
+$env:OPENAI_API_KEY = 'your-api-key'
+$env:SHARED_AI_OPENAI_MODEL = 'your-enabled-model'
+.\gradlew.bat -p platform-core :app:test --tests '*LiveOpenAiSmokeTest'
 ```
 
-Credentials must resolve through the standard chain. The smoke does not print
-credentials or model output. Real streaming smoke remains a later reliability
-step; streaming behavior is deterministic at the Spring AI adapter boundary in
-this slice.
+The smoke does not print credentials or model output. A successful streaming
+smoke requires at least one content delta, exactly one completion, and no
+failure event.
 
-## Deliberate non-scope
+## Deployment and non-scope
+
+The provider slice requires only Platform Core/JVM, outbound HTTPS access, and
+external OpenAI configuration. It remains suitable for a personal Mac mini,
+home server, or the existing Docker image without a cloud-vendor runtime.
 
 Production authorization, Product-owned Tool implementations, Product
 semantics, Production RAG/vector ingestion, retries/fallback routing, billing,

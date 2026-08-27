@@ -20,24 +20,26 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "platform.identity.redis-host=redis",
                 "platform.identity.redis-port=6379",
                 "platform.identity.redis-key-prefix=platform:identity:",
-                "platform.shared-ai.bedrock.enabled=true",
-                "platform.shared-ai.bedrock.region=ap-northeast-2",
-                "platform.shared-ai.bedrock.model-id=configuration-test-model"
+                "platform.shared-ai.openai.enabled=true",
+                "platform.shared-ai.openai.api-key=configuration-test-api-key",
+                "platform.shared-ai.openai.model=configuration-test-model"
         })
-class PlatformCoreBedrockConfigurationIntegrationTest {
+class PlatformCoreOpenAiConfigurationIntegrationTest {
     @Autowired
     private ApplicationContext applicationContext;
 
     @Test
-    void hostsExactlyOneBedrockGatewayWhileRemainingServletMvc() {
+    void hostsExactlyOneOpenAiGatewayWhileRemainingServletMvc() {
         assertThat(applicationContext.getBeansOfType(ModelGateway.class)).hasSize(1);
         assertThat(applicationContext.getBeansOfType(StreamingModelGateway.class)).hasSize(1);
         assertThat(applicationContext.getBean(ModelGateway.class))
                 .isSameAs(applicationContext.getBean(StreamingModelGateway.class))
                 .isInstanceOf(SpringAiModelGateway.class);
-        assertThat(applicationContext.containsBean("bedrockChatModel")).isTrue();
-        assertThat(applicationContext.containsBean("sharedAiBedrockRuntimeClient")).isTrue();
-        assertThat(applicationContext.containsBean("sharedAiBedrockRuntimeAsyncClient")).isTrue();
+        assertThat(applicationContext.containsBean("openAiChatModel")).isTrue();
+        assertThat(applicationContext.getBean("openAiChatModel").getClass().getName())
+                .isEqualTo("org.springframework.ai.openai.OpenAiChatModel");
+        assertThat(applicationContext.getEnvironment().getProperty("spring.ai.model.chat"))
+                .isEqualTo("none");
         assertThat(applicationContext.getEnvironment().getProperty("spring.main.web-application-type"))
                 .isEqualTo("servlet");
     }

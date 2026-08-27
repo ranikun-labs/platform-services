@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -56,8 +57,10 @@ class SharedAiVerticalSliceIntegrationTest {
     void executesTheHostedDeterministicVerticalSliceThroughATestOnlyTransportBoundary() throws Exception {
         assertThat(applicationContext.getBeansOfType(ModelGateway.class)).hasSize(1);
         assertThat(applicationContext.getBean(ModelGateway.class)).isInstanceOf(DeterministicModelGateway.class);
-        assertThat(applicationContext.containsBean("bedrockChatModel")).isFalse();
-        assertThat(applicationContext.containsBean("sharedAiBedrockRuntimeClient")).isFalse();
+        assertThat(applicationContext.containsBean("openAiChatModel")).isFalse();
+        assertThat(Arrays.stream(applicationContext.getBeanDefinitionNames())
+                .filter(name -> name.startsWith("openAi"))
+                .toList()).isEmpty();
         mockMvc.perform(post("/internal/shared-ai/execute")
                         .contentType("application/json")
                         .content("""

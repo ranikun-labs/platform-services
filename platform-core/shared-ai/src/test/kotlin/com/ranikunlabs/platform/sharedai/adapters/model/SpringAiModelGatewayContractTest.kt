@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.sharedai.adapters.model
 
+import com.openai.errors.RateLimitException
 import com.ranikunlabs.platform.sharedai.core.ExecutionScope
 import com.ranikunlabs.platform.sharedai.ports.ModelFailureCategory
 import com.ranikunlabs.platform.sharedai.ports.ModelGatewayException
@@ -24,7 +25,6 @@ import org.springframework.ai.chat.model.Generation
 import org.springframework.ai.chat.prompt.ChatOptions
 import org.springframework.ai.chat.prompt.Prompt
 import reactor.core.publisher.Flux
-import software.amazon.awssdk.services.bedrockruntime.model.ThrottlingException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -43,8 +43,8 @@ class SpringAiModelGatewayContractTest {
 
         assertThat(result.executionReference).isEqualTo("execution-a")
         assertThat(result.scope).isEqualTo(scope)
-        assertThat(result.sourceReference).isEqualTo("bedrock-converse:model:configured-model")
-        assertThat(result.producerReference).isEqualTo("bedrock-converse:configured-model")
+        assertThat(result.sourceReference).isEqualTo("openai:model:configured-model")
+        assertThat(result.producerReference).isEqualTo("openai:configured-model")
         assertThat(result.interpretation).isEqualTo("interpreted")
         assertThat(result.usage?.inputTokens).isEqualTo(11)
         assertThat(result.usage?.outputTokens).isEqualTo(7)
@@ -60,8 +60,9 @@ class SpringAiModelGatewayContractTest {
     @Test
     fun `maps provider failure without leaking SDK exception`() {
         val chatModel = mock(ChatModel::class.java)
+        val providerFailure = rateLimitedFailure()
         `when`(chatModel.call(org.mockito.ArgumentMatchers.any(Prompt::class.java)))
-            .thenThrow(ThrottlingException.builder().message("provider detail").statusCode(429).build())
+            .thenThrow(providerFailure)
 
         assertThatThrownBy { gateway(chatModel).interpret(request()) }
             .isInstanceOfSatisfying(ModelGatewayException::class.java) { failure ->
@@ -100,8 +101,9 @@ class SpringAiModelGatewayContractTest {
     @Test
     fun `maps streaming provider failure to one terminal failure`() {
         val chatModel = mock(ChatModel::class.java)
+        val providerFailure = rateLimitedFailure()
         `when`(chatModel.stream(org.mockito.ArgumentMatchers.any(Prompt::class.java)))
-            .thenReturn(Flux.error(ThrottlingException.builder().statusCode(429).build()))
+            .thenReturn(Flux.error(providerFailure))
         val events = mutableListOf<ModelStreamEvent>()
         val terminal = CountDownLatch(1)
 
@@ -135,7 +137,13 @@ class SpringAiModelGatewayContractTest {
 
     private fun gateway(chatModel: ChatModel): SpringAiModelGateway {
         `when`(chatModel.options).thenReturn(ChatOptions.builder().build())
-        return SpringAiModelGateway(ChatClient.builder(chatModel).build(), "configured-model")
+        return SpringAiModelGateway(ChatClient.builder(chatModel).build(), "openai", "configured-model")
+    }
+
+    private fun rateLimitedFailure(): RateLimitException {
+        val failure = mock(RateLimitException::class.java)
+        `when`(failure.statusCode()).thenReturn(429)
+        return failure
     }
 
     private fun request(): ModelRequest = ModelRequest(

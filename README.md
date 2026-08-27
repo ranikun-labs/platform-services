@@ -56,11 +56,11 @@ for Java/Kotlin 17.
 
 Shared AI contains one explicit `review-knowledge` foundation Skill and a
 deterministic execution slice through Product Tool, Retriever, and ModelGateway
-ports. Its in-memory Product Tool, Retriever, and ModelGateway are fixtures. A
-Bedrock Converse implementation now satisfies the same application-owned
-`ModelGateway` and neutral `StreamingModelGateway` ports through Spring AI
-2.0.1. Bedrock is the first provider adapter, not a canonical exclusive-provider
-decision. Provider, Spring AI, AWS SDK, and Reactor types remain adapter-local.
+ports. Its in-memory Product Tool, Retriever, and ModelGateway are fixtures. An
+OpenAI implementation satisfies the same application-owned `ModelGateway` and
+neutral `StreamingModelGateway` ports through Spring AI 2.0.1. OpenAI is the
+first deployment provider adapter, not a canonical exclusive-provider decision.
+Provider, Spring AI, OpenAI SDK, and Reactor types remain adapter-local.
 
 ## Runtime configuration
 
@@ -72,17 +72,17 @@ fail startup when absent.
 Shared AI has three explicit modes:
 
 - disabled: both `SHARED_AI_FOUNDATION_ENABLED` and
-  `SHARED_AI_BEDROCK_ENABLED` are false (the default)
+  `SHARED_AI_OPENAI_ENABLED` are false (the default)
 - foundation: `SHARED_AI_FOUNDATION_ENABLED=true`; deterministic and
   credential-free
-- Bedrock: `SHARED_AI_BEDROCK_ENABLED=true`, with explicit `AWS_REGION` and
-  `SHARED_AI_BEDROCK_MODEL_ID`
+- OpenAI: `SHARED_AI_OPENAI_ENABLED=true`, with explicit `OPENAI_API_KEY` and
+  `SHARED_AI_OPENAI_MODEL`
 
-Foundation and Bedrock must not be enabled together. Bedrock uses the standard
-AWS SDK credential provider chain (for example AWS CLI/profile credentials,
-environment credentials, web identity, or workload-role credentials); no AWS
-credential is configured in source. Provider timeouts, bounded concurrency,
-and max output tokens are externally configurable under `SHARED_AI_BEDROCK_*`.
+Foundation and OpenAI must not be enabled together. The API key, model, timeout,
+and bounded output token limit are external configuration; no provider
+credential or canonical model is configured in source. The provider requires
+only outbound HTTPS from the Platform Core host, including a personal Mac mini
+or home server.
 See `platform-core/shared-ai/README.md` for the complete boundary and the
 opt-in live smoke command.
 

@@ -3,7 +3,7 @@ package com.ranikunlabs.platform.sharedai
 import com.ranikunlabs.platform.sharedai.adapters.fixture.DeterministicModelGateway
 import com.ranikunlabs.platform.sharedai.adapters.fixture.InMemoryProductToolAdapter
 import com.ranikunlabs.platform.sharedai.adapters.fixture.InMemoryRetrieverAdapter
-import com.ranikunlabs.platform.sharedai.adapters.model.BedrockProviderConfiguration
+import com.ranikunlabs.platform.sharedai.adapters.model.OpenAiProviderConfiguration
 import com.ranikunlabs.platform.sharedai.adapters.observability.MicrometerExecutionTelemetry
 import com.ranikunlabs.platform.sharedai.application.PortResultCorrelationValidator
 import com.ranikunlabs.platform.sharedai.application.ReviewKnowledgeExecutionSupport
@@ -33,14 +33,14 @@ import java.time.Clock
 @Import(
     SharedAiRuntimeConfiguration::class,
     InvalidSharedAiGatewayModeConfiguration::class,
-    BedrockProviderConfiguration::class,
+    OpenAiProviderConfiguration::class,
 )
 class SharedAiModuleConfiguration
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnExpression(
-    "(\${platform.shared-ai.foundation.enabled:false} && !\${platform.shared-ai.bedrock.enabled:false}) || " +
-        "(!\${platform.shared-ai.foundation.enabled:false} && \${platform.shared-ai.bedrock.enabled:false})",
+    "(\${platform.shared-ai.foundation.enabled:false} && !\${platform.shared-ai.openai.enabled:false}) || " +
+        "(!\${platform.shared-ai.foundation.enabled:false} && \${platform.shared-ai.openai.enabled:false})",
 )
 class SharedAiRuntimeConfiguration {
     @Bean
@@ -112,7 +112,7 @@ class SharedAiRuntimeConfiguration {
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnExpression(
-    "\${platform.shared-ai.foundation.enabled:false} && \${platform.shared-ai.bedrock.enabled:false}",
+    "\${platform.shared-ai.foundation.enabled:false} && \${platform.shared-ai.openai.enabled:false}",
 )
 class InvalidSharedAiGatewayModeConfiguration {
     @Bean

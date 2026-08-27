@@ -48,7 +48,6 @@ class SharedAiArchitectureTest {
             "VectorStore",
             "Advisor",
             "com.openai",
-            "software.amazon.awssdk",
             "reactor.core",
             "org.reactivestreams",
             "Flux",
@@ -101,7 +100,6 @@ class SharedAiArchitectureTest {
                 it.contains("kotlin.Triple") ||
                 it.contains("kotlinx.coroutines") ||
                 it.contains("org.springframework.ai")
-                || it.contains("software.amazon.awssdk")
                 || it.contains("reactor.core")
                 || it.contains("org.reactivestreams")
                 || it.contains("org.springframework.web")

@@ -11,11 +11,10 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.model.ChatModel
+import org.springframework.ai.openai.OpenAiChatModel
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
-import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient
-import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient
 
 class SharedAiProviderConfigurationTest {
     private val contextRunner = ApplicationContextRunner()
@@ -29,12 +28,12 @@ class SharedAiProviderConfigurationTest {
             assertThat(context).doesNotHaveBean(StreamingModelGateway::class.java)
             assertThat(context).doesNotHaveBean(SharedAiExecutionService::class.java)
             assertThat(context).doesNotHaveBean(ChatModel::class.java)
-            assertThat(context).doesNotHaveBean(BedrockRuntimeClient::class.java)
+            assertThat(context).doesNotHaveBean(OpenAiChatModel::class.java)
         }
     }
 
     @Test
-    fun `foundation mode hosts exactly one deterministic sync and streaming gateway without AWS clients`() {
+    fun `foundation mode hosts exactly one deterministic sync and streaming gateway without OpenAI`() {
         contextRunner
             .withPropertyValues("platform.shared-ai.foundation.enabled=true")
             .run { context ->
@@ -46,18 +45,17 @@ class SharedAiProviderConfigurationTest {
                     .isInstanceOf(DeterministicModelGateway::class.java)
                 assertThat(context).hasSingleBean(SharedAiExecutionService::class.java)
                 assertThat(context).hasSingleBean(SharedAiStreamingExecutionService::class.java)
-                assertThat(context).doesNotHaveBean(BedrockRuntimeClient::class.java)
-                assertThat(context).doesNotHaveBean(BedrockRuntimeAsyncClient::class.java)
+                assertThat(context).doesNotHaveBean(OpenAiChatModel::class.java)
             }
     }
 
     @Test
-    fun `Bedrock mode hosts exactly one real sync and streaming gateway`() {
+    fun `OpenAI mode hosts exactly one real sync and streaming gateway`() {
         contextRunner
             .withPropertyValues(
-                "platform.shared-ai.bedrock.enabled=true",
-                "platform.shared-ai.bedrock.region=ap-northeast-2",
-                "platform.shared-ai.bedrock.model-id=test-model-id",
+                "platform.shared-ai.openai.enabled=true",
+                "platform.shared-ai.openai.api-key=test-api-key",
+                "platform.shared-ai.openai.model=test-model-id",
             )
             .run { context ->
                 assertThat(context).hasNotFailed()
@@ -66,36 +64,35 @@ class SharedAiProviderConfigurationTest {
                 assertThat(context.getBean(ModelGateway::class.java))
                     .isSameAs(context.getBean(StreamingModelGateway::class.java))
                     .isInstanceOf(SpringAiModelGateway::class.java)
-                assertThat(context).hasSingleBean(BedrockRuntimeClient::class.java)
-                assertThat(context).hasSingleBean(BedrockRuntimeAsyncClient::class.java)
+                assertThat(context).hasSingleBean(OpenAiChatModel::class.java)
             }
     }
 
     @Test
-    fun `Bedrock mode without explicit region fails startup clearly`() {
+    fun `OpenAI mode without explicit API key fails startup clearly`() {
         contextRunner
             .withPropertyValues(
-                "platform.shared-ai.bedrock.enabled=true",
-                "platform.shared-ai.bedrock.model-id=test-model-id",
+                "platform.shared-ai.openai.enabled=true",
+                "platform.shared-ai.openai.model=test-model-id",
             )
             .run { context ->
                 assertThat(context).hasFailed()
                 assertThat(context.startupFailure)
-                    .hasRootCauseMessage("Bedrock mode requires platform.shared-ai.bedrock.region")
+                    .hasRootCauseMessage("OpenAI mode requires platform.shared-ai.openai.api-key")
             }
     }
 
     @Test
-    fun `Bedrock mode without explicit model fails startup clearly`() {
+    fun `OpenAI mode without explicit model fails startup clearly`() {
         contextRunner
             .withPropertyValues(
-                "platform.shared-ai.bedrock.enabled=true",
-                "platform.shared-ai.bedrock.region=ap-northeast-2",
+                "platform.shared-ai.openai.enabled=true",
+                "platform.shared-ai.openai.api-key=test-api-key",
             )
             .run { context ->
                 assertThat(context).hasFailed()
                 assertThat(context.startupFailure)
-                    .hasRootCauseMessage("Bedrock mode requires platform.shared-ai.bedrock.model-id")
+                    .hasRootCauseMessage("OpenAI mode requires platform.shared-ai.openai.model")
             }
     }
 
@@ -104,9 +101,9 @@ class SharedAiProviderConfigurationTest {
         contextRunner
             .withPropertyValues(
                 "platform.shared-ai.foundation.enabled=true",
-                "platform.shared-ai.bedrock.enabled=true",
-                "platform.shared-ai.bedrock.region=ap-northeast-2",
-                "platform.shared-ai.bedrock.model-id=test-model-id",
+                "platform.shared-ai.openai.enabled=true",
+                "platform.shared-ai.openai.api-key=test-api-key",
+                "platform.shared-ai.openai.model=test-model-id",
             )
             .run { context ->
                 assertThat(context).hasFailed()
