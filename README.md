@@ -56,9 +56,11 @@ for Java/Kotlin 17.
 
 Shared AI contains one explicit `review-knowledge` foundation Skill and a
 deterministic execution slice through Product Tool, Retriever, and ModelGateway
-ports. Its in-memory Product Tool, Retriever, and ModelGateway are fixtures.
-The Spring AI `ChatClient` adapter is present behind the application-owned
-ModelGateway, but no live provider is configured or required by tests.
+ports. Its in-memory Product Tool, Retriever, and ModelGateway are fixtures. A
+Bedrock Converse implementation now satisfies the same application-owned
+`ModelGateway` and neutral `StreamingModelGateway` ports through Spring AI
+2.0.1. Bedrock is the first provider adapter, not a canonical exclusive-provider
+decision. Provider, Spring AI, AWS SDK, and Reactor types remain adapter-local.
 
 ## Runtime configuration
 
@@ -66,6 +68,23 @@ Gateway configuration remains under `PLATFORM_GATEWAY_*`. The Platform Core
 host owns `PLATFORM_CORE_PORT`; hosted Identity configuration remains under
 `PLATFORM_IDENTITY_*`. Required values have no usable application defaults and
 fail startup when absent.
+
+Shared AI has three explicit modes:
+
+- disabled: both `SHARED_AI_FOUNDATION_ENABLED` and
+  `SHARED_AI_BEDROCK_ENABLED` are false (the default)
+- foundation: `SHARED_AI_FOUNDATION_ENABLED=true`; deterministic and
+  credential-free
+- Bedrock: `SHARED_AI_BEDROCK_ENABLED=true`, with explicit `AWS_REGION` and
+  `SHARED_AI_BEDROCK_MODEL_ID`
+
+Foundation and Bedrock must not be enabled together. Bedrock uses the standard
+AWS SDK credential provider chain (for example AWS CLI/profile credentials,
+environment credentials, web identity, or workload-role credentials); no AWS
+credential is configured in source. Provider timeouts, bounded concurrency,
+and max output tokens are externally configurable under `SHARED_AI_BEDROCK_*`.
+See `platform-core/shared-ai/README.md` for the complete boundary and the
+opt-in live smoke command.
 
 Run the artifacts independently:
 
@@ -103,8 +122,8 @@ business key contract yet.
 
 ## Scope boundary
 
-The Shared AI foundation is not Production AI or Production RAG. It does not
-implement a real provider, corpus ingestion, vector lifecycle, Product Tool
-integration, production authorization, Finance/Carelog behavior, Commerce, or
-Audit. The internal HTTP execution route exists only in the integration-test
-boundary; normal runtime does not expose the unauthenticated fixture flow.
+The Shared AI slice is not Production RAG or a Product public API. It does not
+implement corpus ingestion, vector lifecycle, Product Tool integration,
+production authorization, Finance/Carelog behavior, Commerce, or Audit. The
+internal HTTP and MVC SSE routes exist only in integration-test sources; normal
+runtime does not expose an unauthenticated generic AI endpoint.
