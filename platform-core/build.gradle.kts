@@ -1,3 +1,4 @@
+import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
 
 plugins {
@@ -12,6 +13,18 @@ subprojects {
     version = rootProject.version
 }
 
+private fun Project.declarableProjectDependencies(): Map<String, Set<String>> =
+    configurations
+            .filter { it.isCanBeDeclared }
+            .mapNotNull { configuration ->
+                val projectDependencies = configuration.dependencies
+                        .withType(ProjectDependency::class.java)
+                        .map { it.path }
+                        .toSet()
+                projectDependencies.takeIf { it.isNotEmpty() }?.let { configuration.name to it }
+            }
+            .toMap()
+
 val verifyModuleBoundaries by tasks.registering {
     group = "verification"
     description = "Verifies the Platform Core host-to-feature dependency direction."
@@ -20,11 +33,9 @@ val verifyModuleBoundaries by tasks.registering {
         val appProject = project(":app")
         val featureProjects = subprojects.filter { it != appProject }
         val featureProjectPaths = featureProjects.map { it.path }.toSet()
-        val appProjectDependencies = appProject.configurations
-                .getByName("implementation")
-                .dependencies
-                .withType(ProjectDependency::class.java)
-                .map { it.path }
+        val appProjectDependencies = appProject.declarableProjectDependencies()
+                .values
+                .flatten()
                 .toSet()
         val platformCoreMainClasses = fileTree(rootDir) {
             include("*/src/main/**/*.java", "*/src/main/**/*.kt")
@@ -40,11 +51,7 @@ val verifyModuleBoundaries by tasks.registering {
             "Platform Core app must compose every feature module; expected $featureProjectPaths, found $appProjectDependencies."
         }
         featureProjects.forEach { featureProject ->
-            val featureDependencies = featureProject.configurations
-                    .getByName("implementation")
-                    .dependencies
-                    .withType(ProjectDependency::class.java)
-                    .map { it.path }
+            val featureDependencies = featureProject.declarableProjectDependencies()
 
             check(!featureProject.plugins.hasPlugin("org.springframework.boot")) {
                 "${featureProject.path} must remain a library and must not apply the Spring Boot plugin."
