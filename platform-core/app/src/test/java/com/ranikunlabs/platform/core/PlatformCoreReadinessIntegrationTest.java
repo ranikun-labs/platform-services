@@ -21,7 +21,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "platform.identity.datasource.password=provided-at-runtime",
                 "platform.identity.redis-host=redis",
                 "platform.identity.redis-port=6379",
-                "platform.identity.redis-key-prefix=platform:identity:"
+                "platform.identity.redis-key-prefix=platform:identity:",
+                // This host-readiness test intentionally has no database dependency. The
+                // Identity persistence slice is exercised by its PostgreSQL integration tests.
+                "platform.identity.persistence.enabled=false",
+                "spring.autoconfigure.exclude="
+                        + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
+                        + "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
+                        + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration"
         })
 @AutoConfigureMockMvc
 class PlatformCoreReadinessIntegrationTest {
