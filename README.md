@@ -7,9 +7,10 @@ boundaries:
   port `8080`.
 - `platform-core`: the Spring MVC modular-monolith process on port `8081`.
 
-Platform Core currently hosts one logical module, `identity`. Identity remains
-an inert foundation: it owns no Auth/OAuth behavior, persistence, schema,
-migration, or independent deployable process in this repository state.
+Platform Core hosts the logical modules `identity` and `shared-ai`. Identity
+remains Java and owns no Auth/OAuth behavior, persistence, schema, migration,
+or independent deployable process in this repository state. Shared AI is a
+Kotlin library module hosted by the app, not another server.
 
 ## Build structure
 
@@ -21,8 +22,9 @@ without forcing a Spring Cloud migration on Gateway.
 platform-services/
 ├── gateway-app/                 independent Gradle build and WebFlux runtime
 └── platform-core/               independent multi-project Gradle build
-    ├── app/                     only executable Spring MVC host
-    └── identity/                Java library/logical module
+    ├── app/                     Java 21, only executable Spring MVC host
+    ├── identity/                Java 21 library/logical module
+    └── shared-ai/               Kotlin/JVM 21 library/logical module
 ```
 
 The repository wrapper remains the single developer entry point:
@@ -41,10 +43,22 @@ Each runtime is also independently buildable:
 ./gradlew -p platform-core :app:bootJar
 ```
 
-The Platform Core dependency direction is `app -> identity`. The
+The Platform Core dependency direction is `app -> {identity, shared-ai}`. The
 `verifyModuleBoundaries` task, included in Platform Core `check`, verifies that
-the app owns the Spring Boot plugin, Identity does not, and the feature-module
-project dependencies remain acyclic.
+the app owns the Spring Boot plugin, feature modules do not, and no feature
+module directly depends on another Platform Core project.
+
+Platform Core uses Java 21, Spring Boot 4.1.1, Kotlin 2.3.21, Spring AI 2.0.1,
+and Gradle 8.14.3. Gateway remains independently governed on JVM target 17,
+Spring Boot 3.4.5, and Spring Cloud 2024.0.1. For local IDE setup, use an
+Eclipse Temurin 21 Project SDK; Gradle toolchains continue to compile Gateway
+for Java/Kotlin 17.
+
+Shared AI contains one explicit `review-knowledge` foundation Skill and a
+deterministic execution slice through Product Tool, Retriever, and ModelGateway
+ports. Its in-memory Product Tool, Retriever, and ModelGateway are fixtures.
+The Spring AI `ChatClient` adapter is present behind the application-owned
+ModelGateway, but no live provider is configured or required by tests.
 
 ## Runtime configuration
 
@@ -89,8 +103,8 @@ business key contract yet.
 
 ## Scope boundary
 
-RPL-105 changes only the Platform Core structure and build boundary. They do
-not add or change Gateway routing/security behavior, and they do not implement
-Carelog Auth/OAuth extraction, Identity business behavior, Shared AI, Spring
-AI, RAG, Commerce, Audit, or Product cutover. Those remain separately governed
-follow-up work.
+The Shared AI foundation is not Production AI or Production RAG. It does not
+implement a real provider, corpus ingestion, vector lifecycle, Product Tool
+integration, production authorization, Finance/Carelog behavior, Commerce, or
+Audit. The internal HTTP execution route exists only in the integration-test
+boundary; normal runtime does not expose the unauthenticated fixture flow.

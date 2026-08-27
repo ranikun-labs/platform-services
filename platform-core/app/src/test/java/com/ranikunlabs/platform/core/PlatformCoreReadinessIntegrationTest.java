@@ -1,10 +1,11 @@
 package com.ranikunlabs.platform.core;
 
 import com.ranikunlabs.platform.identity.IdentityRuntimeProperties;
+import com.ranikunlabs.platform.sharedai.SharedAiModuleConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,13 +23,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "platform.identity.redis-host=redis",
                 "platform.identity.redis-port=6379",
                 "platform.identity.redis-key-prefix=platform:identity:",
+                "platform.identity.auth.enabled=false",
                 // This host-readiness test intentionally has no database dependency. The
                 // Identity persistence slice is exercised by its PostgreSQL integration tests.
                 "platform.identity.persistence.enabled=false",
                 "spring.autoconfigure.exclude="
-                        + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
-                        + "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
-                        + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration"
+                        + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
+                        + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
+                        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration"
         })
 @AutoConfigureMockMvc
 class PlatformCoreReadinessIntegrationTest {
@@ -39,9 +41,13 @@ class PlatformCoreReadinessIntegrationTest {
     @Autowired
     private IdentityRuntimeProperties identityRuntimeProperties;
 
+    @Autowired
+    private SharedAiModuleConfiguration sharedAiModuleConfiguration;
+
     @Test
-    void hostsIdentityAndExposesPlatformCoreReadiness() throws Exception {
+    void hostsIdentityAndSharedAiAndExposesPlatformCoreReadiness() throws Exception {
         assertThat(identityRuntimeProperties.redisKeyPrefix()).isEqualTo("platform:identity:");
+        assertThat(sharedAiModuleConfiguration).isNotNull();
 
         mockMvc.perform(get("/actuator/health/readiness"))
                 .andExpect(status().isOk())
