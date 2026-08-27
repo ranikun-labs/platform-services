@@ -1,6 +1,9 @@
 package com.ranikunlabs.platform.identity;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
+import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.PasswordCredentialJpaRepository;
+import com.ranikunlabs.platform.identity.adapter.persistence.repository.PlatformAccountJpaRepository;
 import com.ranikunlabs.platform.identity.adapter.redis.RedisTokenBlacklistAdapter;
 import com.ranikunlabs.platform.identity.adapter.security.IdentityCredentialAdapter;
 import com.ranikunlabs.platform.identity.adapter.token.IdentityJwtProperties;
@@ -8,6 +11,8 @@ import com.ranikunlabs.platform.identity.adapter.token.JwtTokenProvider;
 import com.ranikunlabs.platform.identity.application.AuthService;
 import com.ranikunlabs.platform.identity.application.AuthServiceImpl;
 import com.ranikunlabs.platform.identity.application.AuthTokenIssuanceService;
+import com.ranikunlabs.platform.identity.application.port.IdentityAccountRegistrationPort;
+import com.ranikunlabs.platform.identity.application.port.PasswordCredentialUpdatePort;
 import com.ranikunlabs.platform.identity.application.port.AccountStatusPort;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionPort;
 import com.ranikunlabs.platform.identity.application.port.CredentialPort;
@@ -49,8 +54,13 @@ class IdentityAuthCompositionTest {
             assertThat(context).hasSingleBean(JwtTokenProvider.class);
             assertThat(context).hasSingleBean(TokenProviderPort.class);
             assertThat(context).hasSingleBean(PasswordCredentialJpaRepository.class);
+            assertThat(context).hasSingleBean(PlatformAccountJpaRepository.class);
             assertThat(context).hasSingleBean(IdentityCredentialAdapter.class);
             assertThat(context).hasSingleBean(CredentialPort.class);
+            assertThat(context).hasSingleBean(IdentityAccountRegistrationJpaAdapter.class);
+            assertThat(context).hasSingleBean(IdentityAccountRegistrationPort.class);
+            assertThat(context).hasSingleBean(PasswordCredentialUpdateJpaAdapter.class);
+            assertThat(context).hasSingleBean(PasswordCredentialUpdatePort.class);
             assertThat(context).hasSingleBean(AccountStatusPort.class);
             assertThat(context).hasSingleBean(TokenSessionPort.class);
             assertThat(context).hasSingleBean(StringRedisTemplate.class);
@@ -78,6 +88,11 @@ class IdentityAuthCompositionTest {
         @Bean
         PasswordCredentialJpaRepository passwordCredentialJpaRepository() {
             return mock(PasswordCredentialJpaRepository.class);
+        }
+
+        @Bean
+        PlatformAccountJpaRepository platformAccountJpaRepository() {
+            return mock(PlatformAccountJpaRepository.class);
         }
 
         @Bean

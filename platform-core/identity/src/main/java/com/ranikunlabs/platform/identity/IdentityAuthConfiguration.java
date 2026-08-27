@@ -1,5 +1,7 @@
 package com.ranikunlabs.platform.identity;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
+import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.redis.IdentityRedisConfiguration;
 import com.ranikunlabs.platform.identity.adapter.redis.RedisTokenBlacklistAdapter;
 import com.ranikunlabs.platform.identity.adapter.security.IdentityCredentialAdapter;
@@ -30,6 +32,8 @@ import java.time.Clock;
 @EnableConfigurationProperties(IdentityJwtProperties.class)
 @Import({
         IdentityCredentialAdapter.class,
+        IdentityAccountRegistrationJpaAdapter.class,
+        PasswordCredentialUpdateJpaAdapter.class,
         RedisTokenBlacklistAdapter.class,
         IdentityRedisConfiguration.class,
         AuthTokenIssuanceService.class,
