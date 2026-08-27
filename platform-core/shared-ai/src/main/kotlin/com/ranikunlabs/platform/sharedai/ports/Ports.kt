@@ -7,6 +7,7 @@ data class ProductFact(
     val executionReference: String,
     val scope: ExecutionScope,
     val sourceReference: String,
+    val producerReference: String,
     val name: String,
     val value: String,
 )
@@ -19,6 +20,7 @@ data class RetrievedItem(
     val executionReference: String,
     val scope: ExecutionScope,
     val sourceReference: String,
+    val producerReference: String,
     val content: String,
 )
 
@@ -26,18 +28,21 @@ fun interface RetrieverPort {
     fun retrieve(context: ExecutionContext, query: String): List<RetrievedItem>
 }
 
-data class ModelRequest(
+class ModelRequest(
     val executionReference: String,
     val scope: ExecutionScope,
     val query: String,
     val productFact: ProductFact,
-    val retrievedItems: List<RetrievedItem>,
-)
+    retrievedItems: List<RetrievedItem>,
+) {
+    val retrievedItems: List<RetrievedItem> = java.util.List.copyOf(retrievedItems)
+}
 
 data class ModelResult(
     val executionReference: String,
     val scope: ExecutionScope,
     val sourceReference: String,
+    val producerReference: String,
     val interpretation: String,
 )
 
@@ -49,6 +54,7 @@ enum class ExecutionStage {
     PRODUCT_TOOL,
     RETRIEVER,
     MODEL,
+    CORRELATION,
     TOTAL,
 }
 

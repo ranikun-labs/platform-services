@@ -4,10 +4,6 @@ import com.ranikunlabs.platform.sharedai.ports.ModelGateway
 import com.ranikunlabs.platform.sharedai.ports.ModelRequest
 import com.ranikunlabs.platform.sharedai.ports.ModelResult
 import org.springframework.ai.chat.client.ChatClient
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 
 class SpringAiModelGateway(private val chatClient: ChatClient) : ModelGateway {
     override fun interpret(request: ModelRequest): ModelResult {
@@ -26,6 +22,7 @@ class SpringAiModelGateway(private val chatClient: ChatClient) : ModelGateway {
             request.executionReference,
             request.scope,
             "spring-ai:model-interpretation",
+            "spring-ai:chat-client",
             interpretation,
         )
     }
@@ -37,12 +34,4 @@ class SpringAiModelGateway(private val chatClient: ChatClient) : ModelGateway {
         request.retrievedItems.forEach { item -> appendLine("Retrieved ${item.sourceReference}: ${item.content}") }
         append("END_UNTRUSTED_INPUT")
     }
-}
-
-@Configuration(proxyBeanMethods = false)
-@ConditionalOnBean(ChatClient::class)
-@ConditionalOnProperty(prefix = "platform.shared-ai.spring-ai", name = ["enabled"], havingValue = "true")
-class SpringAiAdapterConfiguration {
-    @Bean
-    fun springAiModelGateway(chatClient: ChatClient): SpringAiModelGateway = SpringAiModelGateway(chatClient)
 }

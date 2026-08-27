@@ -91,7 +91,7 @@ class SharedAiVerticalSliceIntegrationTest {
                         new ExecutionCommand(context, new SkillId(request.skillId()), request.query()));
                 if (result instanceof ExecutionResult.Success success) {
                     List<String> categories = success.getEvidence().getItems().stream()
-                            .map(EvidenceItem::getCategory)
+                            .map(EvidenceItem::getKind)
                             .map(Enum::name)
                             .toList();
                     return ResponseEntity.ok(new FoundationExecuteResponse(

@@ -29,17 +29,20 @@ enum class TechnicalFailureCategory {
     PRODUCT_TOOL_FAILURE,
     RETRIEVER_FAILURE,
     MODEL_FAILURE,
+    CORRELATION_FAILURE,
 }
 
 sealed interface ExecutionResult {
     val executionReference: String
 
-    data class Success(
+    class Success(
         override val executionReference: String,
         val interpretation: String,
         val evidence: Evidence,
-        val warnings: List<String>,
-    ) : ExecutionResult
+        warnings: List<String>,
+    ) : ExecutionResult {
+        val warnings: List<String> = java.util.List.copyOf(warnings)
+    }
 
     data class TechnicalFailure(
         override val executionReference: String,

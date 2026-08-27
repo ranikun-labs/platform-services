@@ -41,6 +41,14 @@ class ExecutionContextTest {
         }.isInstanceOf(IllegalArgumentException::class.java)
     }
 
+    @Test
+    fun `empty resource references mean no resource-specific references and never wildcard`() {
+        val empty = ExecutionScope("product-a", "tenant-a", emptySet())
+
+        assertThat(empty.contains(ExecutionScope("product-a", "tenant-a", emptySet()))).isTrue()
+        assertThat(empty.contains(ExecutionScope("product-a", "tenant-a", setOf("resource-a")))).isFalse()
+    }
+
     private fun context(scope: ExecutionScope) =
         ExecutionContext(scope, "principal-a", "request-a", "execution-a", "correlation-a")
 }

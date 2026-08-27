@@ -15,6 +15,7 @@ class InMemoryProductToolAdapter : ProductToolPort {
             context.executionReference,
             context.scope,
             "fixture:product-current-state",
+            "fixture:product-tool",
             "current-item-count",
             "3",
         )
@@ -27,6 +28,7 @@ class InMemoryRetrieverAdapter : RetrieverPort {
                 context.executionReference,
                 context.scope,
                 "fixture:knowledge-guidance",
+                "fixture:retriever",
                 "Review items against the currently approved guidance.",
             ),
         )
@@ -38,6 +40,7 @@ class DeterministicModelGateway : ModelGateway {
             request.executionReference,
             request.scope,
             "fixture:model-interpretation",
+            "fixture:deterministic-model",
             "Reviewed ${request.productFact.value} current items using ${request.retrievedItems.size} knowledge item(s).",
         )
 }
