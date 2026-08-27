@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,6 +53,7 @@ class IdentityAuthCompositionTest {
             assertThat(context).hasSingleBean(CredentialPort.class);
             assertThat(context).hasSingleBean(AccountStatusPort.class);
             assertThat(context).hasSingleBean(TokenSessionPort.class);
+            assertThat(context).hasSingleBean(StringRedisTemplate.class);
             assertThat(context).hasSingleBean(RedisTokenBlacklistAdapter.class);
             assertThat(context).hasSingleBean(TokenBlacklistPort.class);
             assertThat(context).hasSingleBean(AuthTokenIssuanceService.class);
@@ -65,6 +65,8 @@ class IdentityAuthCompositionTest {
                     .isSameAs(context.getBean(JwtTokenProvider.class));
             assertThat(context.getBean(CredentialPort.class))
                     .isSameAs(context.getBean(IdentityCredentialAdapter.class));
+            assertThat(context.getBean(TokenBlacklistPort.class))
+                    .isSameAs(context.getBean(RedisTokenBlacklistAdapter.class));
             assertThat(context.getBean(AuthService.class))
                     .isSameAs(context.getBean(AuthServiceImpl.class));
         });
@@ -91,11 +93,6 @@ class IdentityAuthCompositionTest {
         @Bean
         CRMIdentityProjectionPort crmIdentityProjectionPort() {
             return mock(CRMIdentityProjectionPort.class);
-        }
-
-        @Bean
-        RedisConnectionFactory redisConnectionFactory() {
-            return mock(RedisConnectionFactory.class);
         }
 
         @Bean

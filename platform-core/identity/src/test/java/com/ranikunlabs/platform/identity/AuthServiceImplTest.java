@@ -217,7 +217,8 @@ class AuthServiceImplTest {
         when(sessionPort.findByToken("refresh")).thenReturn(Optional.of(mismatch));
 
         assertThatThrownBy(() -> service.refreshToken("refresh"))
-                .isInstanceOf(TokenLifecycleException.class);
+                .isInstanceOfSatisfying(TokenLifecycleException.class, error ->
+                        assertThat(error.reason()).isEqualTo(TokenLifecycleException.Reason.INVALID_REFRESH_TOKEN));
         verifyNoInteractions(accountStatusPort, claimsPort);
 
         RefreshSession inactive = new RefreshSession(
@@ -226,7 +227,8 @@ class AuthServiceImplTest {
         when(accountStatusPort.findStatus(ACCOUNT_ID)).thenReturn(Optional.of(AccountStatus.INACTIVE));
 
         assertThatThrownBy(() -> service.refreshToken("refresh"))
-                .isInstanceOf(TokenLifecycleException.class);
+                .isInstanceOfSatisfying(TokenLifecycleException.class, error ->
+                        assertThat(error.reason()).isEqualTo(TokenLifecycleException.Reason.INVALID_REFRESH_TOKEN));
         verifyNoInteractions(claimsPort);
     }
 
