@@ -3,6 +3,7 @@ package com.ranikunlabs.platform.sharedai.application
 import com.ranikunlabs.platform.sharedai.core.ExecutionContext
 import com.ranikunlabs.platform.sharedai.core.ExecutionScope
 import com.ranikunlabs.platform.sharedai.ports.ModelResult
+import com.ranikunlabs.platform.sharedai.ports.ModelCompletion
 import com.ranikunlabs.platform.sharedai.ports.ProductFact
 import com.ranikunlabs.platform.sharedai.ports.RetrievedItem
 
@@ -17,6 +18,16 @@ class PortResultCorrelationValidator {
 
     fun validate(context: ExecutionContext, result: ModelResult) {
         validate(context, result.executionReference, result.scope, result.sourceReference, result.producerReference)
+    }
+
+    fun validate(context: ExecutionContext, completion: ModelCompletion) {
+        validate(
+            context,
+            completion.executionReference,
+            completion.scope,
+            completion.sourceReference,
+            completion.producerReference,
+        )
     }
 
     private fun validate(

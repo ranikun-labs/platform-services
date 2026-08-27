@@ -8,6 +8,7 @@ spring-ai = "2.0.1"
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 spring-ai-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "spring-ai" }
 spring-ai-client-chat = { module = "org.springframework.ai:spring-ai-client-chat", version.ref = "spring-ai" }
+spring-ai-starter-model-bedrock-converse = { module = "org.springframework.ai:spring-ai-starter-model-bedrock-converse", version.ref = "spring-ai" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
