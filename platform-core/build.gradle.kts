@@ -71,23 +71,24 @@ val verifyModuleBoundaries by tasks.registering {
 }
 
 tasks.named("clean") {
-    dependsOn(":app:clean", ":identity:clean")
+    dependsOn(subprojects.map { "${it.path}:clean" })
 }
 
 tasks.named("assemble") {
-    dependsOn(":app:assemble", ":identity:assemble")
+    dependsOn(subprojects.map { "${it.path}:assemble" })
 }
 
 tasks.named("check") {
-    dependsOn(":app:check", ":identity:check", verifyModuleBoundaries)
+    dependsOn(subprojects.map { "${it.path}:check" })
+    dependsOn(verifyModuleBoundaries)
 }
 
 tasks.named("build") {
-    dependsOn(":app:build", ":identity:build")
+    dependsOn(subprojects.map { "${it.path}:build" })
 }
 
 tasks.register("test") {
     group = "verification"
     description = "Runs tests for all Platform Core modules."
-    dependsOn(":app:test", ":identity:test")
+    dependsOn(subprojects.map { "${it.path}:test" })
 }

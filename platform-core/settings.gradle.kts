@@ -12,4 +12,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "platform-core"
-include(":app", ":identity")
+include(":app", ":identity", ":shared-ai")
