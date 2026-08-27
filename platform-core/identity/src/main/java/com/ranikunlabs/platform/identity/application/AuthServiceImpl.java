@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 /** Behavior-preserving Identity authentication, refresh, and logout orchestration. */
@@ -52,27 +51,6 @@ public class AuthServiceImpl implements AuthService {
         this.accountStatusPort = accountStatusPort;
         this.clock = clock;
         this.tokenIssuanceService = tokenIssuanceService;
-    }
-
-    /** Convenience constructor for unit callers that do not need account-status persistence. */
-    public AuthServiceImpl(
-            CredentialPort credentialPort,
-            CRMIdentityProjectionPort crmIdentityProjectionPort,
-            TokenSessionPort tokenSessionPort,
-            TokenProviderPort tokenProvider,
-            TokenBlacklistPort tokenBlacklistPort,
-            Clock clock
-    ) {
-        this(
-                credentialPort,
-                crmIdentityProjectionPort,
-                tokenSessionPort,
-                tokenProvider,
-                tokenBlacklistPort,
-                accountId -> Optional.of(AccountStatus.ACTIVE),
-                clock,
-                new AuthTokenIssuanceService(tokenProvider, tokenSessionPort)
-        );
     }
 
     @Override

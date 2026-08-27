@@ -21,6 +21,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Constructor;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -69,6 +70,14 @@ class AuthServiceImplTest {
                 credentialPort, claimsPort, sessionPort, tokenProvider, blacklistPort,
                 accountStatusPort, CLOCK,
                 new com.ranikunlabs.platform.identity.application.AuthTokenIssuanceService(tokenProvider, sessionPort));
+    }
+
+    @Test
+    void requiresAccountStatusPortForEveryConstructionPath() {
+        Constructor<?>[] constructors = AuthServiceImpl.class.getDeclaredConstructors();
+
+        assertThat(constructors).hasSize(1);
+        assertThat(constructors[0].getParameterTypes()).contains(AccountStatusPort.class);
     }
 
     @Test
@@ -163,10 +172,40 @@ class AuthServiceImplTest {
 
         assertThat(service.refreshToken("refresh"))
                 .isEqualTo(new AuthTokenBundle("new-access", "new-refresh"));
+        InOrder order = inOrder(tokenProvider, sessionPort, accountStatusPort, claimsPort);
+        order.verify(tokenProvider).validateToken("refresh");
+        order.verify(tokenProvider).getAccountIdFromToken("refresh");
+        order.verify(sessionPort).findByToken("refresh");
+        order.verify(accountStatusPort).findStatus(ACCOUNT_ID);
+        order.verify(claimsPort).getIdentityClaims(ACCOUNT_ID);
+        order.verify(tokenProvider).generateAccessToken(ACCOUNT_ID, ORGANIZATION_ID, "MANAGER", PUBLIC_ID);
+        order.verify(tokenProvider).generateRefreshToken(ACCOUNT_ID);
+        order.verify(tokenProvider).getRefreshTokenExpiryDate();
+        order.verify(sessionPort).rotate(any(RefreshSession.class), org.mockito.ArgumentMatchers.eq("new-refresh"),
+                org.mockito.ArgumentMatchers.eq(expiry));
         ArgumentCaptor<RefreshSession> sessionCaptor = ArgumentCaptor.forClass(RefreshSession.class);
         verify(sessionPort).rotate(sessionCaptor.capture(), org.mockito.ArgumentMatchers.eq("new-refresh"),
                 org.mockito.ArgumentMatchers.eq(expiry));
         assertThat(sessionCaptor.getValue()).isSameAs(session);
+    }
+
+    @Test
+    void refreshRejectsMissingAccountBeforeClaimsOrTokenIssuance() {
+        RefreshSession session = new RefreshSession(
+                "refresh", ACCOUNT_ID, OffsetDateTime.now(CLOCK).plusDays(1));
+        when(tokenProvider.validateToken("refresh")).thenReturn(true);
+        when(tokenProvider.getAccountIdFromToken("refresh")).thenReturn(ACCOUNT_ID);
+        when(sessionPort.findByToken("refresh")).thenReturn(Optional.of(session));
+        when(accountStatusPort.findStatus(ACCOUNT_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.refreshToken("refresh"))
+                .isInstanceOfSatisfying(TokenLifecycleException.class, error ->
+                        assertThat(error.reason()).isEqualTo(TokenLifecycleException.Reason.INVALID_REFRESH_TOKEN));
+        verify(accountStatusPort).findStatus(ACCOUNT_ID);
+        verifyNoInteractions(claimsPort);
+        verify(tokenProvider, never()).generateAccessToken(any(), any(), any(), any());
+        verify(tokenProvider, never()).generateRefreshToken(any());
+        verify(sessionPort, never()).rotate(any(), any(), any());
     }
 
     @Test
