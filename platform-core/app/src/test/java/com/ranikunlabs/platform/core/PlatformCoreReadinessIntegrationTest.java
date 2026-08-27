@@ -1,17 +1,19 @@
-package com.ranikunlabs.platform.identity;
+package com.ranikunlabs.platform.core;
 
+import com.ranikunlabs.platform.identity.IdentityRuntimeProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
-        classes = IdentityApplication.class,
+        classes = PlatformCoreApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
                 "platform.identity.datasource.url=jdbc:postgresql://postgres:5432/platform",
@@ -22,13 +24,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "platform.identity.redis-key-prefix=platform:identity:"
         })
 @AutoConfigureMockMvc
-class IdentityReadinessIntegrationTest {
+class PlatformCoreReadinessIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private IdentityRuntimeProperties identityRuntimeProperties;
+
     @Test
-    void readinessEndpointIsAvailable() throws Exception {
+    void hostsIdentityAndExposesPlatformCoreReadiness() throws Exception {
+        assertThat(identityRuntimeProperties.redisKeyPrefix()).isEqualTo("platform:identity:");
+
         mockMvc.perform(get("/actuator/health/readiness"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"));

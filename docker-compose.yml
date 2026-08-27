@@ -28,12 +28,13 @@ services:
     networks:
       - platform
 
-  identity:
-    image: ${PLATFORM_IDENTITY_IMAGE:-ranikunlabs/platform-identity:local}
+  platform-core-app:
+    image: ${PLATFORM_CORE_IMAGE:-ranikunlabs/platform-core:local}
     build:
-      context: ./platform-core/identity
+      context: ./platform-core
+      dockerfile: app/Dockerfile
     environment:
-      PLATFORM_IDENTITY_PORT: ${PLATFORM_IDENTITY_PORT:-8081}
+      PLATFORM_CORE_PORT: ${PLATFORM_CORE_PORT:-8081}
       PLATFORM_IDENTITY_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PLATFORM_POSTGRES_DB:-platform}
       PLATFORM_IDENTITY_DATASOURCE_USERNAME: ${PLATFORM_POSTGRES_USER:-platform}
       PLATFORM_IDENTITY_DATASOURCE_PASSWORD: ${PLATFORM_POSTGRES_PASSWORD:?PLATFORM_POSTGRES_PASSWORD must be set}
@@ -41,14 +42,14 @@ services:
       PLATFORM_IDENTITY_REDIS_PORT: 6379
       PLATFORM_IDENTITY_REDIS_KEY_PREFIX: "platform:identity:"
     ports:
-      - "${PLATFORM_IDENTITY_PUBLISHED_PORT:-8081}:${PLATFORM_IDENTITY_PORT:-8081}"
+      - "${PLATFORM_CORE_PUBLISHED_PORT:-8081}:${PLATFORM_CORE_PORT:-8081}"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_IDENTITY_PORT}/actuator/health/readiness || exit 1"]
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_CORE_PORT}/actuator/health/readiness || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 12
