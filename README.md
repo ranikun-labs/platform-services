@@ -8,9 +8,25 @@ boundaries:
 - `platform-core`: the Spring MVC modular-monolith process on port `8081`.
 
 Platform Core hosts the logical modules `identity` and `shared-ai`. Identity
-remains Java and owns no Auth/OAuth behavior, persistence, schema, migration,
-or independent deployable process in this repository state. Shared AI is a
-Kotlin library module hosted by the app, not another server.
+remains a Java library/logical module and owns framework-neutral Identity
+contracts plus its relational persistence: the `platform_accounts`,
+`password_credentials`, `external_identities`, `refresh_token`, and
+`product_clients` tables, their Flyway schema/migration, JPA repositories, and
+persistence adapters. Its extracted password-authentication and token-lifecycle
+capabilities include credential authentication, `PlatformAccount` status
+validation, JWT access/refresh issuance, refresh-session persistence/rotation,
+Redis token blacklisting using `blacklist:<rawToken>`, password-account
+registration persistence, and password updates. Identity also owns
+provider-neutral OAuth Core/State: authorization/callback orchestration, PKCE,
+server-side state lifecycle, and the Redis OAuth state store using
+`oauth:state:<state>`. A Kakao provider adapter is present in this module but
+has not yet cleared independent review as an accepted extraction slice; no
+HTTP endpoint exposes any of this OAuth behavior yet, and no Carelog traffic
+has been cut over to it. Identity auth composition is opt-in:
+`platform.identity.auth.enabled=false` remains foundation mode without the
+Identity Auth runtime. Identity does not have an independent deployable
+process in this repository state. Shared AI is a Kotlin library module hosted
+by the app, not another server.
 
 ## Build structure
 
@@ -97,9 +113,13 @@ docker compose up --build gateway-app platform-core-app
 targets. Pin or roll back `PLATFORM_GATEWAY_IMAGE` and `PLATFORM_CORE_IMAGE`
 independently.
 
-PostgreSQL and Redis remain infrastructure topology only. Identity has typed
-configuration boundaries but no client, schema, migration, table access, or
-business key contract yet.
+PostgreSQL and Redis remain infrastructure services in this topology. Identity
+uses them through its own schema, migrations, persistence adapters, token
+blacklist adapter, and OAuth state store, while Carelog User/Profile, Customer,
+Manager, Organization/Workspace authorization, Product enrollment, and Carelog
+business authorization remain outside this module. `PlatformAccount` existence
+is distinct from authentication success, Carelog profile/claims existence, and
+Carelog authorization success.
 
 ## Scope boundary
 

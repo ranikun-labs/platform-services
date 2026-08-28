@@ -22,12 +22,12 @@ import com.ranikunlabs.platform.identity.application.port.TokenSessionPort;
 import com.ranikunlabs.platform.identity.application.port.oauth.ExternalIdentityLookupPort;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStore;
 import com.ranikunlabs.platform.identity.application.port.productclient.ProductClientReader;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -75,6 +75,9 @@ class IdentityAuthCompositionTest {
             assertThat(context).hasSingleBean(AuthService.class);
             assertThat(context).hasSingleBean(CRMIdentityProjectionPort.class);
             assertThat(context).hasSingleBean(OAuthStateStore.class);
+            // Proves the production ObjectMapper (Jackson 3) comes from the real OAuth
+            // composition, not from a test-only fixture bean masking a missing production bean.
+            assertThat(context).hasSingleBean(ObjectMapper.class);
 
             assertThat(context.getBean(TokenProviderPort.class))
                     .isSameAs(context.getBean(JwtTokenProvider.class));
@@ -123,11 +126,6 @@ class IdentityAuthCompositionTest {
         @Bean
         ProductClientReader productClientReader() {
             return mock(ProductClientReader.class);
-        }
-
-        @Bean
-        ObjectMapper objectMapper() {
-            return new ObjectMapper();
         }
 
         @Bean

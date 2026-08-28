@@ -24,12 +24,14 @@ import com.ranikunlabs.platform.identity.application.port.oauth.OAuthProviderPor
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthRequestException;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateRecord;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStore;
+import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStoreUnavailableException;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthTokenGrant;
 import com.ranikunlabs.platform.identity.application.port.productclient.ProductClientReader;
 import com.ranikunlabs.platform.identity.application.port.productclient.RegisteredProductClient;
 import com.ranikunlabs.platform.identity.core.Product;
 import com.ranikunlabs.platform.identity.core.ProductClientChannel;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mock.env.MockEnvironment;
 
 import java.net.URI;
@@ -181,6 +183,116 @@ class OAuthApplicationServiceTest {
     }
 
     @Test
+    void stateStoreOutagePropagatesRatherThanBeingTreatedAsInvalidOrExpiredState() {
+        CapturingProvider provider = new CapturingProvider("neutral", false, true);
+        OAuthStateStoreUnavailableException outage =
+                new OAuthStateStoreUnavailableException("redis down", new RuntimeException());
+        OAuthStateStore failingStateStore = new OAuthStateStore() {
+            @Override
+            public void save(String state, OAuthStateRecord record, Duration ttl) {
+            }
+
+            @Override
+            public Optional<OAuthStateRecord> consume(String state) {
+                throw outage;
+            }
+        };
+        OAuthLoginService service = new OAuthLoginService(new OAuthProviderRegistry(List.of(provider)),
+                failingStateStore, (providerCode, providerSubject) -> Optional.empty(),
+                mock(CRMIdentityProjectionPort.class), mock(AuthTokenIssuanceService.class));
+
+        assertThatThrownBy(() -> service.completeLogin(new OAuthCallbackCommand("neutral", "code", "state")))
+                .isSameAs(outage);
+        assertThat(provider.exchangeCalled).isFalse();
+    }
+
+    @Test
+    void externalIdentityLookupSystemFailurePropagatesRatherThanBeingTreatedAsExternalIdentityConflict() {
+        CapturingStateStore stateStore = new CapturingStateStore();
+        stateStore.record = state();
+        CapturingProvider provider = new CapturingProvider("neutral", false, true);
+        provider.principal = new OAuthPrincipal("neutral", "subject", "person@example.test", true, "Person");
+        ExternalIdentityLookupPort external = mock(ExternalIdentityLookupPort.class);
+        RuntimeException lookupOutage = new RuntimeException("external identity store unavailable");
+        when(external.findByProviderSubject("neutral", "subject")).thenThrow(lookupOutage);
+        OAuthLoginService service = new OAuthLoginService(new OAuthProviderRegistry(List.of(provider)), stateStore,
+                external, mock(CRMIdentityProjectionPort.class), mock(AuthTokenIssuanceService.class));
+
+        assertThatThrownBy(() -> service.completeLogin(new OAuthCallbackCommand("neutral", "code", "state")))
+                .isSameAs(lookupOutage);
+    }
+
+    @Test
+    void crmProjectionSystemFailurePropagatesRatherThanBeingTreatedAsOrphanedIdentity() {
+        CapturingStateStore stateStore = new CapturingStateStore();
+        stateStore.record = state();
+        CapturingProvider provider = new CapturingProvider("neutral", false, true);
+        provider.principal = new OAuthPrincipal("neutral", "subject", null, false, null);
+        UUID accountId = UUID.randomUUID();
+        ExternalIdentityLookupPort external = mock(ExternalIdentityLookupPort.class);
+        when(external.findByProviderSubject("neutral", "subject"))
+                .thenReturn(Optional.of(new LinkedAccountView(accountId, LinkedAccountStatus.ACTIVE)));
+        CRMIdentityProjectionPort claimsPort = mock(CRMIdentityProjectionPort.class);
+        RuntimeException projectionOutage = new RuntimeException("claims projection unavailable");
+        when(claimsPort.findIdentityClaims(accountId)).thenThrow(projectionOutage);
+        OAuthLoginService service = new OAuthLoginService(new OAuthProviderRegistry(List.of(provider)), stateStore,
+                external, claimsPort, mock(AuthTokenIssuanceService.class));
+
+        // Distinguish a genuine system failure (propagate) from claims legitimately absent
+        // (loginIssuesExistingAccountTokensOnlyAfterActiveExternalIdentityAndClaims's sibling
+        // orphaned-identity path uses Optional.empty(), never an exception).
+        assertThatThrownBy(() -> service.completeLogin(new OAuthCallbackCommand("neutral", "code", "state")))
+                .isSameAs(projectionOutage);
+    }
+
+    @Test
+    void tokenIssuanceFailurePropagatesRatherThanBeingAbsorbedIntoAnOAuthLoginResult() {
+        CapturingStateStore stateStore = new CapturingStateStore();
+        stateStore.record = state();
+        CapturingProvider provider = new CapturingProvider("neutral", false, true);
+        provider.principal = new OAuthPrincipal("neutral", "subject", null, false, null);
+        UUID accountId = UUID.randomUUID();
+        ExternalIdentityLookupPort external = mock(ExternalIdentityLookupPort.class);
+        when(external.findByProviderSubject("neutral", "subject"))
+                .thenReturn(Optional.of(new LinkedAccountView(accountId, LinkedAccountStatus.ACTIVE)));
+        CRMIdentityProjectionPort claimsPort = mock(CRMIdentityProjectionPort.class);
+        CRMIdentityClaims claims = new CRMIdentityClaims(UUID.randomUUID(), "MANAGER", UUID.randomUUID());
+        when(claimsPort.findIdentityClaims(accountId)).thenReturn(Optional.of(claims));
+        AuthTokenIssuanceService tokenService = mock(AuthTokenIssuanceService.class);
+        RuntimeException jwtFailure = new RuntimeException("JWT signing key unavailable");
+        when(tokenService.issue(accountId, claims)).thenThrow(jwtFailure);
+        OAuthLoginService service = new OAuthLoginService(new OAuthProviderRegistry(List.of(provider)), stateStore,
+                external, claimsPort, tokenService);
+
+        assertThatThrownBy(() -> service.completeLogin(new OAuthCallbackCommand("neutral", "code", "state")))
+                .isSameAs(jwtFailure);
+    }
+
+    @Test
+    void refreshSessionPersistenceFailurePropagatesRatherThanBeingAbsorbedIntoAnOAuthLoginResult() {
+        CapturingStateStore stateStore = new CapturingStateStore();
+        stateStore.record = state();
+        CapturingProvider provider = new CapturingProvider("neutral", false, true);
+        provider.principal = new OAuthPrincipal("neutral", "subject", null, false, null);
+        UUID accountId = UUID.randomUUID();
+        ExternalIdentityLookupPort external = mock(ExternalIdentityLookupPort.class);
+        when(external.findByProviderSubject("neutral", "subject"))
+                .thenReturn(Optional.of(new LinkedAccountView(accountId, LinkedAccountStatus.ACTIVE)));
+        CRMIdentityProjectionPort claimsPort = mock(CRMIdentityProjectionPort.class);
+        CRMIdentityClaims claims = new CRMIdentityClaims(UUID.randomUUID(), "MANAGER", UUID.randomUUID());
+        when(claimsPort.findIdentityClaims(accountId)).thenReturn(Optional.of(claims));
+        AuthTokenIssuanceService tokenService = mock(AuthTokenIssuanceService.class);
+        TransientDataAccessResourceException sessionPersistenceFailure =
+                new TransientDataAccessResourceException("refresh session persistence failed");
+        when(tokenService.issue(accountId, claims)).thenThrow(sessionPersistenceFailure);
+        OAuthLoginService service = new OAuthLoginService(new OAuthProviderRegistry(List.of(provider)), stateStore,
+                external, claimsPort, tokenService);
+
+        assertThatThrownBy(() -> service.completeLogin(new OAuthCallbackCommand("neutral", "code", "state")))
+                .isSameAs(sessionPersistenceFailure);
+    }
+
+    @Test
     void redirectResolverUsesClientSpecificConfigAndLegacyCompatibilityOnlyForCarelogDefaults() {
         MockEnvironment environment = new MockEnvironment()
                 .withProperty("oauth.redirect-uris.neutral.WEB", REDIRECT.toString());
@@ -190,6 +302,22 @@ class OAuthApplicationServiceTest {
                 "carelog-web", Product.CARELOG, ProductClientChannel.WEB))).isEqualTo(REDIRECT);
         assertThatThrownBy(() -> resolver.resolve("neutral", new RegisteredProductClient(
                 "finance-web", Product.CARELOG, ProductClientChannel.WEB)))
+                .isInstanceOf(OAuthRequestException.class)
+                .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
+                        .isEqualTo(OAuthRequestException.Reason.UNSUPPORTED_CLIENT_CHANNEL));
+    }
+
+    @Test
+    void redirectResolverFailsClosedWhenTheConfiguredCallbackUriIsRelative() {
+        // A relative configured value (e.g. an operator typo dropping the scheme/host) must never
+        // be accepted as a redirect target: it would let the browser resolve it against whatever
+        // origin is currently loaded, i.e. an open redirect.
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("oauth.redirect-uris.neutral.WEB", "/oauth/callback");
+        OAuthRedirectUriResolver resolver = new OAuthRedirectUriResolver(environment);
+
+        assertThatThrownBy(() -> resolver.resolve("neutral", new RegisteredProductClient(
+                "carelog-web", Product.CARELOG, ProductClientChannel.WEB)))
                 .isInstanceOf(OAuthRequestException.class)
                 .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
                         .isEqualTo(OAuthRequestException.Reason.UNSUPPORTED_CLIENT_CHANNEL));
@@ -207,6 +335,30 @@ class OAuthApplicationServiceTest {
                 .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
                         .isEqualTo(OAuthRequestException.Reason.INVALID_OAUTH_RETURN_TO));
         assertThatThrownBy(() -> validator.validate("/\\evil.example.test"))
+                .isInstanceOf(OAuthRequestException.class);
+    }
+
+    @Test
+    void returnToValidatorRejectsAnAbsoluteUriOnAnUnlistedOrigin() {
+        // The primary open-redirect guard: an absolute returnTo must be rejected unless its exact
+        // origin is on the allowlist, regardless of how plausible the host looks.
+        ReturnToValidator validator = new ReturnToValidator(List.of("https://app.example.test"));
+
+        assertThatThrownBy(() -> validator.validate("https://evil.example.test/dashboard"))
+                .isInstanceOf(OAuthRequestException.class)
+                .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
+                        .isEqualTo(OAuthRequestException.Reason.INVALID_OAUTH_RETURN_TO));
+    }
+
+    @Test
+    void returnToValidatorRejectsEncodedSeparatorsUsedToDisguiseAnAbsoluteRedirect() {
+        ReturnToValidator validator = new ReturnToValidator(List.of("https://app.example.test"));
+
+        assertThatThrownBy(() -> validator.validate("/%2fevil.example.test"))
+                .isInstanceOf(OAuthRequestException.class)
+                .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
+                        .isEqualTo(OAuthRequestException.Reason.INVALID_OAUTH_RETURN_TO));
+        assertThatThrownBy(() -> validator.validate("/%5Cevil.example.test"))
                 .isInstanceOf(OAuthRequestException.class);
     }
 

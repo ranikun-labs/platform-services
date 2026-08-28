@@ -70,6 +70,7 @@ class IdentityAccountRegistrationJpaAdapterTest {
         assertThat(credentialCaptor.getValue().getAccountId()).isEqualTo(account.getId());
         assertThat(credentialCaptor.getValue().getLoginId()).isEqualTo("manager1");
         assertThat(credentialCaptor.getValue().getPasswordHash()).isEqualTo("encoded-hash");
+        verify(passwordCredentialRepository).flush();
     }
 
     @Test

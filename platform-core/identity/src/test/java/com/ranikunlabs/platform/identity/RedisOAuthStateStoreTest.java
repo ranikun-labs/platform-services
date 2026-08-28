@@ -1,7 +1,5 @@
 package com.ranikunlabs.platform.identity;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ranikunlabs.platform.identity.adapter.redis.RedisOAuthStateStore;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateRecord;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStoreUnavailableException;
@@ -13,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.net.URI;
 import java.time.Duration;
@@ -37,7 +36,7 @@ class RedisOAuthStateStoreTest {
 
     @BeforeEach
     void setUp() {
-        store = new RedisOAuthStateStore(redisTemplate, new ObjectMapper().registerModule(new JavaTimeModule()));
+        store = new RedisOAuthStateStore(redisTemplate, JsonMapper.builder().build());
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
@@ -51,7 +50,7 @@ class RedisOAuthStateStoreTest {
         verify(valueOperations).set(anyString(), org.mockito.ArgumentMatchers.contains("\"provider\":\"kakao\""),
                 org.mockito.ArgumentMatchers.eq(Duration.ofMinutes(5)));
 
-        String json = new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(record);
+        String json = JsonMapper.builder().build().writeValueAsString(record);
         when(valueOperations.getAndDelete("oauth:state:state-value")).thenReturn(json);
         assertThat(store.consume("state-value")).contains(record);
         verify(valueOperations).getAndDelete("oauth:state:state-value");

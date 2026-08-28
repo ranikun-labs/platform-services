@@ -7,6 +7,7 @@ import com.ranikunlabs.platform.identity.adapter.persistence.repository.Platform
 import com.ranikunlabs.platform.identity.application.port.DuplicateLoginIdException;
 import com.ranikunlabs.platform.identity.application.port.IdentityAccount;
 import com.ranikunlabs.platform.identity.application.port.IdentityAccountRegistrationPort;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -42,8 +43,19 @@ public class IdentityAccountRegistrationJpaAdapter implements IdentityAccountReg
         String encodedPasswordHash = passwordEncoder.encode(rawPassword);
         PlatformAccountEntity account = platformAccountRepository.save(
                 PlatformAccountEntity.create(email));
-        passwordCredentialRepository.save(
-                PasswordCredentialEntity.create(account.getId(), loginId, encodedPasswordHash));
+        try {
+            passwordCredentialRepository.save(
+                    PasswordCredentialEntity.create(account.getId(), loginId, encodedPasswordHash));
+            // The unique constraint is the authoritative concurrency guard. Flush while this
+            // adapter transaction is still inside the translation boundary so a concurrent
+            // duplicate has the same typed contract as the pre-check path.
+            passwordCredentialRepository.flush();
+        } catch (DataIntegrityViolationException exception) {
+            if (IdentityConstraintViolationTranslator.isPasswordCredentialLoginIdViolation(exception)) {
+                throw new DuplicateLoginIdException();
+            }
+            throw exception;
+        }
 
         return new IdentityAccount(account.getId(), loginId, encodedPasswordHash);
     }
