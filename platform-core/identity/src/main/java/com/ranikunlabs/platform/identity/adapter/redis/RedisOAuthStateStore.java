@@ -1,7 +1,5 @@
 package com.ranikunlabs.platform.identity.adapter.redis;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateRecord;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStore;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStoreUnavailableException;
@@ -9,6 +7,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -30,7 +30,7 @@ public class RedisOAuthStateStore implements OAuthStateStore {
     public void save(String state, OAuthStateRecord record, Duration ttl) {
         try {
             redisTemplate.opsForValue().set(key(state), objectMapper.writeValueAsString(record), ttl);
-        } catch (JsonProcessingException | RedisConnectionFailureException | QueryTimeoutException exception) {
+        } catch (JacksonException | RedisConnectionFailureException | QueryTimeoutException exception) {
             throw unavailable(exception);
         } catch (DataAccessException exception) {
             throw unavailable(exception);
@@ -45,7 +45,7 @@ public class RedisOAuthStateStore implements OAuthStateStore {
                 return Optional.empty();
             }
             return Optional.of(objectMapper.readValue(value, OAuthStateRecord.class));
-        } catch (JsonProcessingException | RedisConnectionFailureException | QueryTimeoutException exception) {
+        } catch (JacksonException | RedisConnectionFailureException | QueryTimeoutException exception) {
             throw unavailable(exception);
         } catch (DataAccessException exception) {
             throw unavailable(exception);
