@@ -19,6 +19,10 @@ import com.ranikunlabs.platform.identity.application.port.CredentialPort;
 import com.ranikunlabs.platform.identity.application.port.TokenBlacklistPort;
 import com.ranikunlabs.platform.identity.application.port.TokenProviderPort;
 import com.ranikunlabs.platform.identity.application.port.TokenSessionPort;
+import com.ranikunlabs.platform.identity.application.port.oauth.ExternalIdentityLookupPort;
+import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStore;
+import com.ranikunlabs.platform.identity.application.port.productclient.ProductClientReader;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -70,6 +74,7 @@ class IdentityAuthCompositionTest {
             assertThat(context).hasSingleBean(AuthServiceImpl.class);
             assertThat(context).hasSingleBean(AuthService.class);
             assertThat(context).hasSingleBean(CRMIdentityProjectionPort.class);
+            assertThat(context).hasSingleBean(OAuthStateStore.class);
 
             assertThat(context.getBean(TokenProviderPort.class))
                     .isSameAs(context.getBean(JwtTokenProvider.class));
@@ -108,6 +113,21 @@ class IdentityAuthCompositionTest {
         @Bean
         CRMIdentityProjectionPort crmIdentityProjectionPort() {
             return mock(CRMIdentityProjectionPort.class);
+        }
+
+        @Bean
+        ExternalIdentityLookupPort externalIdentityLookupPort() {
+            return mock(ExternalIdentityLookupPort.class);
+        }
+
+        @Bean
+        ProductClientReader productClientReader() {
+            return mock(ProductClientReader.class);
+        }
+
+        @Bean
+        ObjectMapper objectMapper() {
+            return new ObjectMapper();
         }
 
         @Bean

@@ -37,7 +37,8 @@ import java.time.Clock;
         RedisTokenBlacklistAdapter.class,
         IdentityRedisConfiguration.class,
         AuthTokenIssuanceService.class,
-        AuthServiceImpl.class
+        AuthServiceImpl.class,
+        IdentityOAuthConfiguration.class
 })
 public class IdentityAuthConfiguration {
 
