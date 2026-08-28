@@ -308,6 +308,22 @@ class OAuthApplicationServiceTest {
     }
 
     @Test
+    void redirectResolverFailsClosedWhenTheConfiguredCallbackUriIsRelative() {
+        // A relative configured value (e.g. an operator typo dropping the scheme/host) must never
+        // be accepted as a redirect target: it would let the browser resolve it against whatever
+        // origin is currently loaded, i.e. an open redirect.
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("oauth.redirect-uris.neutral.WEB", "/oauth/callback");
+        OAuthRedirectUriResolver resolver = new OAuthRedirectUriResolver(environment);
+
+        assertThatThrownBy(() -> resolver.resolve("neutral", new RegisteredProductClient(
+                "carelog-web", Product.CARELOG, ProductClientChannel.WEB)))
+                .isInstanceOf(OAuthRequestException.class)
+                .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
+                        .isEqualTo(OAuthRequestException.Reason.UNSUPPORTED_CLIENT_CHANNEL));
+    }
+
+    @Test
     void returnToValidatorRejectsOpenRedirectAndKeepsSafeRelativeInputVerbatim() {
         ReturnToValidator validator = new ReturnToValidator(List.of("https://app.example.test"));
 
@@ -319,6 +335,30 @@ class OAuthApplicationServiceTest {
                 .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
                         .isEqualTo(OAuthRequestException.Reason.INVALID_OAUTH_RETURN_TO));
         assertThatThrownBy(() -> validator.validate("/\\evil.example.test"))
+                .isInstanceOf(OAuthRequestException.class);
+    }
+
+    @Test
+    void returnToValidatorRejectsAnAbsoluteUriOnAnUnlistedOrigin() {
+        // The primary open-redirect guard: an absolute returnTo must be rejected unless its exact
+        // origin is on the allowlist, regardless of how plausible the host looks.
+        ReturnToValidator validator = new ReturnToValidator(List.of("https://app.example.test"));
+
+        assertThatThrownBy(() -> validator.validate("https://evil.example.test/dashboard"))
+                .isInstanceOf(OAuthRequestException.class)
+                .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
+                        .isEqualTo(OAuthRequestException.Reason.INVALID_OAUTH_RETURN_TO));
+    }
+
+    @Test
+    void returnToValidatorRejectsEncodedSeparatorsUsedToDisguiseAnAbsoluteRedirect() {
+        ReturnToValidator validator = new ReturnToValidator(List.of("https://app.example.test"));
+
+        assertThatThrownBy(() -> validator.validate("/%2fevil.example.test"))
+                .isInstanceOf(OAuthRequestException.class)
+                .satisfies(error -> assertThat(((OAuthRequestException) error).reason())
+                        .isEqualTo(OAuthRequestException.Reason.INVALID_OAUTH_RETURN_TO));
+        assertThatThrownBy(() -> validator.validate("/%5Cevil.example.test"))
                 .isInstanceOf(OAuthRequestException.class);
     }
 
