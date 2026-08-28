@@ -8,9 +8,19 @@ boundaries:
 - `platform-core`: the Spring MVC modular-monolith process on port `8081`.
 
 Platform Core hosts the logical modules `identity` and `shared-ai`. Identity
-remains Java and owns no Auth/OAuth behavior, persistence, schema, migration,
-or independent deployable process in this repository state. Shared AI is a
-Kotlin library module hosted by the app, not another server.
+remains a Java library/logical module and owns framework-neutral Identity
+contracts plus its relational persistence: the `platform_accounts`,
+`password_credentials`, `external_identities`, `refresh_token`, and
+`product_clients` tables, their Flyway schema/migration, JPA repositories, and
+persistence adapters. Its extracted password-authentication and token-lifecycle
+capabilities include credential authentication, `PlatformAccount` status
+validation, JWT access/refresh issuance, refresh-session persistence/rotation,
+Redis token blacklisting using `blacklist:<rawToken>`, password-account
+registration persistence, and password updates. Identity auth composition is
+opt-in: `platform.identity.auth.enabled=false` remains foundation mode without
+the Identity Auth runtime. OAuth application/provider behavior is not part of
+the current implementation. Shared AI is a Kotlin library module hosted by the
+app, not another server.
 
 ## Build structure
 
@@ -97,9 +107,13 @@ docker compose up --build gateway-app platform-core-app
 targets. Pin or roll back `PLATFORM_GATEWAY_IMAGE` and `PLATFORM_CORE_IMAGE`
 independently.
 
-PostgreSQL and Redis remain infrastructure topology only. Identity has typed
-configuration boundaries but no client, schema, migration, table access, or
-business key contract yet.
+PostgreSQL and Redis remain infrastructure services in this topology. Identity
+uses them through its own schema, migrations, persistence adapters, and token
+blacklist adapter, while Carelog User/Profile, Customer, Manager,
+Organization/Workspace authorization, Product enrollment, and Carelog business
+authorization remain outside this module. `PlatformAccount` existence is
+distinct from authentication success, Carelog profile/claims existence, and
+Carelog authorization success.
 
 ## Scope boundary
 
@@ -108,3 +122,12 @@ implement a real provider, corpus ingestion, vector lifecycle, Product Tool
 integration, production authorization, Finance/Carelog behavior, Commerce, or
 Audit. The internal HTTP execution route exists only in the integration-test
 boundary; normal runtime does not expose the unauthenticated fixture flow.
+
+Identity's current password-authentication and token-lifecycle capabilities do
+not include OAuth application orchestration, authorization/callback flows,
+Redis OAuth State, PKCE runtime behavior, Kakao, or OAuth HTTP compatibility
+endpoints. Framework-neutral OAuth contracts do not imply an implemented OAuth
+runtime. Identity account registration persistence is not Carelog user/profile
+enrollment or authorization; Carelog migration/cutover including RPL-55,
+Finance consumer adapters, and RPL-107 Bedrock/provider/streaming functionality
+remain outside the current baseline.
