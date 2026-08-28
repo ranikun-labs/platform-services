@@ -23,6 +23,9 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
+    // OAuth state serialization for RedisOAuthStateStore. Jackson 3's databind module has JSR-310
+    // support built in, so no separate datatype module is required (version managed by the Spring Boot BOM).
+    implementation("tools.jackson.core:jackson-databind")
 
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
