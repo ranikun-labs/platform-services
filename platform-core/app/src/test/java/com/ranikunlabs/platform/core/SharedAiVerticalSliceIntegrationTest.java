@@ -36,6 +36,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "platform.identity.redis-host=redis",
                 "platform.identity.redis-port=6379",
                 "platform.identity.redis-key-prefix=platform:identity:",
+                "platform.identity.auth.enabled=false",
+                "platform.identity.persistence.enabled=false",
+                "spring.autoconfigure.exclude="
+                        + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
+                        + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
+                        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration",
                 "platform.shared-ai.foundation.enabled=true"
         })
 @AutoConfigureMockMvc
