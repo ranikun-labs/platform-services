@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.identity;
 
+import com.ranikunlabs.platform.identity.adapter.http.IdentityHttpConfiguration;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.redis.IdentityRedisConfiguration;
@@ -38,7 +39,8 @@ import java.time.Clock;
         IdentityRedisConfiguration.class,
         AuthTokenIssuanceService.class,
         AuthServiceImpl.class,
-        IdentityOAuthConfiguration.class
+        IdentityOAuthConfiguration.class,
+        IdentityHttpConfiguration.class
 })
 public class IdentityAuthConfiguration {
 
