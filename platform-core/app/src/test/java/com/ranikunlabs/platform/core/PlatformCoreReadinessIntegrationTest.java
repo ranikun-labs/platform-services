@@ -1,11 +1,13 @@
 package com.ranikunlabs.platform.core;
 
+import com.ranikunlabs.platform.identity.adapter.http.AuthController;
 import com.ranikunlabs.platform.identity.IdentityRuntimeProperties;
 import com.ranikunlabs.platform.sharedai.SharedAiModuleConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,10 +46,14 @@ class PlatformCoreReadinessIntegrationTest {
     @Autowired
     private SharedAiModuleConfiguration sharedAiModuleConfiguration;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     @Test
     void hostsIdentityAndSharedAiAndExposesPlatformCoreReadiness() throws Exception {
         assertThat(identityRuntimeProperties.redisKeyPrefix()).isEqualTo("platform:identity:");
         assertThat(sharedAiModuleConfiguration).isNotNull();
+        assertThat(applicationContext.getBeansOfType(AuthController.class)).isEmpty();
 
         mockMvc.perform(get("/actuator/health/readiness"))
                 .andExpect(status().isOk())
