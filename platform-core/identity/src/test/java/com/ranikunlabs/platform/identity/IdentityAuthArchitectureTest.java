@@ -23,6 +23,31 @@ class IdentityAuthArchitectureTest {
             );
 
     @ArchTest
+    static final ArchRule applicationOrchestrationDoesNotImportHttpFramework = noClasses()
+            .that()
+            .resideInAnyPackage("com.ranikunlabs.platform.identity.application..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(
+                    "jakarta.servlet..",
+                    "org.springframework.http..",
+                    "org.springframework.web..",
+                    "org.springframework.security.."
+            );
+
+    @ArchTest
+    static final ArchRule httpAdapterDoesNotBypassInfrastructureAdapters = noClasses()
+            .that()
+            .resideInAnyPackage("com.ranikunlabs.platform.identity.adapter.http..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.ranikunlabs.platform.identity.adapter.persistence..",
+                    "com.ranikunlabs.platform.identity.adapter.redis..",
+                    "com.ranikunlabs.platform.identity.adapter.oauth.kakao.."
+            );
+
+    @ArchTest
     static final ArchRule identityImplementationDoesNotImportCarelogTypes = noClasses()
             .should()
             .dependOnClassesThat()
