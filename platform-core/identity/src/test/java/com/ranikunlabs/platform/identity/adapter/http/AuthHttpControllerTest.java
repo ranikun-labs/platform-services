@@ -5,6 +5,7 @@ import com.ranikunlabs.platform.identity.application.AuthService;
 import com.ranikunlabs.platform.identity.application.oauth.OAuthAuthorizationService;
 import com.ranikunlabs.platform.identity.application.oauth.OAuthLoginService;
 import com.ranikunlabs.platform.identity.application.port.AuthTokenBundle;
+import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionException;
 import com.ranikunlabs.platform.identity.application.port.InvalidCredentialsException;
 import com.ranikunlabs.platform.identity.application.port.TokenLifecycleException;
 import com.ranikunlabs.platform.identity.application.port.oauth.ClientChannel;
@@ -118,6 +119,44 @@ class AuthHttpControllerTest {
                 .isEqualTo(wrongPassword.getResponse().getContentAsString())
                 .contains("아이디 또는 비밀번호가 일치하지 않습니다.")
                 .doesNotContain("unknown", "manager", "password");
+    }
+
+    @Test
+    void loginMapsMissingProductProfileToNotFound() throws Exception {
+        doThrow(new CRMIdentityProjectionException(
+                CRMIdentityProjectionException.Reason.PRODUCT_PROFILE_NOT_FOUND))
+                .when(authService).login("manager", "password123");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":\"manager\",\"password\":\"password123\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Product identity 정보를 찾을 수 없습니다."))
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = CRMIdentityProjectionException.Reason.class, names = {
+            "DEPENDENCY_AUTH_FAILURE",
+            "DEPENDENCY_UNAVAILABLE",
+            "DEPENDENCY_CONTRACT_FAILURE"
+    })
+    void loginMapsProductDependencyFailuresToServiceUnavailable(
+            CRMIdentityProjectionException.Reason reason
+    ) throws Exception {
+        doThrow(new CRMIdentityProjectionException(reason))
+                .when(authService).login("manager", "password123");
+
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":\"manager\",\"password\":\"password123\"}"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("Product identity 정보를 사용할 수 없습니다."))
+                .andExpect(jsonPath("$.data").doesNotExist())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString())
+                .doesNotContain(reason.name(), "CRMIdentityProjectionException");
     }
 
     @Test

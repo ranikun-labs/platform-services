@@ -3,6 +3,7 @@ package com.ranikunlabs.platform.identity;
 import com.ranikunlabs.platform.identity.adapter.http.IdentityHttpConfiguration;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
+import com.ranikunlabs.platform.identity.adapter.productclaims.CarelogProductClaimsClientConfiguration;
 import com.ranikunlabs.platform.identity.adapter.redis.IdentityRedisConfiguration;
 import com.ranikunlabs.platform.identity.adapter.redis.RedisTokenBlacklistAdapter;
 import com.ranikunlabs.platform.identity.adapter.security.IdentityCredentialAdapter;
@@ -27,8 +28,9 @@ import java.time.Clock;
  * <p>The explicit opt-in keeps the foundation host/readiness mode bootable while Identity Auth,
  * OAuth, and HTTP runtime composition remain disabled by default. Enabling
  * {@code platform.identity.auth.enabled=true} composes those runtimes and requires the canonical
- * {@code jwt.*} values and a Product-owned CRM claims port bean. Production Product claims
- * integration and Carelog traffic cutover remain outside this module.
+ * {@code jwt.*} values. When the opt-in Product claims settings are enabled, the composition
+ * includes the Platform-owned HTTP adapter for the Carelog-owned claims boundary. Product claims
+ * meaning and Carelog traffic cutover remain outside Shared Identity.
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "platform.identity.auth.enabled", havingValue = "true")
@@ -41,6 +43,7 @@ import java.time.Clock;
         IdentityRedisConfiguration.class,
         AuthTokenIssuanceService.class,
         AuthServiceImpl.class,
+        CarelogProductClaimsClientConfiguration.class,
         IdentityOAuthConfiguration.class,
         IdentityHttpConfiguration.class
 })

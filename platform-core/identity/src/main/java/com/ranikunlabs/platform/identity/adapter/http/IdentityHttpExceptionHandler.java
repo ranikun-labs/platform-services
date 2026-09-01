@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.identity.adapter.http;
 
 import com.ranikunlabs.platform.identity.adapter.http.dto.response.ApiResponse;
+import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionException;
 import com.ranikunlabs.platform.identity.application.port.InvalidCredentialsException;
 import com.ranikunlabs.platform.identity.application.port.TokenLifecycleException;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthProviderException;
@@ -22,6 +23,18 @@ public class IdentityHttpExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidCredentials(InvalidCredentialsException ignored) {
         return error(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호가 일치하지 않습니다.");
+    }
+
+    @ExceptionHandler(CRMIdentityProjectionException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCRMIdentityProjection(
+            CRMIdentityProjectionException exception
+    ) {
+        return switch (exception.reason()) {
+            case PRODUCT_PROFILE_NOT_FOUND -> error(
+                    HttpStatus.NOT_FOUND, "Product identity 정보를 찾을 수 없습니다.");
+            case DEPENDENCY_AUTH_FAILURE, DEPENDENCY_UNAVAILABLE, DEPENDENCY_CONTRACT_FAILURE -> error(
+                    HttpStatus.SERVICE_UNAVAILABLE, "Product identity 정보를 사용할 수 없습니다.");
+        };
     }
 
     @ExceptionHandler(TokenLifecycleException.class)
