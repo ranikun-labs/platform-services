@@ -44,16 +44,88 @@ data class ModelResult(
     val sourceReference: String,
     val producerReference: String,
     val interpretation: String,
+    val usage: ModelUsage? = null,
 )
 
 fun interface ModelGateway {
     fun interpret(request: ModelRequest): ModelResult
 }
 
+data class ModelUsage(
+    val inputTokens: Int?,
+    val outputTokens: Int?,
+    val totalTokens: Int?,
+)
+
+enum class ModelFailureCategory {
+    AUTHENTICATION,
+    RATE_LIMITED,
+    TIMEOUT,
+    PROVIDER_UNAVAILABLE,
+    INVALID_REQUEST,
+    CANCELLED,
+    UNKNOWN_PROVIDER_FAILURE,
+}
+
+class ModelGatewayException(
+    val category: ModelFailureCategory,
+    cause: Throwable? = null,
+) : RuntimeException("Model provider call failed: ${category.name}", cause)
+
+data class ModelCompletion(
+    val executionReference: String,
+    val scope: ExecutionScope,
+    val sourceReference: String,
+    val producerReference: String,
+    val usage: ModelUsage?,
+)
+
+sealed interface ModelStreamEvent {
+    val executionReference: String
+
+    data class Started(
+        override val executionReference: String,
+    ) : ModelStreamEvent
+
+    data class ContentDelta(
+        override val executionReference: String,
+        val text: String,
+    ) : ModelStreamEvent {
+        init {
+            require(text.isNotEmpty()) { "model stream delta must not be empty" }
+        }
+    }
+
+    data class Completed(
+        val completion: ModelCompletion,
+    ) : ModelStreamEvent {
+        override val executionReference: String = completion.executionReference
+    }
+
+    data class Failed(
+        override val executionReference: String,
+        val category: ModelFailureCategory,
+    ) : ModelStreamEvent
+}
+
+fun interface ModelStreamObserver {
+    fun onEvent(event: ModelStreamEvent)
+}
+
+fun interface ModelStreamCancellation {
+    fun cancel()
+}
+
+fun interface StreamingModelGateway {
+    fun stream(request: ModelRequest, observer: ModelStreamObserver): ModelStreamCancellation
+}
+
 enum class ExecutionStage {
     PRODUCT_TOOL,
     RETRIEVER,
     MODEL,
+    MODEL_FIRST_TOKEN,
+    MODEL_STREAM,
     CORRELATION,
     TOTAL,
 }

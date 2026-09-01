@@ -3,11 +3,26 @@ spring:
     name: platform-core-app
   main:
     web-application-type: servlet
+  ai:
+    model:
+      chat: none
 
 server:
   port: ${PLATFORM_CORE_PORT}
 
 platform:
+  shared-ai:
+    foundation:
+      enabled: ${SHARED_AI_FOUNDATION_ENABLED:false}
+    bedrock:
+      enabled: ${SHARED_AI_BEDROCK_ENABLED:false}
+      region: ${AWS_REGION:}
+      model-id: ${SHARED_AI_BEDROCK_MODEL_ID:}
+      max-tokens: ${SHARED_AI_BEDROCK_MAX_TOKENS:128}
+      timeout: ${SHARED_AI_BEDROCK_TIMEOUT:30s}
+      connection-timeout: ${SHARED_AI_BEDROCK_CONNECTION_TIMEOUT:5s}
+      read-timeout: ${SHARED_AI_BEDROCK_READ_TIMEOUT:30s}
+      max-concurrent-requests: ${SHARED_AI_BEDROCK_MAX_CONCURRENT_REQUESTS:8}
   identity:
     datasource:
       url: ${PLATFORM_IDENTITY_DATASOURCE_URL:}

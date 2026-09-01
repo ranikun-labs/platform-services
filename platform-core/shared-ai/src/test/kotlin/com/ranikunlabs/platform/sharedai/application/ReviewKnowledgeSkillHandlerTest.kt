@@ -238,12 +238,15 @@ class ReviewKnowledgeSkillHandlerTest {
         modelGateway: ModelGateway,
         telemetry: ExecutionTelemetry = RecordingTelemetry(),
     ) = ReviewKnowledgeSkillHandler(
-        productTool,
-        retriever,
         modelGateway,
         telemetry,
-        PortResultCorrelationValidator(),
-        clock,
+        ReviewKnowledgeExecutionSupport(
+            productTool,
+            retriever,
+            telemetry,
+            PortResultCorrelationValidator(),
+            clock,
+        ),
     )
 
     private fun command() = ExecutionCommand(context, SkillId.REVIEW_KNOWLEDGE, "review the current state")

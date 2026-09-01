@@ -2,6 +2,7 @@ package com.ranikunlabs.platform.sharedai.application
 
 import com.ranikunlabs.platform.sharedai.core.Evidence
 import com.ranikunlabs.platform.sharedai.core.ExecutionContext
+import com.ranikunlabs.platform.sharedai.ports.ModelUsage
 
 data class SkillId(val value: String) {
     init {
@@ -30,6 +31,13 @@ enum class TechnicalFailureCategory {
     RETRIEVER_FAILURE,
     MODEL_FAILURE,
     CORRELATION_FAILURE,
+    AUTHENTICATION,
+    RATE_LIMITED,
+    TIMEOUT,
+    PROVIDER_UNAVAILABLE,
+    INVALID_REQUEST,
+    CANCELLED,
+    UNKNOWN_PROVIDER_FAILURE,
 }
 
 sealed interface ExecutionResult {
@@ -40,8 +48,16 @@ sealed interface ExecutionResult {
         val interpretation: String,
         val evidence: Evidence,
         warnings: List<String>,
+        val usage: ModelUsage? = null,
     ) : ExecutionResult {
         val warnings: List<String> = java.util.List.copyOf(warnings)
+
+        constructor(
+            executionReference: String,
+            interpretation: String,
+            evidence: Evidence,
+            warnings: List<String>,
+        ) : this(executionReference, interpretation, evidence, warnings, null)
     }
 
     data class TechnicalFailure(

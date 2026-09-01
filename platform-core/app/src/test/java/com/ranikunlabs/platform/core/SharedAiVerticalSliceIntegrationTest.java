@@ -7,11 +7,14 @@ import com.ranikunlabs.platform.sharedai.application.SkillId;
 import com.ranikunlabs.platform.sharedai.core.EvidenceItem;
 import com.ranikunlabs.platform.sharedai.core.ExecutionContext;
 import com.ranikunlabs.platform.sharedai.core.ExecutionScope;
+import com.ranikunlabs.platform.sharedai.adapters.fixture.DeterministicModelGateway;
+import com.ranikunlabs.platform.sharedai.ports.ModelGateway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,8 +55,15 @@ class SharedAiVerticalSliceIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     @Test
     void executesTheHostedDeterministicVerticalSliceThroughATestOnlyTransportBoundary() throws Exception {
+        assertThat(applicationContext.getBeansOfType(ModelGateway.class)).hasSize(1);
+        assertThat(applicationContext.getBean(ModelGateway.class)).isInstanceOf(DeterministicModelGateway.class);
+        assertThat(applicationContext.containsBean("bedrockChatModel")).isFalse();
+        assertThat(applicationContext.containsBean("sharedAiBedrockRuntimeClient")).isFalse();
         mockMvc.perform(post("/internal/shared-ai/execute")
                         .contentType("application/json")
                         .content("""
