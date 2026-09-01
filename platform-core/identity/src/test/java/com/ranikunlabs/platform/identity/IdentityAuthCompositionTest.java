@@ -1,5 +1,8 @@
 package com.ranikunlabs.platform.identity;
 
+import com.ranikunlabs.platform.identity.adapter.http.IdentityAuthController;
+import com.ranikunlabs.platform.identity.adapter.http.IdentityAuthExceptionHandler;
+import com.ranikunlabs.platform.identity.adapter.http.security.IdentityAuthenticationEntryPoint;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.PasswordCredentialJpaRepository;
@@ -30,10 +33,15 @@ import com.ranikunlabs.platform.identity.application.port.oauth.ExternalIdentity
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStore;
 import com.ranikunlabs.platform.identity.application.port.productclient.ProductClientReader;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.web.SecurityFilterChain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -41,6 +49,25 @@ import static org.mockito.Mockito.mock;
 class IdentityAuthCompositionTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withUserConfiguration(IdentityModuleConfiguration.class, AuthCompositionTestConfiguration.class)
+            .withPropertyValues(
+                    "platform.identity.auth.enabled=true",
+                    "platform.identity.persistence.enabled=false",
+                    "platform.identity.datasource.url=jdbc:postgresql://postgres:5432/platform",
+                    "platform.identity.datasource.username=identity",
+                    "platform.identity.datasource.password=provided-at-runtime",
+                    "platform.identity.redis-host=redis",
+                    "platform.identity.redis-port=6379",
+                    "platform.identity.redis-key-prefix=platform:identity:",
+                    "jwt.secret-key=01234567890123456789012345678901",
+                    "jwt.access-token-validity=900000",
+                    "jwt.refresh-token-validity=1209600000");
+
+    /** Same module composition hosted in a Servlet context, where the HTTP boundary applies. */
+    private final WebApplicationContextRunner servletContextRunner = new WebApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(
+                    SecurityAutoConfiguration.class,
+                    ServletWebSecurityAutoConfiguration.class))
             .withUserConfiguration(IdentityModuleConfiguration.class, AuthCompositionTestConfiguration.class)
             .withPropertyValues(
                     "platform.identity.auth.enabled=true",
@@ -100,6 +127,44 @@ class IdentityAuthCompositionTest {
             assertThat(context.getBean(AuthService.class))
                     .isSameAs(context.getBean(AuthServiceImpl.class));
         });
+    }
+
+    @Test
+    void doesNotComposeTheHttpBoundaryOutsideAServletContext() {
+        contextRunner.run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context).doesNotHaveBean(IdentityAuthController.class);
+            assertThat(context).doesNotHaveBean(IdentityAuthExceptionHandler.class);
+            assertThat(context).doesNotHaveBean(SecurityFilterChain.class);
+        });
+    }
+
+    @Test
+    void composesTheAuthHttpBoundaryAndItsNarrowSecurityChainInAServletContext() {
+        servletContextRunner.run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context).hasSingleBean(IdentityAuthController.class);
+            assertThat(context).hasSingleBean(IdentityAuthExceptionHandler.class);
+            assertThat(context).hasSingleBean(IdentityAuthenticationEntryPoint.class);
+            // Exactly one chain: the Identity Auth namespace boundary, with no host-wide chain.
+            assertThat(context).hasSingleBean(SecurityFilterChain.class);
+            assertThat(context).hasSingleBean(AuthService.class);
+            assertThat(context).hasSingleBean(OAuthAuthorizationService.class);
+            assertThat(context).hasSingleBean(OAuthLoginService.class);
+        });
+    }
+
+    @Test
+    void keepsTheAuthNamespaceClosedWhenTheIdentityAuthRuntimeIsDisabled() {
+        servletContextRunner
+                .withPropertyValues("platform.identity.auth.enabled=false")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(IdentityAuthController.class);
+                    // The namespace chain still exists, so foundation mode does not leave
+                    // /api/v1/auth/** open and does not change host-wide security either.
+                    assertThat(context).hasSingleBean(SecurityFilterChain.class);
+                });
     }
 
     @TestConfiguration(proxyBeanMethods = false)
