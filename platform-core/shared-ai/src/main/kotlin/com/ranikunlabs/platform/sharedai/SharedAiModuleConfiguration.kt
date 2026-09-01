@@ -47,6 +47,7 @@ class SharedAiRuntimeConfiguration {
         environment: Environment,
         chatClients: ObjectProvider<ChatClient>,
         providerProperties: ObjectProvider<OpenAiProviderProperties>,
+        meterRegistry: MeterRegistry,
     ): ModelGateway {
         val foundationEnabled = environment.getProperty(FOUNDATION_ENABLED, Boolean::class.java, false)
         val springAiEnabled = environment.getProperty(SPRING_AI_ENABLED, Boolean::class.java, false)
@@ -62,7 +63,7 @@ class SharedAiRuntimeConfiguration {
         }
         val properties = providerProperties.getIfAvailable()
             ?: throw IllegalStateException("Spring AI model gateway mode requires OpenAI provider configuration")
-        return SpringAiModelGateway(candidates.single(), "openai", properties.model)
+        return SpringAiModelGateway(candidates.single(), "openai", properties.model, meterRegistry)
     }
 
     @Bean

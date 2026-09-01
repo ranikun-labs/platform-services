@@ -44,7 +44,7 @@ class OpenAiProviderConfiguration {
     @Bean
     fun openAiChatModel(
         properties: OpenAiProviderProperties,
-        observationRegistries: ObjectProvider<ObservationRegistry>,
+        observationRegistryProvider: ObjectProvider<ObservationRegistry>,
     ): OpenAiChatModel {
         properties.validateForProviderMode()
         val options = OpenAiChatOptions.builder()
@@ -56,7 +56,7 @@ class OpenAiProviderConfiguration {
             .build()
         return OpenAiChatModel.builder()
             .options(options)
-            .observationRegistry(observationRegistries.getIfUnique { ObservationRegistry.NOOP })
+            .observationRegistry(observationRegistryProvider.getIfUnique { ObservationRegistry.NOOP })
             .build()
     }
 

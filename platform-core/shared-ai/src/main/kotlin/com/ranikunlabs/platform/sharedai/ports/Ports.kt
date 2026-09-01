@@ -45,7 +45,22 @@ data class ModelResult(
     val producerReference: String,
     val interpretation: String,
     val usage: ModelUsage? = null,
-)
+) {
+    constructor(
+        executionReference: String,
+        scope: ExecutionScope,
+        sourceReference: String,
+        producerReference: String,
+        interpretation: String,
+    ) : this(
+        executionReference,
+        scope,
+        sourceReference,
+        producerReference,
+        interpretation,
+        null,
+    )
+}
 
 data class ModelUsage(
     val inputTokens: Int?,

@@ -1,5 +1,7 @@
 package com.ranikunlabs.platform.sharedai.application
 
+import com.ranikunlabs.platform.sharedai.adapters.model.OpenAiFailureReason
+import com.ranikunlabs.platform.sharedai.adapters.model.OpenAiProviderFailure
 import com.ranikunlabs.platform.sharedai.core.EvidenceCategory
 import com.ranikunlabs.platform.sharedai.core.ExecutionContext
 import com.ranikunlabs.platform.sharedai.core.ExecutionScope
@@ -176,6 +178,19 @@ class ReviewKnowledgeSkillHandlerTest {
             ProductToolPort { fact() },
             RetrieverPort { _, _ -> listOf(retrieved()) },
             ModelGateway { throw IllegalStateException("sensitive model detail") },
+            telemetry,
+        ).execute(command())
+
+        assertFailureAndTotal(result, TechnicalFailureCategory.MODEL_FAILURE, telemetry)
+    }
+
+    @Test
+    fun `adapter provider failure remains coarse MODEL_FAILURE at application boundary`() {
+        val telemetry = RecordingTelemetry()
+        val result = handler(
+            ProductToolPort { fact() },
+            RetrieverPort { _, _ -> listOf(retrieved()) },
+            ModelGateway { throw OpenAiProviderFailure(OpenAiFailureReason.RATE_LIMITED) },
             telemetry,
         ).execute(command())
 

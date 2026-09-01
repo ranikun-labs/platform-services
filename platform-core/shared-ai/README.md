@@ -36,7 +36,10 @@ Provider failures are classified only inside the adapter. The application sees
 the existing coarse `MODEL_FAILURE` category, while model results retain only
 neutral execution/scope/source/producer references and optional token usage.
 Input sent to the model remains fenced as untrusted data with
-`BEGIN_UNTRUSTED_INPUT` and `END_UNTRUSTED_INPUT` markers.
+`BEGIN_UNTRUSTED_INPUT` and `END_UNTRUSTED_INPUT` markers; occurrences of those
+markers inside untrusted content are deterministically backslash-escaped.
+Adapter-local failure reasons are observable through the existing Micrometer
+telemetry seam only, and never become application or Product result fields.
 
 API keys are never logged or included in provider properties' diagnostic
 representation. The host exposes only health/info Actuator endpoints by

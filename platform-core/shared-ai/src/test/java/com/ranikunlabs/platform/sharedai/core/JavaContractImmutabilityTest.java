@@ -2,6 +2,8 @@ package com.ranikunlabs.platform.sharedai.core;
 
 import com.ranikunlabs.platform.sharedai.application.ExecutionResult;
 import com.ranikunlabs.platform.sharedai.ports.ModelRequest;
+import com.ranikunlabs.platform.sharedai.ports.ModelResult;
+import com.ranikunlabs.platform.sharedai.ports.ModelUsage;
 import com.ranikunlabs.platform.sharedai.ports.ProductFact;
 import com.ranikunlabs.platform.sharedai.ports.RetrievedItem;
 import org.junit.jupiter.api.Test;
@@ -72,6 +74,21 @@ class JavaContractImmutabilityTest {
                 .isInstanceOf(UnsupportedOperationException.class);
         assertThatThrownBy(() -> success.getWarnings().add("warning-c"))
                 .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void modelResultProvidesJavaConstructionPathWithUnknownUsage() {
+        var scope = scope();
+        var result = new ModelResult(
+                "execution-a", scope, "model:result", "model:producer", "interpretation");
+
+        assertThat(result.getUsage()).isNull();
+
+        var zeroUsage = new ModelUsage(0, 0, 0);
+        var resultWithUsage = new ModelResult(
+                "execution-a", scope, "model:result", "model:producer", "interpretation", zeroUsage);
+
+        assertThat(resultWithUsage.getUsage()).isSameAs(zeroUsage);
     }
 
     private ExecutionScope scope() {
