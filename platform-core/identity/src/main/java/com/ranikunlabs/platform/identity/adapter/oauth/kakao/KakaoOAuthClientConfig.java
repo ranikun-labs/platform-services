@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.identity.adapter.oauth.kakao;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -31,9 +32,10 @@ public class KakaoOAuthClientConfig {
     }
 
     @Bean
-    KakaoOAuthApiClient kakaoOAuthApiClient(RestClient kakaoOAuthRestClient,
-                                            KakaoOAuthProperties properties,
-                                            KakaoOAuthErrorMapper errorMapper) {
+    KakaoOAuthApiClient kakaoOAuthApiClient(
+            @Qualifier("kakaoOAuthRestClient") RestClient kakaoOAuthRestClient,
+            KakaoOAuthProperties properties,
+            KakaoOAuthErrorMapper errorMapper) {
         return new KakaoOAuthApiClient(kakaoOAuthRestClient, properties, errorMapper);
     }
 }

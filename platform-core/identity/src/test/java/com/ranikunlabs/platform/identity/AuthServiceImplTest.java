@@ -5,6 +5,7 @@ import com.ranikunlabs.platform.identity.application.port.AccountStatusPort;
 import com.ranikunlabs.platform.identity.application.port.AuthTokenBundle;
 import com.ranikunlabs.platform.identity.application.port.AuthenticatedIdentity;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityClaims;
+import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionException;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionPort;
 import com.ranikunlabs.platform.identity.application.port.CredentialPort;
 import com.ranikunlabs.platform.identity.application.port.RefreshSession;
@@ -104,6 +105,21 @@ class AuthServiceImplTest {
     }
 
     @Test
+    void loginDoesNotIssueTokensWhenProductClaimsDependencyFails() {
+        AuthenticatedIdentity identity = new AuthenticatedIdentity(ACCOUNT_ID, "manager@example.com");
+        CRMIdentityProjectionException failure = new CRMIdentityProjectionException(
+                CRMIdentityProjectionException.Reason.DEPENDENCY_UNAVAILABLE);
+        when(credentialPort.authenticate("manager@example.com", "raw-password"))
+                .thenReturn(identity);
+        when(claimsPort.getIdentityClaims(ACCOUNT_ID)).thenThrow(failure);
+
+        assertThatThrownBy(() -> service.login("manager@example.com", "raw-password"))
+                .isSameAs(failure);
+
+        verifyNoInteractions(tokenProvider, sessionPort);
+    }
+
+    @Test
     void refreshRejectsInvalidJwtBeforeSessionLookup() {
         when(tokenProvider.validateToken("bad-refresh")).thenReturn(false);
 
@@ -187,6 +203,26 @@ class AuthServiceImplTest {
         verify(sessionPort).rotate(sessionCaptor.capture(), org.mockito.ArgumentMatchers.eq("new-refresh"),
                 org.mockito.ArgumentMatchers.eq(expiry));
         assertThat(sessionCaptor.getValue()).isSameAs(session);
+    }
+
+    @Test
+    void refreshDoesNotRotateWhenProductClaimsDependencyFails() {
+        RefreshSession session = new RefreshSession(
+                "refresh", ACCOUNT_ID, OffsetDateTime.now(CLOCK).plusDays(1));
+        CRMIdentityProjectionException failure = new CRMIdentityProjectionException(
+                CRMIdentityProjectionException.Reason.DEPENDENCY_CONTRACT_FAILURE);
+        when(tokenProvider.validateToken("refresh")).thenReturn(true);
+        when(tokenProvider.getAccountIdFromToken("refresh")).thenReturn(ACCOUNT_ID);
+        when(sessionPort.findByToken("refresh")).thenReturn(Optional.of(session));
+        when(accountStatusPort.findStatus(ACCOUNT_ID)).thenReturn(Optional.of(AccountStatus.ACTIVE));
+        when(claimsPort.getIdentityClaims(ACCOUNT_ID)).thenThrow(failure);
+
+        assertThatThrownBy(() -> service.refreshToken("refresh"))
+                .isSameAs(failure);
+
+        verify(tokenProvider, never()).generateAccessToken(any(), any(), any(), any());
+        verify(tokenProvider, never()).generateRefreshToken(any());
+        verify(sessionPort, never()).rotate(any(), any(), any());
     }
 
     @Test

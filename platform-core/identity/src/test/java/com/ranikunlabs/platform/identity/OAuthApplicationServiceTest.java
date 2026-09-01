@@ -9,6 +9,7 @@ import com.ranikunlabs.platform.identity.application.oauth.OAuthRedirectUriResol
 import com.ranikunlabs.platform.identity.application.oauth.ReturnToValidator;
 import com.ranikunlabs.platform.identity.application.port.AuthTokenBundle;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityClaims;
+import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionException;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionPort;
 import com.ranikunlabs.platform.identity.application.port.oauth.ClientChannel;
 import com.ranikunlabs.platform.identity.application.port.oauth.ExternalIdentityLookupPort;
@@ -233,7 +234,8 @@ class OAuthApplicationServiceTest {
         when(external.findByProviderSubject("neutral", "subject"))
                 .thenReturn(Optional.of(new LinkedAccountView(accountId, LinkedAccountStatus.ACTIVE)));
         CRMIdentityProjectionPort claimsPort = mock(CRMIdentityProjectionPort.class);
-        RuntimeException projectionOutage = new RuntimeException("claims projection unavailable");
+        RuntimeException projectionOutage = new CRMIdentityProjectionException(
+                CRMIdentityProjectionException.Reason.DEPENDENCY_UNAVAILABLE);
         when(claimsPort.findIdentityClaims(accountId)).thenThrow(projectionOutage);
         OAuthLoginService service = new OAuthLoginService(new OAuthProviderRegistry(List.of(provider)), stateStore,
                 external, claimsPort, mock(AuthTokenIssuanceService.class));
