@@ -59,11 +59,17 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import javax.sql.DataSource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -79,6 +85,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -127,6 +135,8 @@ class IdentityPersistenceRepositoryTest {
     private final AuthService authService;
     private final CRMIdentityProjectionPort crmIdentityProjectionPort;
     private final ApplicationContext applicationContext;
+    private final PlatformTransactionManager transactionManager;
+    private final DataSource dataSource;
 
     private static final RegistrationRaceGate REGISTRATION_RACE_GATE = new RegistrationRaceGate();
 
@@ -145,7 +155,9 @@ class IdentityPersistenceRepositoryTest {
             PasswordCredentialUpdateJpaAdapter passwordCredentialUpdate,
             PasswordEncoder passwordEncoder,
             AuthService authService,
-            CRMIdentityProjectionPort crmIdentityProjectionPort
+            CRMIdentityProjectionPort crmIdentityProjectionPort,
+            PlatformTransactionManager transactionManager,
+            DataSource dataSource
     ) {
         this.applicationContext = applicationContext;
         this.platformAccountRepository = platformAccountRepository;
@@ -161,6 +173,8 @@ class IdentityPersistenceRepositoryTest {
         this.passwordEncoder = passwordEncoder;
         this.authService = authService;
         this.crmIdentityProjectionPort = crmIdentityProjectionPort;
+        this.transactionManager = transactionManager;
+        this.dataSource = dataSource;
     }
 
     @BeforeAll
@@ -527,6 +541,153 @@ class IdentityPersistenceRepositoryTest {
                 .isInstanceOfSatisfying(ProductClientLookupException.class, error ->
                         assertThat(error.reason())
                                 .isEqualTo(ProductClientLookupException.Reason.DISABLED_PRODUCT_CLIENT));
+    }
+
+    @Test
+    void refreshRowLockBlocksTheCompetingLookupUntilTheFirstTransactionCommits() throws Exception {
+        PlatformAccountEntity account = platformAccountRepository.saveAndFlush(
+                PlatformAccountEntity.create(unique("refresh-lock-proof") + "@example.com"));
+        String oldToken = seedOlderRefreshSession(account.getId());
+        String rotatedToken = unique("refresh-lock-proof-rotated");
+        CountDownLatch firstLockAcquired = new CountDownLatch(1);
+        CountDownLatch secondAttemptStarted = new CountDownLatch(1);
+        CountDownLatch releaseFirst = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<Boolean> first = executor.submit(() -> inNewTransaction(() -> {
+                RefreshTokenEntity locked = refreshTokenRepository.findByRefreshTokenForUpdate(oldToken)
+                        .orElseThrow();
+                firstLockAcquired.countDown();
+                awaitLatch(releaseFirst);
+                locked.updateToken(rotatedToken, locked.getTokenExpiresAt());
+                refreshTokenRepository.flush();
+                return true;
+            }));
+            Future<Boolean> second = executor.submit(() -> {
+                awaitLatch(firstLockAcquired);
+                secondAttemptStarted.countDown();
+                return inNewTransaction(() ->
+                        refreshTokenRepository.findByRefreshTokenForUpdate(oldToken).isPresent());
+            });
+
+            assertThat(firstLockAcquired.await(30, TimeUnit.SECONDS)).isTrue();
+            assertThat(secondAttemptStarted.await(30, TimeUnit.SECONDS)).isTrue();
+            assertThat(awaitRowLockContention()).isTrue();
+            assertThatThrownBy(() -> second.get(1, TimeUnit.SECONDS))
+                    .isInstanceOf(TimeoutException.class);
+
+            releaseFirst.countDown();
+            assertThat(first.get(30, TimeUnit.SECONDS)).isTrue();
+            assertThat(second.get(30, TimeUnit.SECONDS)).isFalse();
+        } finally {
+            releaseFirst.countDown();
+            shutdown(executor);
+        }
+
+        assertThat(tokenSession.findByToken(oldToken)).isEmpty();
+        assertThat(sessionsFor(account.getId())).singleElement()
+                .extracting(RefreshTokenEntity::getRefreshToken)
+                .isEqualTo(rotatedToken);
+    }
+
+    @Test
+    void accountRowLockSerializesSessionReplacementAndStaysPerAccount() throws Exception {
+        PlatformAccountEntity contended = platformAccountRepository.saveAndFlush(
+                PlatformAccountEntity.create(unique("account-lock-proof") + "@example.com"));
+        PlatformAccountEntity independent = platformAccountRepository.saveAndFlush(
+                PlatformAccountEntity.create(unique("account-lock-independent") + "@example.com"));
+        CountDownLatch firstLockAcquired = new CountDownLatch(1);
+        CountDownLatch secondAttemptStarted = new CountDownLatch(1);
+        CountDownLatch releaseFirst = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        try {
+            Future<Boolean> first = executor.submit(() -> inNewTransaction(() -> {
+                platformAccountRepository.findByIdForSessionReplacement(contended.getId()).orElseThrow();
+                firstLockAcquired.countDown();
+                awaitLatch(releaseFirst);
+                tokenSession.replaceForAccount(
+                        contended.getId(), unique("account-lock-first"), OffsetDateTime.now().plusDays(1));
+                return true;
+            }));
+            Future<Boolean> second = executor.submit(() -> {
+                awaitLatch(firstLockAcquired);
+                secondAttemptStarted.countDown();
+                return inNewTransaction(() -> {
+                    platformAccountRepository.findByIdForSessionReplacement(contended.getId()).orElseThrow();
+                    tokenSession.replaceForAccount(
+                            contended.getId(), unique("account-lock-second"), OffsetDateTime.now().plusDays(1));
+                    return true;
+                });
+            });
+
+            assertThat(firstLockAcquired.await(30, TimeUnit.SECONDS)).isTrue();
+            assertThat(secondAttemptStarted.await(30, TimeUnit.SECONDS)).isTrue();
+            assertThat(awaitRowLockContention()).isTrue();
+            assertThatThrownBy(() -> second.get(1, TimeUnit.SECONDS))
+                    .isInstanceOf(TimeoutException.class);
+
+            Future<Boolean> independentLock = executor.submit(() -> inNewTransaction(() -> {
+                platformAccountRepository.findByIdForSessionReplacement(independent.getId()).orElseThrow();
+                tokenSession.replaceForAccount(
+                        independent.getId(), unique("account-lock-other"), OffsetDateTime.now().plusDays(1));
+                return true;
+            }));
+            assertThat(independentLock.get(30, TimeUnit.SECONDS)).isTrue();
+
+            releaseFirst.countDown();
+            assertThat(first.get(30, TimeUnit.SECONDS)).isTrue();
+            assertThat(second.get(30, TimeUnit.SECONDS)).isTrue();
+        } finally {
+            releaseFirst.countDown();
+            shutdown(executor);
+        }
+
+        assertThat(sessionsFor(contended.getId())).hasSize(1);
+        assertThat(sessionsFor(independent.getId())).hasSize(1);
+    }
+
+    private <T> T inNewTransaction(Supplier<T> work) {
+        TransactionTemplate template = new TransactionTemplate(transactionManager);
+        template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return template.execute(status -> work.get());
+    }
+
+    private static void awaitLatch(CountDownLatch latch) {
+        try {
+            if (!latch.await(30, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Timed out waiting for the lock coordination latch");
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while coordinating the lock proof", exception);
+        }
+    }
+
+    /** Confirms with PostgreSQL itself that a backend is blocked behind a row lock. */
+    private boolean awaitRowLockContention() throws Exception {
+        long deadline = System.nanoTime() + Duration.ofSeconds(30).toNanos();
+        while (System.nanoTime() < deadline) {
+            if (blockedBackendCount() > 0) {
+                return true;
+            }
+            TimeUnit.MILLISECONDS.sleep(50);
+        }
+        return false;
+    }
+
+    private int blockedBackendCount() throws Exception {
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(
+                     "select count(*) from pg_stat_activity"
+                             + " where cardinality(pg_blocking_pids(pid)) > 0")) {
+            return resultSet.next() ? resultSet.getInt(1) : 0;
+        }
+    }
+
+    private static void shutdown(ExecutorService executor) throws InterruptedException {
+        executor.shutdownNow();
+        executor.awaitTermination(30, TimeUnit.SECONDS);
     }
 
     private static String unique(String prefix) {
