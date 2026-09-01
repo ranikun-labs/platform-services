@@ -19,10 +19,14 @@ Redis token blacklisting using `blacklist:<rawToken>`, password-account
 registration persistence, and password updates. Identity also owns
 provider-neutral OAuth Core/State: authorization/callback orchestration, PKCE,
 server-side state lifecycle, and the Redis OAuth state store using
-`oauth:state:<state>`. A Kakao provider adapter is present in this module but
-has not yet cleared independent review as an accepted extraction slice; no
-HTTP endpoint exposes any of this OAuth behavior yet, and no Carelog traffic
-has been cut over to it. Identity auth composition is opt-in:
+`oauth:state:<state>`. The accepted Kakao provider adapter and Auth/OAuth HTTP
+compatibility layer are hosted by the Platform Core Spring MVC app. The
+compatibility endpoints are available under `/api/v1/auth` when
+`platform.identity.auth.enabled=true`; Platform Core hosted Identity
+composition is covered by runtime verification. Carelog traffic cutover,
+production Product claims integration, and Product enrollment remain outside
+this module. Live Kakao smoke is `LIVE_KAKAO_SMOKE_DEFERRED_TO_RPL55`, and no
+Carelog traffic has been cut over to it. Identity auth composition is opt-in:
 `platform.identity.auth.enabled=false` remains foundation mode without the
 Identity Auth runtime. Identity does not have an independent deployable
 process in this repository state. Shared AI is a Kotlin library module hosted

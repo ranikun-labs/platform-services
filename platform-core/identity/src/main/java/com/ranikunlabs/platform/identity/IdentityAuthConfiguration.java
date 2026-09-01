@@ -24,9 +24,11 @@ import java.time.Clock;
 /**
  * Optional runtime composition for the extracted authentication slice.
  *
- * <p>The explicit opt-in keeps the RPL-105 host/readiness foundation bootable until the later
- * HTTP compatibility and Product claims adapter slices are connected. Enabling this configuration
- * requires the canonical {@code jwt.*} values and a Product-owned CRM claims port bean.
+ * <p>The explicit opt-in keeps the foundation host/readiness mode bootable while Identity Auth,
+ * OAuth, and HTTP runtime composition remain disabled by default. Enabling
+ * {@code platform.identity.auth.enabled=true} composes those runtimes and requires the canonical
+ * {@code jwt.*} values and a Product-owned CRM claims port bean. Production Product claims
+ * integration and Carelog traffic cutover remain outside this module.
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "platform.identity.auth.enabled", havingValue = "true")
