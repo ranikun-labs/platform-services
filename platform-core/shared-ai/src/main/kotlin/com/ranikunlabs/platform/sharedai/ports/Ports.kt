@@ -44,6 +44,13 @@ data class ModelResult(
     val sourceReference: String,
     val producerReference: String,
     val interpretation: String,
+    val usage: ModelUsage? = null,
+)
+
+data class ModelUsage(
+    val inputTokens: Int?,
+    val outputTokens: Int?,
+    val totalTokens: Int?,
 )
 
 fun interface ModelGateway {

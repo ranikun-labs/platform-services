@@ -9,6 +9,7 @@ import com.ranikunlabs.platform.sharedai.ports.ExecutionStage
 import com.ranikunlabs.platform.sharedai.ports.ExecutionTelemetry
 import com.ranikunlabs.platform.sharedai.ports.ModelGateway
 import com.ranikunlabs.platform.sharedai.ports.ModelResult
+import com.ranikunlabs.platform.sharedai.ports.ModelUsage
 import com.ranikunlabs.platform.sharedai.ports.ProductFact
 import com.ranikunlabs.platform.sharedai.ports.ProductToolPort
 import com.ranikunlabs.platform.sharedai.ports.RetrievedItem
@@ -79,6 +80,17 @@ class ReviewKnowledgeSkillHandlerTest {
         )
         assertThat(result.evidence.items.last().sourceReferences)
             .containsExactly(result.evidence.items.first().evidenceId.value)
+    }
+
+    @Test
+    fun `preserves optional model usage through the execution result`() {
+        val result = handler(
+            ProductToolPort { fact() },
+            RetrieverPort { _, _ -> emptyList() },
+            ModelGateway { modelResult(usage = ModelUsage(11, 7, 18)) },
+        ).execute(command()) as ExecutionResult.Success
+
+        assertThat(result.usage).isEqualTo(ModelUsage(11, 7, 18))
     }
 
     @Test
@@ -267,7 +279,8 @@ class ReviewKnowledgeSkillHandlerTest {
     private fun modelResult(
         executionReference: String = "execution-a",
         scope: ExecutionScope = context.scope,
-    ) = ModelResult(executionReference, scope, "model:result", "model:fixture", "reviewed")
+        usage: ModelUsage? = null,
+    ) = ModelResult(executionReference, scope, "model:result", "model:fixture", "reviewed", usage)
 
     private class RecordingTelemetry : ExecutionTelemetry {
         val measurements = mutableListOf<ExecutionMeasurement>()
