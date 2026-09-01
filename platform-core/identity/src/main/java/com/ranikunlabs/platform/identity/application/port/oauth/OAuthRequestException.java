@@ -6,8 +6,8 @@ import java.util.Objects;
  * Typed, provider-neutral failure for an invalid OAuth authorization request.
  *
  * <p>The application layer uses this value instead of exposing web exception or provider
- * framework types.  An HTTP adapter may map the reason to the product's established error
- * response when the compatibility endpoint is extracted later.</p>
+ * framework types. The Identity HTTP adapter maps the reason to the established Auth/OAuth
+ * error response.</p>
  */
 public final class OAuthRequestException extends RuntimeException {
 
