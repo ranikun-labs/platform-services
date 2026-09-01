@@ -3,6 +3,8 @@ package com.ranikunlabs.platform.sharedai
 import com.ranikunlabs.platform.sharedai.adapters.fixture.DeterministicModelGateway
 import com.ranikunlabs.platform.sharedai.adapters.fixture.InMemoryProductToolAdapter
 import com.ranikunlabs.platform.sharedai.adapters.fixture.InMemoryRetrieverAdapter
+import com.ranikunlabs.platform.sharedai.adapters.model.OpenAiProviderConfiguration
+import com.ranikunlabs.platform.sharedai.adapters.model.OpenAiProviderProperties
 import com.ranikunlabs.platform.sharedai.adapters.model.SpringAiModelGateway
 import com.ranikunlabs.platform.sharedai.adapters.observability.MicrometerExecutionTelemetry
 import com.ranikunlabs.platform.sharedai.application.PortResultCorrelationValidator
@@ -26,7 +28,7 @@ import org.springframework.core.env.Environment
 import java.time.Clock
 
 @Configuration(proxyBeanMethods = false)
-@Import(SharedAiRuntimeConfiguration::class)
+@Import(SharedAiRuntimeConfiguration::class, OpenAiProviderConfiguration::class)
 class SharedAiModuleConfiguration
 
 @Configuration(proxyBeanMethods = false)
@@ -44,6 +46,7 @@ class SharedAiRuntimeConfiguration {
     fun modelGateway(
         environment: Environment,
         chatClients: ObjectProvider<ChatClient>,
+        providerProperties: ObjectProvider<OpenAiProviderProperties>,
     ): ModelGateway {
         val foundationEnabled = environment.getProperty(FOUNDATION_ENABLED, Boolean::class.java, false)
         val springAiEnabled = environment.getProperty(SPRING_AI_ENABLED, Boolean::class.java, false)
@@ -57,7 +60,9 @@ class SharedAiRuntimeConfiguration {
         if (candidates.size != 1) {
             throw IllegalStateException("Spring AI model gateway mode requires exactly one ChatClient")
         }
-        return SpringAiModelGateway(candidates.single())
+        val properties = providerProperties.getIfAvailable()
+            ?: throw IllegalStateException("Spring AI model gateway mode requires OpenAI provider configuration")
+        return SpringAiModelGateway(candidates.single(), "openai", properties.model)
     }
 
     @Bean
