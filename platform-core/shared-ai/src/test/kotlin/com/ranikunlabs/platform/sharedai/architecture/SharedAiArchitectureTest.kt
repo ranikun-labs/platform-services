@@ -6,6 +6,8 @@ import com.ranikunlabs.platform.sharedai.application.SkillHandler
 import com.ranikunlabs.platform.sharedai.core.Evidence
 import com.ranikunlabs.platform.sharedai.core.ExecutionContext
 import com.ranikunlabs.platform.sharedai.ports.ModelGateway
+import com.ranikunlabs.platform.sharedai.ports.ModelResult
+import com.ranikunlabs.platform.sharedai.ports.ModelUsage
 import com.ranikunlabs.platform.sharedai.ports.ProductToolPort
 import com.ranikunlabs.platform.sharedai.ports.RetrieverPort
 import org.assertj.core.api.Assertions.assertThat
@@ -44,6 +46,30 @@ class SharedAiArchitectureTest {
             "VectorStore",
             "Advisor",
             "com.openai",
+            "reactor",
+            "org.reactivestreams",
+            "SseEmitter",
+            "kotlinx.coroutines",
+        )
+
+        neutralRoots.flatMap(::sourceFiles).forEach { source ->
+            assertThat(source.readText()).describedAs(source.toString()).doesNotContain(*forbidden.toTypedArray())
+        }
+    }
+
+    @Test
+    fun `provider-specific failure taxonomy remains below the application boundary`() {
+        val neutralRoots = listOf("application", "core", "ports").map {
+            sharedAiRoot.resolve("src/main/kotlin/com/ranikunlabs/platform/sharedai/$it")
+        }
+        val forbidden = listOf(
+            "OpenAiFailureReason",
+            "OpenAiProviderFailure",
+            "ModelFailureCategory",
+            "RATE_LIMITED",
+            "PROVIDER_UNAVAILABLE",
+            "AUTHENTICATION",
+            "INVALID_REQUEST",
         )
 
         neutralRoots.flatMap(::sourceFiles).forEach { source ->
@@ -55,7 +81,16 @@ class SharedAiArchitectureTest {
     fun `module dependencies contain neither Product persistence nor feature projects`() {
         val buildFile = sharedAiRoot.resolve("build.gradle.kts").readText()
 
-        assertThat(buildFile).doesNotContain("project(\"", "jdbc", "jpa", "r2dbc", "postgresql", "pgvector")
+        assertThat(buildFile).doesNotContain(
+            "project(\"",
+            "jdbc",
+            "jpa",
+            "r2dbc",
+            "postgresql",
+            "pgvector",
+            "spring-ai-starter-model-openai",
+        )
+        assertThat(buildFile).contains("libs.spring.ai.openai")
     }
 
     @Test
@@ -69,6 +104,8 @@ class SharedAiArchitectureTest {
             ProductToolPort::class.java,
             RetrieverPort::class.java,
             ModelGateway::class.java,
+            ModelResult::class.java,
+            ModelUsage::class.java,
         )
         val signatures = contractTypes.flatMap { type ->
             type.methods.map { method ->
@@ -83,7 +120,10 @@ class SharedAiArchitectureTest {
                 it.contains("kotlin.Pair") ||
                 it.contains("kotlin.Triple") ||
                 it.contains("kotlinx.coroutines") ||
-                it.contains("org.springframework.ai")
+                it.contains("org.springframework.ai") ||
+                it.contains("reactor") ||
+                it.contains("org.reactivestreams") ||
+                it.contains("SseEmitter")
         }
     }
 
