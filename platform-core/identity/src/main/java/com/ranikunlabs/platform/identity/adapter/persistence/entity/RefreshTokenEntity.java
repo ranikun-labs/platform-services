@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -18,7 +19,13 @@ import java.util.UUID;
 
 /** Persistence model for Identity-owned refresh-token sessions. */
 @Entity
-@Table(name = "refresh_token")
+@Table(
+        name = "refresh_token",
+        uniqueConstraints = @UniqueConstraint(
+                name = "refresh_token_account_id_key",
+                columnNames = "account_id"
+        )
+)
 @EntityListeners(AuditingEntityListener.class)
 public class RefreshTokenEntity {
 

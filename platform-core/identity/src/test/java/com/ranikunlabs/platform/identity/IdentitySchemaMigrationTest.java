@@ -57,7 +57,7 @@ class IdentitySchemaMigrationTest {
         var result = flyway().migrate();
 
         assertThat(result.success).isTrue();
-        assertThat(result.migrationsExecuted).isEqualTo(1);
+        assertThat(result.migrationsExecuted).isEqualTo(2);
 
         try (Connection connection = connection()) {
             assertThat(tableNames(connection)).containsExactlyInAnyOrder(
@@ -96,6 +96,7 @@ class IdentitySchemaMigrationTest {
                     "fk_external_identities_account",
                     "refresh_token_pkey",
                     "refresh_token_refresh_token_key",
+                    "refresh_token_account_id_key",
                     "fk_refresh_token_account",
                     "uq_product_clients_client_id",
                     "chk_product_clients_client_id_format",
@@ -182,6 +183,11 @@ class IdentitySchemaMigrationTest {
                 "INSERT INTO refresh_token (refresh_token, account_id, token_expires_at, created_at, updated_at) "
                         + "VALUES (?, ?, ?, ?, ?)",
                 "23505", "schema-refresh", accountId, now().plusDays(1), now(), now()
+        );
+        assertSqlState(
+                "INSERT INTO refresh_token (refresh_token, account_id, token_expires_at, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, ?, ?)",
+                "23505", "second-account-session", accountId, now().plusDays(1), now(), now()
         );
         assertSqlState(
                 "INSERT INTO refresh_token (refresh_token, account_id, token_expires_at, created_at, updated_at) "

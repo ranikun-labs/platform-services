@@ -9,10 +9,12 @@ import com.ranikunlabs.platform.identity.adapter.persistence.entity.ExternalIden
 import com.ranikunlabs.platform.identity.adapter.persistence.entity.PasswordCredentialEntity;
 import com.ranikunlabs.platform.identity.adapter.persistence.entity.PlatformAccountEntity;
 import com.ranikunlabs.platform.identity.adapter.persistence.entity.ProductClientEntity;
+import com.ranikunlabs.platform.identity.adapter.persistence.entity.RefreshTokenEntity;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.ExternalIdentityJpaRepository;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.PasswordCredentialJpaRepository;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.PlatformAccountJpaRepository;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.ProductClientJpaRepository;
+import com.ranikunlabs.platform.identity.adapter.persistence.repository.RefreshTokenJpaRepository;
 import com.ranikunlabs.platform.identity.adapter.security.IdentityCredentialAdapter;
 import com.ranikunlabs.platform.identity.adapter.token.IdentityJwtProperties;
 import com.ranikunlabs.platform.identity.adapter.token.JwtTokenProvider;
@@ -20,6 +22,8 @@ import com.ranikunlabs.platform.identity.application.AuthService;
 import com.ranikunlabs.platform.identity.application.AuthServiceImpl;
 import com.ranikunlabs.platform.identity.application.AuthTokenIssuanceService;
 import com.ranikunlabs.platform.identity.application.port.AccountStatusPort;
+import com.ranikunlabs.platform.identity.application.port.AuthTokenBundle;
+import com.ranikunlabs.platform.identity.application.port.CRMIdentityClaims;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionPort;
 import com.ranikunlabs.platform.identity.application.port.CredentialPort;
 import com.ranikunlabs.platform.identity.application.port.DuplicateLoginIdException;
@@ -28,6 +32,7 @@ import com.ranikunlabs.platform.identity.application.port.IdentityAccountRegistr
 import com.ranikunlabs.platform.identity.application.port.PasswordCredentialUpdatePort;
 import com.ranikunlabs.platform.identity.application.port.RefreshSession;
 import com.ranikunlabs.platform.identity.application.port.TokenBlacklistPort;
+import com.ranikunlabs.platform.identity.application.port.TokenLifecycleException;
 import com.ranikunlabs.platform.identity.application.port.TokenProviderPort;
 import com.ranikunlabs.platform.identity.application.port.TokenSessionPort;
 import com.ranikunlabs.platform.identity.application.port.oauth.LinkedAccountStatus;
@@ -50,6 +55,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -58,11 +64,17 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import javax.sql.DataSource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -71,6 +83,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /** Verifies JPA repository behavior against the migrated Identity schema. */
 @SpringBootTest(
@@ -91,6 +104,9 @@ import static org.mockito.Mockito.mock;
 )
 class IdentityPersistenceRepositoryTest {
 
+    private static final String JWT_SECRET = "01234567890123456789012345678901";
+    private static final long ACCESS_TOKEN_VALIDITY = 900_000L;
+    private static final long REFRESH_TOKEN_VALIDITY = 1_209_600_000L;
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
 
     static {
@@ -101,12 +117,15 @@ class IdentityPersistenceRepositoryTest {
     private final PasswordCredentialJpaRepository passwordCredentialRepository;
     private final ExternalIdentityJpaRepository externalIdentityRepository;
     private final ProductClientJpaRepository productClientRepository;
+    private final RefreshTokenJpaRepository refreshTokenRepository;
     private final ExternalIdentityLookupJpaAdapter externalIdentityLookup;
     private final ProductClientReaderJpaAdapter productClientReader;
     private final TokenSessionJpaAdapter tokenSession;
     private final IdentityAccountRegistrationJpaAdapter accountRegistration;
     private final PasswordCredentialUpdateJpaAdapter passwordCredentialUpdate;
     private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
+    private final CRMIdentityProjectionPort crmIdentityProjectionPort;
     private final ApplicationContext applicationContext;
 
     private static final RegistrationRaceGate REGISTRATION_RACE_GATE = new RegistrationRaceGate();
@@ -118,24 +137,30 @@ class IdentityPersistenceRepositoryTest {
             PasswordCredentialJpaRepository passwordCredentialRepository,
             ExternalIdentityJpaRepository externalIdentityRepository,
             ProductClientJpaRepository productClientRepository,
+            RefreshTokenJpaRepository refreshTokenRepository,
             ExternalIdentityLookupJpaAdapter externalIdentityLookup,
             ProductClientReaderJpaAdapter productClientReader,
             TokenSessionJpaAdapter tokenSession,
             IdentityAccountRegistrationJpaAdapter accountRegistration,
             PasswordCredentialUpdateJpaAdapter passwordCredentialUpdate,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            AuthService authService,
+            CRMIdentityProjectionPort crmIdentityProjectionPort
     ) {
         this.applicationContext = applicationContext;
         this.platformAccountRepository = platformAccountRepository;
         this.passwordCredentialRepository = passwordCredentialRepository;
         this.externalIdentityRepository = externalIdentityRepository;
         this.productClientRepository = productClientRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.externalIdentityLookup = externalIdentityLookup;
         this.productClientReader = productClientReader;
         this.tokenSession = tokenSession;
         this.accountRegistration = accountRegistration;
         this.passwordCredentialUpdate = passwordCredentialUpdate;
         this.passwordEncoder = passwordEncoder;
+        this.authService = authService;
+        this.crmIdentityProjectionPort = crmIdentityProjectionPort;
     }
 
     @BeforeAll
@@ -383,6 +408,104 @@ class IdentityPersistenceRepositoryTest {
     }
 
     @Test
+    void concurrentLoginsForOneAccountLeaveExactlyOnePersistedSession() throws Exception {
+        String loginId = unique("session-login");
+        String password = unique("session-password");
+        IdentityAccount account = accountRegistration.registerPasswordAccount(
+                loginId, loginId + "@example.com", password);
+        when(crmIdentityProjectionPort.getIdentityClaims(account.accountId())).thenReturn(claims());
+
+        List<Object> outcomes = runConcurrently(
+                () -> authService.login(loginId, password),
+                () -> authService.login(loginId, password));
+
+        assertThat(outcomes).allMatch(AuthTokenBundle.class::isInstance);
+        List<RefreshTokenEntity> sessions = sessionsFor(account.accountId());
+        assertThat(sessions).hasSize(1);
+        assertThat(outcomes.stream()
+                .map(AuthTokenBundle.class::cast)
+                .map(AuthTokenBundle::refreshToken))
+                .contains(sessions.getFirst().getRefreshToken());
+    }
+
+    @Test
+    void concurrentRefreshOfTheSameTokenHasExactlyOneWinner() throws Exception {
+        PlatformAccountEntity account = platformAccountRepository.saveAndFlush(
+                PlatformAccountEntity.create(unique("refresh-race") + "@example.com"));
+        String oldToken = seedOlderRefreshSession(account.getId());
+        when(crmIdentityProjectionPort.getIdentityClaims(account.getId())).thenReturn(claims());
+
+        List<Object> outcomes = runConcurrently(
+                () -> authService.refreshToken(oldToken),
+                () -> authService.refreshToken(oldToken));
+
+        assertThat(outcomes.stream().filter(AuthTokenBundle.class::isInstance)).hasSize(1);
+        assertThat(outcomes.stream().filter(TokenLifecycleException.class::isInstance)).hasSize(1);
+        TokenLifecycleException loser = outcomes.stream()
+                .filter(TokenLifecycleException.class::isInstance)
+                .map(TokenLifecycleException.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertThat(loser.reason()).isEqualTo(TokenLifecycleException.Reason.REFRESH_TOKEN_NOT_FOUND);
+        assertThat(sessionsFor(account.getId())).hasSize(1);
+        assertThat(tokenSession.findByToken(oldToken)).isEmpty();
+    }
+
+    @Test
+    void rotatedRefreshTokenCannotBeReplayedSequentially() {
+        PlatformAccountEntity account = platformAccountRepository.saveAndFlush(
+                PlatformAccountEntity.create(unique("refresh-replay") + "@example.com"));
+        String oldToken = seedOlderRefreshSession(account.getId());
+        when(crmIdentityProjectionPort.getIdentityClaims(account.getId())).thenReturn(claims());
+
+        AuthTokenBundle rotated = authService.refreshToken(oldToken);
+
+        assertThat(rotated.refreshToken()).isNotEqualTo(oldToken);
+        assertThatThrownBy(() -> authService.refreshToken(oldToken))
+                .isInstanceOfSatisfying(TokenLifecycleException.class, failure ->
+                        assertThat(failure.reason())
+                                .isEqualTo(TokenLifecycleException.Reason.REFRESH_TOKEN_NOT_FOUND));
+        assertThat(sessionsFor(account.getId())).singleElement()
+                .extracting(RefreshTokenEntity::getRefreshToken)
+                .isEqualTo(rotated.refreshToken());
+    }
+
+    @Test
+    void loginAndRefreshForDifferentAccountsProceedConcurrently() throws Exception {
+        String loginId = unique("different-account-login");
+        String password = unique("different-account-password");
+        IdentityAccount loginAccount = accountRegistration.registerPasswordAccount(
+                loginId, loginId + "@example.com", password);
+        PlatformAccountEntity refreshAccount = platformAccountRepository.saveAndFlush(
+                PlatformAccountEntity.create(unique("different-account-refresh") + "@example.com"));
+        String oldToken = seedOlderRefreshSession(refreshAccount.getId());
+        when(crmIdentityProjectionPort.getIdentityClaims(loginAccount.accountId())).thenReturn(claims());
+        when(crmIdentityProjectionPort.getIdentityClaims(refreshAccount.getId())).thenReturn(claims());
+
+        List<Object> outcomes = runConcurrently(
+                () -> authService.login(loginId, password),
+                () -> authService.refreshToken(oldToken));
+
+        assertThat(outcomes).allMatch(AuthTokenBundle.class::isInstance);
+        assertThat(sessionsFor(loginAccount.accountId())).hasSize(1);
+        assertThat(sessionsFor(refreshAccount.getId())).hasSize(1);
+    }
+
+    @Test
+    void logoutStillDeletesTheAccountRefreshSession() {
+        String loginId = unique("logout-session");
+        String password = unique("logout-password");
+        IdentityAccount account = accountRegistration.registerPasswordAccount(
+                loginId, loginId + "@example.com", password);
+        when(crmIdentityProjectionPort.getIdentityClaims(account.accountId())).thenReturn(claims());
+        AuthTokenBundle tokens = authService.login(loginId, password);
+
+        authService.logout(account.accountId(), tokens.accessToken());
+
+        assertThat(sessionsFor(account.accountId())).isEmpty();
+    }
+
+    @Test
     void productClientReaderReturnsSeedAndFailsClosedByCanonicalReason() {
         assertThat(productClientReader.requireEnabled("carelog-web").product()).isEqualTo(Product.CARELOG);
         assertThat(productClientReader.requireEnabled("carelog-mobile").channel())
@@ -408,6 +531,52 @@ class IdentityPersistenceRepositoryTest {
 
     private static String unique(String prefix) {
         return prefix + "-" + UUID.randomUUID();
+    }
+
+    private String seedOlderRefreshSession(UUID accountId) {
+        Clock earlierClock = Clock.fixed(Instant.now().minus(Duration.ofMinutes(2)), ZoneOffset.UTC);
+        JwtTokenProvider earlierProvider = new JwtTokenProvider(
+                JWT_SECRET, ACCESS_TOKEN_VALIDITY, REFRESH_TOKEN_VALIDITY, earlierClock);
+        String token = earlierProvider.generateRefreshToken(accountId);
+        tokenSession.replaceForAccount(accountId, token, earlierProvider.getRefreshTokenExpiryDate());
+        return token;
+    }
+
+    private CRMIdentityClaims claims() {
+        return new CRMIdentityClaims(UUID.randomUUID(), "MEMBER", UUID.randomUUID());
+    }
+
+    private List<RefreshTokenEntity> sessionsFor(UUID accountId) {
+        return refreshTokenRepository.findAll().stream()
+                .filter(session -> accountId.equals(session.getAccountId()))
+                .toList();
+    }
+
+    @SafeVarargs
+    private final List<Object> runConcurrently(Callable<?>... operations) throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(operations.length);
+        CyclicBarrier start = new CyclicBarrier(operations.length + 1);
+        try {
+            List<Future<Object>> futures = java.util.Arrays.stream(operations)
+                    .map(operation -> executor.submit(() -> {
+                        start.await(30, TimeUnit.SECONDS);
+                        try {
+                            return operation.call();
+                        } catch (Throwable failure) {
+                            return failure;
+                        }
+                    }))
+                    .toList();
+            start.await(30, TimeUnit.SECONDS);
+            java.util.ArrayList<Object> outcomes = new java.util.ArrayList<>();
+            for (Future<Object> future : futures) {
+                outcomes.add(future.get(30, TimeUnit.SECONDS));
+            }
+            return outcomes;
+        } finally {
+            executor.shutdownNow();
+            executor.awaitTermination(30, TimeUnit.SECONDS);
+        }
     }
 
     private Object registerOrReturnFailure(String loginId, String email, String rawPassword) {
@@ -495,7 +664,11 @@ class IdentityPersistenceRepositoryTest {
 
         @org.springframework.context.annotation.Bean
         StringRedisTemplate stringRedisTemplate() {
-            return mock(StringRedisTemplate.class);
+            StringRedisTemplate template = mock(StringRedisTemplate.class);
+            @SuppressWarnings("unchecked")
+            ValueOperations<String, String> values = mock(ValueOperations.class);
+            when(template.opsForValue()).thenReturn(values);
+            return template;
         }
 
         @org.springframework.context.annotation.Bean
