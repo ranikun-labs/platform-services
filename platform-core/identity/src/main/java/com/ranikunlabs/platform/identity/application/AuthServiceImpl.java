@@ -58,6 +58,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthTokenBundle login(String loginId, String password) {
         AuthenticatedIdentity identity = credentialPort.authenticate(loginId, password);
         CRMIdentityClaims claims = crmIdentityProjectionPort.getIdentityClaims(identity.accountId());
+        CRMIdentityClaimsPolicy.requireEligible(claims);
         return tokenIssuanceService.issue(identity.accountId(), claims);
     }
 
@@ -89,6 +90,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         CRMIdentityClaims claims = crmIdentityProjectionPort.getIdentityClaims(accountId);
+        CRMIdentityClaimsPolicy.requireEligible(claims);
         return tokenIssuanceService.rotate(session, claims);
     }
 

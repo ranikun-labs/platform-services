@@ -11,9 +11,11 @@ import com.ranikunlabs.platform.identity.adapter.token.IdentityJwtProperties;
 import com.ranikunlabs.platform.identity.adapter.token.JwtTokenProvider;
 import com.ranikunlabs.platform.identity.application.AuthServiceImpl;
 import com.ranikunlabs.platform.identity.application.AuthTokenIssuanceService;
+import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionPort;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -44,6 +46,7 @@ import java.time.Clock;
         AuthTokenIssuanceService.class,
         AuthServiceImpl.class,
         CarelogProductClaimsClientConfiguration.class,
+        IdentityAuthConfiguration.IdentityProductClaimsRequirementConfiguration.class,
         IdentityOAuthConfiguration.class,
         IdentityHttpConfiguration.class
 })
@@ -69,5 +72,26 @@ public class IdentityAuthConfiguration {
                 properties.refreshTokenValidity(),
                 clock
         );
+    }
+
+    /** Fails startup clearly when Auth is enabled without a claims provider. */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnProperty(
+            name = "platform.identity.product-claims.enabled",
+            havingValue = "false",
+            matchIfMissing = true
+    )
+    static class IdentityProductClaimsRequirementConfiguration {
+
+        @Bean
+        static BeanFactoryPostProcessor identityProductClaimsCompositionGuard() {
+            return beanFactory -> {
+                if (beanFactory.getBeanNamesForType(CRMIdentityProjectionPort.class, true, false).length == 0) {
+                    throw new IllegalStateException(
+                            "Identity Auth requires the Product claims integration when no CRMIdentityProjectionPort is configured; "
+                                    + "set platform.identity.product-claims.enabled=true or provide another valid provider");
+                }
+            };
+        }
     }
 }

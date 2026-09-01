@@ -72,6 +72,8 @@ class JwtUuidHttpIntegrationTest(
             .header("X-Role", "spoofed-role")
             .header("X-Public-Id", "spoofed-public")
             .header("X-Gateway-Secret", "spoofed-secret")
+            .header("X-Service-Id", "spoofed-service")
+            .header("X-Service-Secret", "spoofed-service-secret")
             .exchange()
             .expectStatus().isOk
 
@@ -81,6 +83,7 @@ class JwtUuidHttpIntegrationTest(
         assertThat(capturedHeaders.get()).containsEntry("X-Role", "MANAGER")
         assertThat(capturedHeaders.get()).containsEntry("X-Public-Id", publicId)
         assertThat(capturedHeaders.get()).containsEntry("X-Gateway-Secret", internalSecret)
+        assertThat(capturedHeaders.get()).doesNotContainKeys("X-Service-Id", "X-Service-Secret")
     }
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -118,7 +121,9 @@ class JwtUuidHttpIntegrationTest(
                         "X-Organization-Id",
                         "X-Role",
                         "X-Public-Id",
-                        "X-Gateway-Secret"
+                        "X-Gateway-Secret",
+                        "X-Service-Id",
+                        "X-Service-Secret"
                     ).mapNotNull { name -> request.requestHeaders().get(name)?.let { name to it } }.toMap()
                 )
                 response.status(200).send()

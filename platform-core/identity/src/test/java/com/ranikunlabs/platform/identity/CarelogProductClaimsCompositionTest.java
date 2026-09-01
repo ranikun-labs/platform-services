@@ -49,7 +49,7 @@ class CarelogProductClaimsCompositionTest {
                     "oauth.redirect-uris.kakao.MOBILE=https://carelog.example.test/oauth/kakao/callback",
                     "platform.identity.product-claims.enabled=true",
                     "platform.identity.product-claims.base-url=http://carelog.example.test:8080",
-                    "platform.identity.product-claims.service-token=test-service-token");
+                    "platform.identity.product-claims.service-secret=platform-identity-service-secret-0123456789");
 
     @Test
     void enabledAuthCompositionUsesExactlyOneProductionProductClaimsPort() {
@@ -66,6 +66,18 @@ class CarelogProductClaimsCompositionTest {
             assertThat(context.getBeansOfType(CRMIdentityProjectionPort.class))
                     .containsOnlyKeys("carelogProductClaimsProjectionPort");
         });
+    }
+
+    @Test
+    void enabledAuthWithoutProductClaimsFailsWithAClearCompositionRequirement() {
+        runner.withPropertyValues("platform.identity.product-claims.enabled=false")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .hasMessage(
+                                    "Identity Auth requires the Product claims integration when no CRMIdentityProjectionPort is configured; "
+                                            + "set platform.identity.product-claims.enabled=true or provide another valid provider");
+                });
     }
 
     @TestConfiguration(proxyBeanMethods = false)

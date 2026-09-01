@@ -18,8 +18,7 @@ public class CarelogProductClaimsProperties {
     @NotBlank
     private String baseUrl;
 
-    @NotBlank
-    private String serviceToken;
+    private String serviceSecret;
 
     @NotNull
     private Duration connectTimeout = Duration.ofSeconds(1);
@@ -35,8 +34,8 @@ public class CarelogProductClaimsProperties {
         return baseUrl;
     }
 
-    public String getServiceToken() {
-        return serviceToken;
+    public String getServiceSecret() {
+        return serviceSecret;
     }
 
     public Duration getConnectTimeout() {
@@ -55,8 +54,8 @@ public class CarelogProductClaimsProperties {
         this.baseUrl = baseUrl;
     }
 
-    public void setServiceToken(String serviceToken) {
-        this.serviceToken = serviceToken;
+    public void setServiceSecret(String serviceSecret) {
+        this.serviceSecret = serviceSecret;
     }
 
     public void setConnectTimeout(Duration connectTimeout) {
@@ -89,19 +88,23 @@ public class CarelogProductClaimsProperties {
                 || uri.getUserInfo() != null
                 || uri.getQuery() != null
                 || uri.getFragment() != null
-                || (path != null && !path.isEmpty() && !"/".equals(path))) {
+                || (path != null && !path.isEmpty())) {
             throw new IllegalStateException(
                     "platform.identity.product-claims.base-url must be a service origin");
         }
         return uri;
     }
 
-    public String requiredServiceToken() {
-        if (serviceToken == null || serviceToken.isBlank()) {
+    public String requiredServiceSecret() {
+        if (serviceSecret == null || serviceSecret.isBlank()) {
             throw new IllegalStateException(
-                    "platform.identity.product-claims.service-token must be provided");
+                    "platform.identity.product-claims.service-secret must be provided and at least 32 characters");
         }
-        return serviceToken;
+        if (serviceSecret.length() < 32) {
+            throw new IllegalStateException(
+                    "platform.identity.product-claims.service-secret must be at least 32 characters");
+        }
+        return serviceSecret;
     }
 
     private Duration requirePositiveTimeout(String property, Duration value) {

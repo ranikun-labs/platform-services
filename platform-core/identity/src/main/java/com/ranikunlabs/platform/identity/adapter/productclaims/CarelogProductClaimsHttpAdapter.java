@@ -4,26 +4,32 @@ import com.ranikunlabs.platform.identity.application.port.CRMIdentityClaims;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionException;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionException.Reason;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionPort;
+import com.ranikunlabs.platform.identity.application.CRMIdentityClaimsPolicy;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 /** HTTP adapter for the Carelog-owned Product claims projection port. */
 public final class CarelogProductClaimsHttpAdapter implements CRMIdentityProjectionPort {
 
-    static final String CLAIMS_PATH = "/api/v1/internal/identity/accounts/{accountId}/claims";
-    static final String SERVICE_TOKEN_HEADER = "X-Platform-Service-Token";
+    static final String CLAIMS_PATH = "/api/v1/internal/identity/claims/{accountId}";
+    static final String SERVICE_ID_HEADER = "X-Service-Id";
+    static final String SERVICE_SECRET_HEADER = "X-Service-Secret";
+    static final String SERVICE_ID = "platform-identity";
 
     private final RestClient restClient;
-    private final String serviceToken;
+    private final String serviceSecret;
 
-    public CarelogProductClaimsHttpAdapter(RestClient restClient, String serviceToken) {
-        this.restClient = restClient;
-        this.serviceToken = serviceToken;
+    public CarelogProductClaimsHttpAdapter(RestClient restClient, String serviceSecret) {
+        this.restClient = Objects.requireNonNull(restClient, "restClient");
+        if (serviceSecret == null || serviceSecret.isBlank() || serviceSecret.length() < 32) {
+            throw new IllegalArgumentException("serviceSecret must be at least 32 characters");
+        }
+        this.serviceSecret = serviceSecret;
     }
 
     @Override
@@ -38,20 +44,34 @@ public final class CarelogProductClaimsHttpAdapter implements CRMIdentityProject
     }
 
     private Optional<CRMIdentityClaims> requestClaims(UUID accountId) {
+        if (accountId == null) {
+            throw new CRMIdentityProjectionException(Reason.DEPENDENCY_CONTRACT_FAILURE);
+        }
         try {
-            CarelogProductClaimsResponse response = restClient.get()
+            return restClient.get()
                     .uri(CLAIMS_PATH, accountId)
-                    .header(SERVICE_TOKEN_HEADER, serviceToken)
-                    .retrieve()
-                    .body(CarelogProductClaimsResponse.class);
-            return Optional.of(validate(response));
+                    .header(SERVICE_ID_HEADER, SERVICE_ID)
+                    .header(SERVICE_SECRET_HEADER, serviceSecret)
+                    .exchange((request, response) -> {
+                        int status = response.getStatusCode().value();
+                        if (status == 404) {
+                            return Optional.empty();
+                        }
+                        if (status != 200) {
+                            throw mapHttpFailure(status);
+                        }
+                        return Optional.of(validate(response.bodyTo(CarelogProductClaimsResponse.class)));
+                    });
+        } catch (CRMIdentityProjectionException exception) {
+            throw exception;
         } catch (RestClientResponseException exception) {
-            return mapHttpFailure(exception.getStatusCode().value());
+            throw mapHttpFailure(exception.getStatusCode().value());
         } catch (ResourceAccessException exception) {
             throw new CRMIdentityProjectionException(Reason.DEPENDENCY_UNAVAILABLE);
-        } catch (RestClientException exception) {
-            throw new CRMIdentityProjectionException(Reason.DEPENDENCY_CONTRACT_FAILURE);
-        } catch (IllegalArgumentException exception) {
+        } catch (RuntimeException exception) {
+            if (isTransportFailure(exception)) {
+                throw new CRMIdentityProjectionException(Reason.DEPENDENCY_UNAVAILABLE);
+            }
             throw new CRMIdentityProjectionException(Reason.DEPENDENCY_CONTRACT_FAILURE);
         }
     }
@@ -60,25 +80,35 @@ public final class CarelogProductClaimsHttpAdapter implements CRMIdentityProject
         if (response == null
                 || response.organizationId() == null
                 || response.publicId() == null
-                || !"MANAGER".equals(response.role())) {
+                || response.role() == null
+                || response.role().isBlank()) {
             throw new CRMIdentityProjectionException(Reason.DEPENDENCY_CONTRACT_FAILURE);
         }
-        return new CRMIdentityClaims(
+        return CRMIdentityClaimsPolicy.requireEligible(new CRMIdentityClaims(
                 response.organizationId(),
                 response.role(),
-                response.publicId());
+                response.publicId()));
     }
 
-    private Optional<CRMIdentityClaims> mapHttpFailure(int status) {
-        if (status == 404) {
-            return Optional.empty();
-        }
+    private CRMIdentityProjectionException mapHttpFailure(int status) {
         if (status == 401 || status == 403) {
-            throw new CRMIdentityProjectionException(Reason.DEPENDENCY_AUTH_FAILURE);
+            return new CRMIdentityProjectionException(Reason.DEPENDENCY_AUTH_FAILURE);
         }
         if (status == 429 || status >= 500) {
-            throw new CRMIdentityProjectionException(Reason.DEPENDENCY_UNAVAILABLE);
+            return new CRMIdentityProjectionException(Reason.DEPENDENCY_UNAVAILABLE);
         }
-        throw new CRMIdentityProjectionException(Reason.DEPENDENCY_CONTRACT_FAILURE);
+        return new CRMIdentityProjectionException(Reason.DEPENDENCY_CONTRACT_FAILURE);
+    }
+
+    private boolean isTransportFailure(Throwable exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof java.net.ConnectException
+                    || cause instanceof java.net.SocketTimeoutException
+                    || cause instanceof java.net.http.HttpTimeoutException
+                    || cause instanceof java.io.IOException) {
+                return true;
+            }
+        }
+        return false;
     }
 }
