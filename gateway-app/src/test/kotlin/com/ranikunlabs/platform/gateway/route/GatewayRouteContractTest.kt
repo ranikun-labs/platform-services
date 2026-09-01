@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest
 import org.springframework.mock.web.server.MockServerWebExchange
 import reactor.core.publisher.Mono
+import java.net.URI
 
 @SpringBootTest(
     classes = [GatewayApplication::class],
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono
         "PLATFORM_GATEWAY_REDIS_HOST=localhost",
         "PLATFORM_GATEWAY_REDIS_PORT=6379",
         "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
+        "PLATFORM_GATEWAY_AUTH_URI=http://platform-core.test:8081",
         "PLATFORM_GATEWAY_CARELOG_BE_URI=http://localhost:8080",
         "PLATFORM_GATEWAY_CARELOG_RAG_URI=http://localhost:8081",
         "PLATFORM_GATEWAY_INTERNAL_SECRET=integration-secret",
@@ -41,6 +43,7 @@ class GatewayRouteContractTest(
         assertThat(routes.map(Route::getId)).containsSubsequence(
             "kakao-oauth-authorization",
             "kakao-oauth-exchange",
+            "platform-identity-auth",
             "carelog-be",
             "carelog-rag"
         )
@@ -53,14 +56,46 @@ class GatewayRouteContractTest(
         val routes = routeLocator.routes.collectList().block()!!
         val authorization = route(routes, "kakao-oauth-authorization")
         val exchange = route(routes, "kakao-oauth-exchange")
+        val identityAuth = route(routes, "platform-identity-auth")
         val carelogBe = route(routes, "carelog-be")
 
+        assertThat(authorization.getUri()).isEqualTo(URI.create(authUri))
+        assertThat(exchange.getUri()).isEqualTo(URI.create(authUri))
         assertThat(authorization.matches(HttpMethod.POST, authorizationPath)).isTrue()
         assertThat(exchange.matches(HttpMethod.POST, exchangePath)).isTrue()
         assertThat(authorization.matches(HttpMethod.GET, authorizationPath)).isFalse()
         assertThat(exchange.matches(HttpMethod.PUT, exchangePath)).isFalse()
         assertThat(authorization.matches(HttpMethod.POST, "$authorizationPath/extra")).isFalse()
         assertThat(carelogBe.matches(HttpMethod.POST, authorizationPath)).isTrue()
+        assertThat(identityAuth.getUri()).isEqualTo(URI.create(authUri))
+    }
+
+    @Test
+    fun `Identity Auth namespace wins over the Carelog fallback`() {
+        val routes = routeLocator.routes.collectList().block()!!
+
+        assertThat(firstMatchingRoute(routes, HttpMethod.POST, "/api/v1/auth/login").id)
+            .isEqualTo("platform-identity-auth")
+        assertThat(firstMatchingRoute(routes, HttpMethod.POST, "/api/v1/auth/refresh").id)
+            .isEqualTo("platform-identity-auth")
+        assertThat(firstMatchingRoute(routes, HttpMethod.POST, "/api/v1/auth/logout").id)
+            .isEqualTo("platform-identity-auth")
+        assertThat(firstMatchingRoute(routes, HttpMethod.POST, "/api/v1/auth/something").id)
+            .isEqualTo("platform-identity-auth")
+        assertThat(firstMatchingRoute(routes, HttpMethod.GET, "/api/v1/customers/test").id)
+            .isEqualTo("carelog-be")
+        assertThat(firstMatchingRoute(routes, HttpMethod.POST, "/api/v1/customers/test").id)
+            .isEqualTo("carelog-be")
+    }
+
+    @Test
+    fun `exact OAuth routes remain ahead of the broad Identity Auth route`() {
+        val routes = routeLocator.routes.collectList().block()!!
+
+        assertThat(routes.indexOf(route(routes, "kakao-oauth-authorization")))
+            .isLessThan(routes.indexOf(route(routes, "platform-identity-auth")))
+        assertThat(routes.indexOf(route(routes, "kakao-oauth-exchange")))
+            .isLessThan(routes.indexOf(route(routes, "platform-identity-auth")))
     }
 
     @Test
@@ -78,6 +113,9 @@ class GatewayRouteContractTest(
 
     private fun route(routes: List<Route>, id: String): Route = routes.single { it.id == id }
 
+    private fun firstMatchingRoute(routes: List<Route>, method: HttpMethod, path: String): Route =
+        routes.first { it.matches(method, path) }
+
     private fun Route.matches(method: HttpMethod, path: String): Boolean =
         Mono.from(
             predicate.apply(
@@ -86,6 +124,7 @@ class GatewayRouteContractTest(
         ).block()!!
 
     private companion object {
+        const val authUri = "http://platform-core.test:8081"
         const val authorizationPath = "/api/v1/auth/oauth/kakao/authorization"
         const val exchangePath = "/api/v1/auth/oauth/kakao/exchange"
     }

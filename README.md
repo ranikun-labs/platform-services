@@ -102,10 +102,14 @@ not claim Product reachability or database/Redis business connectivity.
 
 `docker-compose.yml` defines the two application processes, one PostgreSQL
 physical instance, and one Redis physical instance. It requires
-`PLATFORM_POSTGRES_PASSWORD` and the existing Gateway upstream/security values.
+`PLATFORM_POSTGRES_PASSWORD` and the Gateway upstream/security values.
+`PLATFORM_GATEWAY_AUTH_URI` normally points to Platform Core and can be changed
+to the Carelog URI for an auth-routing rollback without changing the Gateway
+artifact.
 
 ```sh
 PLATFORM_POSTGRES_PASSWORD='local-only' \
+PLATFORM_GATEWAY_AUTH_URI='http://platform-core-app:8081' \
 PLATFORM_GATEWAY_CARELOG_BE_URI='http://carelog-be:8080' \
 PLATFORM_GATEWAY_CARELOG_RAG_URI='http://carelog-rag:8000' \
 PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET='local-only' \

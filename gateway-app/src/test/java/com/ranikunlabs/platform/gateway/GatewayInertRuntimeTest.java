@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "PLATFORM_GATEWAY_REDIS_HOST=redis",
                 "PLATFORM_GATEWAY_REDIS_PORT=6379",
                 "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
+                "PLATFORM_GATEWAY_AUTH_URI=http://localhost:8081",
                 "PLATFORM_GATEWAY_CARELOG_BE_URI=http://localhost:8080",
                 "PLATFORM_GATEWAY_CARELOG_RAG_URI=http://localhost:8081",
                 "PLATFORM_GATEWAY_INTERNAL_SECRET=runtime-test-secret",

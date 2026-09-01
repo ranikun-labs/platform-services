@@ -46,8 +46,6 @@ class JwtGlobalFilterCharacterizationTest {
         redisTemplate = mock(ReactiveStringRedisTemplate::class.java)
         val config = GatewayConfig(
             publicPaths = listOf(
-                "/api/v1/auth/login",
-                "/api/v1/auth/refresh",
                 "/api/v1/users/managers"
             ),
             internalSecret = internalSecret,
@@ -57,34 +55,89 @@ class JwtGlobalFilterCharacterizationTest {
             JwtVerifier(secret),
             RedisBlacklistService(redisTemplate),
             config,
+            AuthPublicRequestMatcher(),
             OAuthPublicRequestMatcher()
         )
         capturedExchange = null
     }
 
-    @Test
-    fun `configured public prefix preserves startsWith behavior and injects only gateway secret`() {
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh"
+    ])
+    fun `exact POST Identity Auth endpoints are public and strip spoofed trusted headers`(path: String) {
         val exchange = exchange(
             HttpMethod.POST,
-            "/api/v1/auth/login-extra",
-            mapOf("X-User-Id" to "spoofed-user", "X-Gateway-Secret" to "spoofed-secret")
+            path,
+            spoofedTrustedHeaders
         )
 
         filter.filter(exchange, chain).block()
 
         assertThat(headerOf("X-Gateway-Secret")).isEqualTo(internalSecret)
         assertThat(headerOf("X-User-Id")).isNull()
+        assertThat(headerOf("X-Organization-Id")).isNull()
+        assertThat(headerOf("X-Role")).isNull()
+        assertThat(headerOf("X-Public-Id")).isNull()
+        assertThat(headerOf("X-Platform-Service-Token")).isNull()
         verifyNoInteractions(redisTemplate)
     }
 
-    @Test
-    fun `OPTIONS on a configured public prefix retains the current public-path behavior`() {
-        val exchange = exchange(HttpMethod.OPTIONS, "/api/v1/auth/login")
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh"
+    ])
+    fun `OPTIONS on an exact Identity Auth endpoint retains preflight public behavior`(path: String) {
+        val exchange = exchange(HttpMethod.OPTIONS, path)
 
         filter.filter(exchange, chain).block()
 
         assertThat(headerOf("X-Gateway-Secret")).isEqualTo(internalSecret)
         assertThat(exchange.response.statusCode).isNull()
+        verifyNoInteractions(redisTemplate)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "POST /api/v1/auth/login-extra",
+        "POST /api/v1/auth/login/foo",
+        "POST /api/v1/auth/refresh-extra",
+        "POST /api/v1/auth/refresh/foo",
+        "OPTIONS /api/v1/auth/login-extra",
+        "GET /api/v1/auth/login",
+        "PUT /api/v1/auth/refresh"
+    ])
+    fun `non exact or wrong method Identity Auth requests remain protected`(request: String) {
+        val (method, path) = request.split(" ", limit = 2)
+        val exchange = exchange(HttpMethod.valueOf(method), path)
+
+        filter.filter(exchange, chain).block()
+
+        assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        assertThat(capturedExchange).isNull()
+        verifyNoInteractions(redisTemplate)
+    }
+
+    @Test
+    fun `logout remains protected`() {
+        val exchange = exchange(HttpMethod.POST, "/api/v1/auth/logout")
+
+        filter.filter(exchange, chain).block()
+
+        assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        assertThat(capturedExchange).isNull()
+        verifyNoInteractions(redisTemplate)
+    }
+
+    @Test
+    fun `configured product public prefix remains startsWith based`() {
+        val exchange = exchange(HttpMethod.GET, "/api/v1/users/managers/extra")
+
+        filter.filter(exchange, chain).block()
+
+        assertThat(headerOf("X-Gateway-Secret")).isEqualTo(internalSecret)
         verifyNoInteractions(redisTemplate)
     }
 
@@ -102,7 +155,8 @@ class JwtGlobalFilterCharacterizationTest {
                 "X-Organization-Id" to "spoofed-org",
                 "X-Role" to "spoofed-role",
                 "X-Public-Id" to "spoofed-public",
-                "X-Gateway-Secret" to "spoofed-secret"
+                "X-Gateway-Secret" to "spoofed-secret",
+                "X-Platform-Service-Token" to "spoofed-platform-token"
             )
         )
 
@@ -113,6 +167,7 @@ class JwtGlobalFilterCharacterizationTest {
         assertThat(headerOf("X-Organization-Id")).isNull()
         assertThat(headerOf("X-Role")).isNull()
         assertThat(headerOf("X-Public-Id")).isNull()
+        assertThat(headerOf("X-Platform-Service-Token")).isNull()
         verifyNoInteractions(redisTemplate)
     }
 
@@ -317,4 +372,13 @@ class JwtGlobalFilterCharacterizationTest {
 
     private fun headerOf(name: String): String? =
         capturedExchange!!.request.headers.getFirst(name)
+
+    private val spoofedTrustedHeaders = mapOf(
+        "X-User-Id" to "spoofed-user",
+        "X-Organization-Id" to "spoofed-org",
+        "X-Role" to "spoofed-role",
+        "X-Public-Id" to "spoofed-public",
+        "X-Gateway-Secret" to "spoofed-secret",
+        "X-Platform-Service-Token" to "spoofed-platform-token"
+    )
 }

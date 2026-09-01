@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference
         "PLATFORM_GATEWAY_REDIS_HOST=127.0.0.1",
         "PLATFORM_GATEWAY_REDIS_PORT=1",
         "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
+        "PLATFORM_GATEWAY_AUTH_URI=http://127.0.0.1:39154",
         "PLATFORM_GATEWAY_CARELOG_BE_URI=http://127.0.0.1:39154",
         "PLATFORM_GATEWAY_CARELOG_RAG_URI=http://127.0.0.1:39154",
         "PLATFORM_GATEWAY_INTERNAL_SECRET=http-http-test-internal-secret",
