@@ -2,6 +2,7 @@ package com.ranikunlabs.platform.sharedai.application
 
 import com.ranikunlabs.platform.sharedai.core.Evidence
 import com.ranikunlabs.platform.sharedai.core.ExecutionContext
+import com.ranikunlabs.platform.sharedai.ports.ModelUsage
 
 data class SkillId(val value: String) {
     init {
@@ -40,8 +41,16 @@ sealed interface ExecutionResult {
         val interpretation: String,
         val evidence: Evidence,
         warnings: List<String>,
+        val usage: ModelUsage? = null,
     ) : ExecutionResult {
         val warnings: List<String> = java.util.List.copyOf(warnings)
+
+        constructor(
+            executionReference: String,
+            interpretation: String,
+            evidence: Evidence,
+            warnings: List<String>,
+        ) : this(executionReference, interpretation, evidence, warnings, null)
     }
 
     data class TechnicalFailure(

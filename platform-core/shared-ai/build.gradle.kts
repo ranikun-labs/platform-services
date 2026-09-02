@@ -35,6 +35,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-autoconfigure")
     implementation("io.micrometer:micrometer-core")
     implementation(libs.spring.ai.client.chat)
+    implementation(libs.spring.ai.openai)
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

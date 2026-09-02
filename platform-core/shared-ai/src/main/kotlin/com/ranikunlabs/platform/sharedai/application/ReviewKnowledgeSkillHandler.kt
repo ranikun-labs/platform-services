@@ -102,6 +102,7 @@ class ReviewKnowledgeSkillHandler(
                 modelResult.interpretation,
                 Evidence(command.context, evidenceItems),
                 if (retrieved.isEmpty()) listOf("NO_RETRIEVED_CONTENT") else emptyList(),
+                modelResult.usage,
             )
         } catch (failure: StageFailure) {
             terminalFailure = failure.category
