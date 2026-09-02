@@ -72,6 +72,34 @@ class KakaoOAuthConfigurationTest {
         });
     }
 
+    /**
+     * Any Kakao property is intent to run Kakao. Leaving one of these to disable the integration by
+     * accident would turn a typo into a silently missing login, so each must stop startup rather
+     * than fall back to "Kakao not configured".
+     */
+    @Test
+    void failsStartupForEveryPartialKakaoConfiguration() {
+        assertPartialConfigurationFails("oauth.kakao.client-secret=" + CLIENT_SECRET);
+        assertPartialConfigurationFails("oauth.kakao.client-secret-enabled=false");
+        assertPartialConfigurationFails("oauth.kakao.authorization-uri=https://kauth.kakao.com/oauth/authorize");
+        assertPartialConfigurationFails("oauth.kakao.token-uri=https://kauth.kakao.com/oauth/token");
+        assertPartialConfigurationFails("oauth.kakao.user-info-uri=https://kapi.kakao.com/v2/user/me");
+        assertPartialConfigurationFails("oauth.kakao.connect-timeout=2s");
+        assertPartialConfigurationFails("oauth.kakao.read-timeout=3s");
+    }
+
+    /**
+     * The module's own endpoint and timeout defaults must not make an unconfigured deployment look
+     * operator-configured, so the absence check reads externally supplied properties only.
+     */
+    @Test
+    void treatsThisModulesOwnDefaultsAsAbsenceRatherThanConfiguration() {
+        contextRunner.run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context).doesNotHaveBean(OAuthProviderPort.class);
+        });
+    }
+
     @Test
     void failsWhenTheClientSecretIsMissingWhileTheApplicationRequiresOne() {
         contextRunner
@@ -135,6 +163,11 @@ class KakaoOAuthConfigurationTest {
             assertThat(context.getEnvironment().containsProperty("oauth.kakao.finance-client-id"))
                     .isFalse();
         });
+    }
+
+    private void assertPartialConfigurationFails(String property) {
+        contextRunner.withPropertyValues(property).run(context ->
+                assertThat(context).as("partial configuration %s", property).hasFailed());
     }
 
     private ApplicationContextRunner configured() {

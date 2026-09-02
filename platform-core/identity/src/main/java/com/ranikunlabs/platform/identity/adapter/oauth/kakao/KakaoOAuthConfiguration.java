@@ -1,7 +1,7 @@
 package com.ranikunlabs.platform.identity.adapter.oauth.kakao;
 
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthProviderPort;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,14 +14,15 @@ import java.time.Clock;
 /**
  * Registers the production Kakao provider only when it is actually configured.
  *
- * <p>Composition is gated on {@code oauth.kakao.client-id}. With no Kakao configuration the provider
- * simply does not exist — foundation mode boots, and {@code OAuthProviderRegistry} reports Kakao as
- * an unsupported provider rather than pretending a stub is the real integration. With a client id
- * present, {@link KakaoOAuthProperties} validation makes any incomplete or unusable Kakao
- * configuration a startup failure instead of a runtime surprise.
+ * <p>With no {@code oauth.kakao.*} configuration at all the provider simply does not exist —
+ * foundation mode boots, and {@code OAuthProviderRegistry} reports Kakao as an unsupported provider
+ * rather than pretending a stub is the real integration. Once any Kakao property is supplied,
+ * {@link KakaoOAuthConfiguredCondition} treats that as intent to run Kakao and
+ * {@link KakaoOAuthProperties} validation turns an incomplete or unusable configuration into a
+ * startup failure, so a half-configured deployment can never read as "Kakao disabled".
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(prefix = "oauth.kakao", name = "client-id")
+@Conditional(KakaoOAuthConfiguredCondition.class)
 @EnableConfigurationProperties(KakaoOAuthProperties.class)
 public class KakaoOAuthConfiguration {
 
