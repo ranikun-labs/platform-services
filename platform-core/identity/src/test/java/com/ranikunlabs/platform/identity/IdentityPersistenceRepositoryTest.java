@@ -463,6 +463,16 @@ class IdentityPersistenceRepositoryTest {
         assertThat(loser.reason()).isEqualTo(TokenLifecycleException.Reason.REFRESH_TOKEN_NOT_FOUND);
         assertThat(sessionsFor(account.getId())).hasSize(1);
         assertThat(tokenSession.findByToken(oldToken)).isEmpty();
+        // The surviving credential must be a new one, never the token both callers presented.
+        AuthTokenBundle winner = outcomes.stream()
+                .filter(AuthTokenBundle.class::isInstance)
+                .map(AuthTokenBundle.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertThat(winner.refreshToken()).isNotEqualTo(oldToken);
+        assertThat(sessionsFor(account.getId())).singleElement()
+                .extracting(RefreshTokenEntity::getRefreshToken)
+                .isEqualTo(winner.refreshToken());
     }
 
     @Test
@@ -482,6 +492,43 @@ class IdentityPersistenceRepositoryTest {
         assertThat(sessionsFor(account.getId())).singleElement()
                 .extracting(RefreshTokenEntity::getRefreshToken)
                 .isEqualTo(rotated.refreshToken());
+    }
+
+    /**
+     * Rotation must consume the presented credential without depending on the clock advancing.
+     *
+     * <p>Refresh tokens carry {@code sub}, {@code iat}, and {@code exp}, all of which are identical
+     * for two issuances inside one second; only the per-issuance {@code jti} separates them. Nothing
+     * here waits for a clock second, so a rotation that reproduced the old token would fail this.
+     */
+    @Test
+    void refreshRotatesToADistinctTokenWithoutWaitingForTheClock() {
+        PlatformAccountEntity account = platformAccountRepository.saveAndFlush(
+                PlatformAccountEntity.create(unique("refresh-uniqueness") + "@example.com"));
+        String oldToken = seedOlderRefreshSession(account.getId());
+        when(crmIdentityProjectionPort.getIdentityClaims(account.getId())).thenReturn(claims());
+
+        AuthTokenBundle rotated = authService.refreshToken(oldToken);
+
+        assertThat(rotated.refreshToken()).isNotEqualTo(oldToken);
+        assertThat(jwtId(rotated.refreshToken())).isNotEqualTo(jwtId(oldToken));
+        assertThat(sessionsFor(account.getId())).singleElement()
+                .extracting(RefreshTokenEntity::getRefreshToken)
+                .isEqualTo(rotated.refreshToken());
+
+        assertThatThrownBy(() -> authService.refreshToken(oldToken))
+                .isInstanceOfSatisfying(TokenLifecycleException.class, failure ->
+                        assertThat(failure.reason())
+                                .isEqualTo(TokenLifecycleException.Reason.REFRESH_TOKEN_NOT_FOUND));
+
+        // The winner stays usable, and rotating again is distinct once more.
+        AuthTokenBundle rotatedAgain = authService.refreshToken(rotated.refreshToken());
+        assertThat(rotatedAgain.refreshToken())
+                .isNotEqualTo(rotated.refreshToken())
+                .isNotEqualTo(oldToken);
+        assertThat(sessionsFor(account.getId())).singleElement()
+                .extracting(RefreshTokenEntity::getRefreshToken)
+                .isEqualTo(rotatedAgain.refreshToken());
     }
 
     @Test
@@ -688,6 +735,16 @@ class IdentityPersistenceRepositoryTest {
     private static void shutdown(ExecutorService executor) throws InterruptedException {
         executor.shutdownNow();
         executor.awaitTermination(30, TimeUnit.SECONDS);
+    }
+
+    /** Reads the per-issuance uniqueness claim straight off the wire, without the provider. */
+    private static String jwtId(String jwt) {
+        String payload = new String(
+                java.util.Base64.getUrlDecoder().decode(jwt.split("\\.")[1]),
+                java.nio.charset.StandardCharsets.UTF_8);
+        java.util.regex.Matcher matcher =
+                java.util.regex.Pattern.compile("\"jti\"\\s*:\\s*\"([^\"]+)\"").matcher(payload);
+        return matcher.find() ? matcher.group(1) : null;
     }
 
     private static String unique(String prefix) {

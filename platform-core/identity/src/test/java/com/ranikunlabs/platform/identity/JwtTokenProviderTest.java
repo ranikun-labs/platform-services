@@ -53,7 +53,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void refreshTokenContainsOnlyAccountSubjectAndCanonicalTtl() {
+    void refreshTokenCarriesNoAccessClaimsAndKeepsTheCanonicalTtl() {
         String token = provider.generateRefreshToken(ACCOUNT_ID);
         Claims claims = parse(token);
 
@@ -64,6 +64,52 @@ class JwtTokenProviderTest {
         assertThat(claims.getExpiration().getTime() - claims.getIssuedAt().getTime())
                 .isEqualTo(Duration.ofDays(14).toMillis());
         assertThat(provider.getAccountIdFromToken(token)).isEqualTo(ACCOUNT_ID);
+    }
+
+    /**
+     * The clock is frozen, so {@code iat} and {@code exp} are identical across both issuances. Any
+     * difference between the tokens therefore comes from per-issuance entropy, not from time.
+     */
+    @Test
+    void refreshTokensIssuedAtTheSameInstantForOneAccountAreDistinct() {
+        String first = provider.generateRefreshToken(ACCOUNT_ID);
+        String second = provider.generateRefreshToken(ACCOUNT_ID);
+
+        assertThat(first).isNotEqualTo(second);
+        assertThat(parse(first).getIssuedAt()).isEqualTo(parse(second).getIssuedAt());
+        assertThat(parse(first).getExpiration()).isEqualTo(parse(second).getExpiration());
+        assertThat(parse(first).getId()).isNotEqualTo(parse(second).getId());
+
+        assertThat(provider.validateToken(first)).isTrue();
+        assertThat(provider.validateToken(second)).isTrue();
+        assertThat(provider.getAccountIdFromToken(first)).isEqualTo(ACCOUNT_ID);
+        assertThat(provider.getAccountIdFromToken(second)).isEqualTo(ACCOUNT_ID);
+    }
+
+    /** A refresh token minted before the uniqueness hardening must remain usable as-is. */
+    @Test
+    void aLegacyRefreshTokenWithoutTheUniquenessClaimStaysAcceptable() {
+        Instant now = Instant.now(clock);
+        String legacyToken = Jwts.builder()
+                .subject(ACCOUNT_ID.toString())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(Duration.ofDays(14))))
+                .signWith(verificationKey)
+                .compact();
+
+        assertThat(parse(legacyToken).getId()).isNull();
+        assertThat(provider.validateToken(legacyToken)).isTrue();
+        assertThat(provider.getAccountIdFromToken(legacyToken)).isEqualTo(ACCOUNT_ID);
+        // Still not an access credential: the uniqueness claim changes nothing about token class.
+        assertThat(provider.validateAccessToken(legacyToken)).isFalse();
+    }
+
+    @Test
+    void theUniquenessClaimIsNotAddedToAccessTokens() {
+        String accessToken = provider.generateAccessToken(ACCOUNT_ID, ORGANIZATION_ID, "MANAGER", PUBLIC_ID);
+
+        assertThat(parse(accessToken).getId()).isNull();
+        assertThat(provider.validateAccessToken(accessToken)).isTrue();
     }
 
     @Test

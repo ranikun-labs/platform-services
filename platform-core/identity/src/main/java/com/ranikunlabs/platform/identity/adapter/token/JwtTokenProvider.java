@@ -56,11 +56,21 @@ public class JwtTokenProvider implements TokenProviderPort {
                 .compact();
     }
 
+    /**
+     * Issues a refresh token that is unique per issuance.
+     *
+     * <p>{@code sub}, {@code iat}, and {@code exp} alone do not distinguish two tokens minted for
+     * one account within the same second, because JWT time claims have one-second wire resolution.
+     * A rotation that produced the previous token byte-for-byte would leave the consumed credential
+     * usable, so each issuance carries a random {@code jti}. The claim is additive: it is never
+     * required on presentation, so refresh tokens issued before this change stay usable.
+     */
     @Override
     public String generateRefreshToken(UUID accountId) {
         Instant now = Instant.now(clock);
         return Jwts.builder()
                 .subject(accountId.toString())
+                .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(refreshTokenValidity)))
                 .signWith(secretKey)

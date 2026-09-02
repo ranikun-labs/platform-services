@@ -31,13 +31,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -204,7 +202,6 @@ class HostedIdentityRuntimeIntegrationTest {
                 ClaimsStubResponse.of(UUID.randomUUID(), "MEMBER", UUID.randomUUID());
         CLAIMS_RESPONSE.set(rotatedClaims);
         CLAIMS_CALLS.clear();
-        awaitNextIssuedAtSecond();
 
         HttpOutcome refreshed = postJson("/api/v1/auth/refresh",
                 "{\"refreshToken\":\"" + originalRefreshToken + "\"}");
@@ -473,22 +470,6 @@ class HostedIdentityRuntimeIntegrationTest {
             }
         }
         return tokens;
-    }
-
-    /**
-     * Waits for the wall clock to cross into the next second before a rotation.
-     *
-     * <p>A refresh token carries only {@code sub}, {@code iat}, and {@code exp}, and JWT time claims
-     * have one-second resolution, so two refresh tokens minted for the same account within one
-     * second are byte-identical. That is a property of the canonical token format this extraction
-     * preserves; crossing the boundary is what makes "the previous token is rejected" observable
-     * rather than a coincidence of timing.
-     */
-    private static void awaitNextIssuedAtSecond() throws InterruptedException {
-        long currentSecond = Instant.now().getEpochSecond();
-        while (Instant.now().getEpochSecond() == currentSecond) {
-            TimeUnit.MILLISECONDS.sleep(50);
-        }
     }
 
     private static JsonNode decodeJwtPayload(String jwt) {
