@@ -13,6 +13,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,6 +75,55 @@ class JwtTokenProviderTest {
         assertThat(provider.getRemainingValidity(token)).isEqualTo(Duration.ofMinutes(15));
         assertThat(provider.getRefreshTokenExpiryDate())
                 .isEqualTo(Instant.now(clock).plus(Duration.ofDays(14)).atOffset(ZoneOffset.UTC));
+    }
+
+    @Test
+    void accessTokenValidationAcceptsOnlyTokensCarryingTheAccessClaimSet() {
+        String accessToken = provider.generateAccessToken(ACCOUNT_ID, ORGANIZATION_ID, "MANAGER", PUBLIC_ID);
+        String refreshToken = provider.generateRefreshToken(ACCOUNT_ID);
+
+        assertThat(provider.validateAccessToken(accessToken)).isTrue();
+        // Authentic and unexpired, but not an access credential.
+        assertThat(provider.validateToken(refreshToken)).isTrue();
+        assertThat(provider.validateAccessToken(refreshToken)).isFalse();
+        assertThat(provider.validateAccessToken(accessToken + "tampered")).isFalse();
+    }
+
+    @Test
+    void accessTokenValidationRejectsMissingOrUnparsableAccessClaims() {
+        assertThat(provider.validateAccessToken(
+                signedToken(ACCOUNT_ID.toString(), null, "MANAGER", PUBLIC_ID.toString()))).isFalse();
+        assertThat(provider.validateAccessToken(
+                signedToken(ACCOUNT_ID.toString(), "not-a-uuid", "MANAGER", PUBLIC_ID.toString()))).isFalse();
+        assertThat(provider.validateAccessToken(
+                signedToken(ACCOUNT_ID.toString(), ORGANIZATION_ID.toString(), null, PUBLIC_ID.toString()))).isFalse();
+        assertThat(provider.validateAccessToken(
+                signedToken(ACCOUNT_ID.toString(), ORGANIZATION_ID.toString(), "  ", PUBLIC_ID.toString()))).isFalse();
+        assertThat(provider.validateAccessToken(
+                signedToken(ACCOUNT_ID.toString(), ORGANIZATION_ID.toString(), "MANAGER", null))).isFalse();
+        assertThat(provider.validateAccessToken(
+                signedToken(ACCOUNT_ID.toString(), ORGANIZATION_ID.toString(), "MANAGER", "not-a-uuid"))).isFalse();
+        assertThat(provider.validateAccessToken(
+                signedToken("not-a-uuid", ORGANIZATION_ID.toString(), "MANAGER", PUBLIC_ID.toString()))).isFalse();
+    }
+
+    /** Builds an otherwise-authentic token with a chosen access-claim shape. */
+    private String signedToken(String subject, String organizationId, String role, String publicId) {
+        Instant now = Instant.now(clock);
+        var builder = Jwts.builder()
+                .subject(subject)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(Duration.ofMinutes(15))));
+        if (organizationId != null) {
+            builder.claim("organizationId", organizationId);
+        }
+        if (role != null) {
+            builder.claim("role", role);
+        }
+        if (publicId != null) {
+            builder.claim("publicId", publicId);
+        }
+        return builder.signWith(verificationKey).compact();
     }
 
     private Claims parse(String token) {

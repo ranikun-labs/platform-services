@@ -34,11 +34,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.net.URI;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -257,6 +261,35 @@ class IdentityAuthHttpCompatibilityTest {
     void logoutWithAMalformedBearerTokenIsUnauthorized() throws Exception {
         mockMvc.perform(post(LOGOUT_PATH).header("Authorization", "Bearer not-a-jwt"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    /**
+     * A refresh token is issued by the same provider and the same signing key, so it is an
+     * authentic token. It still must not be usable as a bearer credential.
+     */
+    @Test
+    void aValidRefreshTokenCannotBeUsedAsABearerCredential() throws Exception {
+        String refreshToken = tokenProvider.generateRefreshToken(UUID.randomUUID());
+
+        mockMvc.perform(post(LOGOUT_PATH).header("Authorization", "Bearer " + refreshToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Unauthorized"));
+
+        verify(authService, never()).logout(any(), any());
+    }
+
+    @Test
+    void anExpiredAccessTokenCannotEstablishAuthentication() throws Exception {
+        JwtTokenProvider expiredProvider = new JwtTokenProvider(
+                JWT_SECRET, 900_000L, 1_209_600_000L,
+                Clock.fixed(Instant.now().minus(Duration.ofDays(1)), ZoneOffset.UTC));
+        String expiredAccessToken = expiredProvider.generateAccessToken(
+                UUID.randomUUID(), UUID.randomUUID(), "MEMBER", UUID.randomUUID());
+
+        mockMvc.perform(post(LOGOUT_PATH).header("Authorization", "Bearer " + expiredAccessToken))
+                .andExpect(status().isUnauthorized());
+
+        verify(authService, never()).logout(any(), any());
     }
 
     @Test

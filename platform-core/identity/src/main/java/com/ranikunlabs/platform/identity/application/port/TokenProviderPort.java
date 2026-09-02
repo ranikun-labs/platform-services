@@ -13,6 +13,16 @@ public interface TokenProviderPort {
 
     boolean validateToken(String token);
 
+    /**
+     * Verifies that a token is usable as an access credential, not merely a well-signed token.
+     *
+     * <p>{@link #validateToken(String)} answers only whether a token is authentic and unexpired,
+     * which every issued token is — including refresh tokens. Bearer authentication must additionally
+     * establish the token's class, so this operation also requires the claims that only an access
+     * token carries. Refresh tokens must fail it.
+     */
+    boolean validateAccessToken(String token);
+
     UUID getAccountIdFromToken(String token);
 
     OffsetDateTime getRefreshTokenExpiryDate();

@@ -54,7 +54,9 @@ public class IdentityBearerAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(BEARER_PREFIX.length());
-        if (token.isBlank() || !tokenProvider.validateToken(token)) {
+        // Access-token validation, not generic token validation: a refresh token is also an
+        // authentic signed token and must never authenticate a request.
+        if (token.isBlank() || !tokenProvider.validateAccessToken(token)) {
             return;
         }
 

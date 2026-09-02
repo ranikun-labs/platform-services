@@ -92,6 +92,32 @@ public class JwtTokenProvider implements TokenProviderPort {
         return false;
     }
 
+    /**
+     * Distinguishes an access token from any other authentic token by its claim shape.
+     *
+     * <p>The issued JWT format is unchanged: access tokens already carry {@code organizationId},
+     * {@code role}, and {@code publicId}, and refresh tokens carry none of them, so requiring those
+     * claims separates the two token classes without adding a type claim.
+     */
+    @Override
+    public boolean validateAccessToken(String token) {
+        if (!validateToken(token)) {
+            return false;
+        }
+        try {
+            Claims claims = getClaims(token);
+            UUID.fromString(claims.getSubject());
+            UUID.fromString(claims.get("organizationId", String.class));
+            UUID.fromString(claims.get("publicId", String.class));
+            String role = claims.get("role", String.class);
+            return role != null && !role.isBlank();
+        } catch (RuntimeException exception) {
+            // A missing or unparsable access claim means this is not a usable access credential.
+            log.warn("Rejected bearer token without a complete access-token claim set");
+            return false;
+        }
+    }
+
     @Override
     public OffsetDateTime getRefreshTokenExpiryDate() {
         return OffsetDateTime.now(clock).plus(Duration.ofMillis(refreshTokenValidity));

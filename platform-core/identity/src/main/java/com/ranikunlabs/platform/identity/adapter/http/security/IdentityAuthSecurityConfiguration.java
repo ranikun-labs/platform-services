@@ -22,13 +22,18 @@ import java.time.Clock;
  * Servlet security composition for the Identity Auth namespace only.
  *
  * <p>The chain is scoped with {@code securityMatcher} to {@code /api/v1/auth/**} and deliberately
- * states no policy for any other path, so hosting Identity does not change how the rest of the
- * Platform Core host is secured. Within the namespace only the exact public POST endpoints are
- * permitted; every other path under it — including endpoints added later — requires authentication.
+ * states no policy for any other path. Within the namespace only the exact public POST endpoints
+ * are permitted; every other path under it — including endpoints added later — requires
+ * authentication.
  *
  * <p>The chain is composed whenever Identity is hosted in a Servlet context with Spring Security
  * present, independently of {@code platform.identity.auth.enabled}. In foundation mode the
  * namespace has no endpoints and the chain simply keeps it closed.
+ *
+ * <p>Contributing any {@code SecurityFilterChain} bean does influence Spring Boot's security
+ * auto-configuration — Boot's default host-wide chain backs off once one exists. That interaction
+ * is deliberate here but is not a guarantee this module can make on the host's behalf: host-wide
+ * policy is settled by the later Hosted Runtime Composition gate.
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)

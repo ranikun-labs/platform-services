@@ -162,7 +162,7 @@ class IdentityAuthCompositionTest {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(IdentityAuthController.class);
                     // The namespace chain still exists, so foundation mode does not leave
-                    // /api/v1/auth/** open and does not change host-wide security either.
+                    // /api/v1/auth/** open.
                     assertThat(context).hasSingleBean(SecurityFilterChain.class);
                 });
     }
