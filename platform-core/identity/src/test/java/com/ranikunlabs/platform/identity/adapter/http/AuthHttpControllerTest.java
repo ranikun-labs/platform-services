@@ -160,6 +160,25 @@ class AuthHttpControllerTest {
     }
 
     @Test
+    void loginMapsAnIneligibleProductRoleToForbiddenWithoutExposingTheRole() throws Exception {
+        doThrow(new CRMIdentityProjectionException(
+                CRMIdentityProjectionException.Reason.PRODUCT_ROLE_NOT_ELIGIBLE))
+                .when(authService).login("manager", "password123");
+
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":\"manager\",\"password\":\"password123\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Product identity 권한이 없습니다."))
+                .andExpect(jsonPath("$.data").doesNotExist())
+                .andReturn();
+
+        assertThat(result.getResponse().getContentAsString())
+                .doesNotContain("CUSTOMER", "PRODUCT_ROLE_NOT_ELIGIBLE");
+    }
+
+    @Test
     void loginValidationUsesCanonicalStatusAndFirstFieldMessage() throws Exception {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -433,6 +452,19 @@ class AuthHttpControllerTest {
         mockMvc.perform(exchangeRequest())
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.message").value("OAuth 인증 요청 저장소를 사용할 수 없습니다."))
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    void exchangeMapsAnIneligibleProductRoleToForbidden() throws Exception {
+        doThrow(new CRMIdentityProjectionException(
+                CRMIdentityProjectionException.Reason.PRODUCT_ROLE_NOT_ELIGIBLE))
+                .when(oauthLoginService).completeLogin(any());
+
+        mockMvc.perform(exchangeRequest())
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Product identity 권한이 없습니다."))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }
 

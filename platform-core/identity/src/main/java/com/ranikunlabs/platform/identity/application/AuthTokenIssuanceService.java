@@ -23,6 +23,7 @@ public class AuthTokenIssuanceService {
 
     /** Issues a login pair and replaces all existing sessions for the account. */
     public AuthTokenBundle issue(UUID accountId, CRMIdentityClaims claims) {
+        CRMIdentityClaimsPolicy.requireEligible(claims);
         String accessToken = tokenProvider.generateAccessToken(
                 accountId,
                 claims.organizationId(),
@@ -42,6 +43,7 @@ public class AuthTokenIssuanceService {
 
     /** Issues a refresh pair and mutates the exact session returned by the lookup. */
     public AuthTokenBundle rotate(RefreshSession session, CRMIdentityClaims claims) {
+        CRMIdentityClaimsPolicy.requireEligible(claims);
         UUID accountId = session.accountId();
         String accessToken = tokenProvider.generateAccessToken(
                 accountId,

@@ -67,13 +67,20 @@ class JwtGlobalFilterCharacterizationTest {
         val exchange = exchange(
             HttpMethod.POST,
             "/api/v1/auth/login-extra",
-            mapOf("X-User-Id" to "spoofed-user", "X-Gateway-Secret" to "spoofed-secret")
+            mapOf(
+                "X-User-Id" to "spoofed-user",
+                "X-Gateway-Secret" to "spoofed-secret",
+                "X-Service-Id" to "spoofed-service",
+                "X-Service-Secret" to "spoofed-service-secret"
+            )
         )
 
         filter.filter(exchange, chain).block()
 
         assertThat(headerOf("X-Gateway-Secret")).isEqualTo(internalSecret)
         assertThat(headerOf("X-User-Id")).isNull()
+        assertThat(headerOf("X-Service-Id")).isNull()
+        assertThat(headerOf("X-Service-Secret")).isNull()
         verifyNoInteractions(redisTemplate)
     }
 
@@ -102,7 +109,9 @@ class JwtGlobalFilterCharacterizationTest {
                 "X-Organization-Id" to "spoofed-org",
                 "X-Role" to "spoofed-role",
                 "X-Public-Id" to "spoofed-public",
-                "X-Gateway-Secret" to "spoofed-secret"
+                "X-Gateway-Secret" to "spoofed-secret",
+                "X-Service-Id" to "spoofed-service",
+                "X-Service-Secret" to "spoofed-service-secret"
             )
         )
 
@@ -113,6 +122,48 @@ class JwtGlobalFilterCharacterizationTest {
         assertThat(headerOf("X-Organization-Id")).isNull()
         assertThat(headerOf("X-Role")).isNull()
         assertThat(headerOf("X-Public-Id")).isNull()
+        assertThat(headerOf("X-Service-Id")).isNull()
+        assertThat(headerOf("X-Service-Secret")).isNull()
+        verifyNoInteractions(redisTemplate)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "/api/v1/internal",
+        "/api/v1/internal/identity/claims/11111111-1111-1111-1111-111111111111"
+    ])
+    fun `internal API paths are forbidden before authentication or routing`(path: String) {
+        val exchange = exchange(
+            HttpMethod.GET,
+            path,
+            mapOf(
+                "X-Service-Id" to "platform-identity",
+                "X-Service-Secret" to "spoofed-service-secret"
+            )
+        )
+
+        filter.filter(exchange, chain).block()
+
+        assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+        assertThat(capturedExchange).isNull()
+        verifyNoInteractions(redisTemplate)
+    }
+
+    @Test
+    fun `service credentials never bypass user authentication`() {
+        val exchange = exchange(
+            HttpMethod.GET,
+            "/api/v1/patients",
+            mapOf(
+                "X-Service-Id" to "platform-identity",
+                "X-Service-Secret" to "platform-identity-service-secret-0123456789"
+            )
+        )
+
+        filter.filter(exchange, chain).block()
+
+        assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        assertThat(capturedExchange).isNull()
         verifyNoInteractions(redisTemplate)
     }
 
@@ -242,7 +293,9 @@ class JwtGlobalFilterCharacterizationTest {
                 "X-Organization-Id" to "evil-org",
                 "X-Role" to "ADMIN",
                 "X-Public-Id" to "evil-public",
-                "X-Gateway-Secret" to "leaked-secret"
+                "X-Gateway-Secret" to "leaked-secret",
+                "X-Service-Id" to "spoofed-service",
+                "X-Service-Secret" to "spoofed-service-secret"
             )
         )
 
@@ -253,6 +306,8 @@ class JwtGlobalFilterCharacterizationTest {
         assertThat(headerOf("X-Role")).isEqualTo("MANAGER")
         assertThat(headerOf("X-Public-Id")).isEqualTo(publicId)
         assertThat(headerOf("X-Gateway-Secret")).isEqualTo(internalSecret)
+        assertThat(headerOf("X-Service-Id")).isNull()
+        assertThat(headerOf("X-Service-Secret")).isNull()
     }
 
     @Test

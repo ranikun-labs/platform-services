@@ -1,6 +1,9 @@
 package com.ranikunlabs.platform.identity.application.oauth;
 
 import com.ranikunlabs.platform.identity.application.AuthTokenIssuanceService;
+import com.ranikunlabs.platform.identity.application.CRMIdentityClaimsPolicy;
+import com.ranikunlabs.platform.identity.application.port.AuthTokenBundle;
+import com.ranikunlabs.platform.identity.application.port.CRMIdentityClaims;
 import com.ranikunlabs.platform.identity.application.port.CRMIdentityProjectionPort;
 import com.ranikunlabs.platform.identity.application.port.oauth.ExternalIdentityLookupPort;
 import com.ranikunlabs.platform.identity.application.port.oauth.LinkedAccountStatus;
@@ -15,6 +18,7 @@ import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStore;
 import com.ranikunlabs.platform.identity.application.port.oauth.OnboardingCandidate;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /** Consumes one-time OAuth state, verifies the provider principal, and follows the Identity login seam. */
 public class OAuthLoginService {
@@ -82,9 +86,17 @@ public class OAuthLoginService {
         return crmIdentityProjectionPort.findIdentityClaims(linkedAccount.get().accountId())
                 .<OAuthLoginResult>map(claims -> new OAuthLoginResult.ExistingAccountAuthenticated(
                         linkedAccount.get().accountId(),
-                        authTokenIssuanceService.issue(linkedAccount.get().accountId(), claims)
+                        issueEligibleClaims(linkedAccount.get().accountId(), claims)
                 ))
                 .orElseGet(() -> new OAuthLoginResult.ExternalIdentityConflict(
                         OAuthLoginResult.ConflictReason.ORPHANED_IDENTITY));
+    }
+
+    private AuthTokenBundle issueEligibleClaims(
+            UUID accountId,
+            CRMIdentityClaims claims
+    ) {
+        CRMIdentityClaimsPolicy.requireEligible(claims);
+        return authTokenIssuanceService.issue(accountId, claims);
     }
 }

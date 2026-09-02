@@ -120,6 +120,22 @@ class AuthServiceImplTest {
     }
 
     @Test
+    void loginDoesNotIssueTokensForAnIneligibleCustomerProjection() {
+        AuthenticatedIdentity identity = new AuthenticatedIdentity(ACCOUNT_ID, "manager@example.com");
+        when(credentialPort.authenticate("manager@example.com", "raw-password"))
+                .thenReturn(identity);
+        when(claimsPort.getIdentityClaims(ACCOUNT_ID))
+                .thenReturn(new CRMIdentityClaims(ORGANIZATION_ID, "CUSTOMER", PUBLIC_ID));
+
+        assertThatThrownBy(() -> service.login("manager@example.com", "raw-password"))
+                .isInstanceOfSatisfying(CRMIdentityProjectionException.class, error ->
+                        assertThat(error.reason())
+                                .isEqualTo(CRMIdentityProjectionException.Reason.PRODUCT_ROLE_NOT_ELIGIBLE));
+
+        verifyNoInteractions(tokenProvider, sessionPort);
+    }
+
+    @Test
     void refreshRejectsInvalidJwtBeforeSessionLookup() {
         when(tokenProvider.validateToken("bad-refresh")).thenReturn(false);
 
@@ -219,6 +235,27 @@ class AuthServiceImplTest {
 
         assertThatThrownBy(() -> service.refreshToken("refresh"))
                 .isSameAs(failure);
+
+        verify(tokenProvider, never()).generateAccessToken(any(), any(), any(), any());
+        verify(tokenProvider, never()).generateRefreshToken(any());
+        verify(sessionPort, never()).rotate(any(), any(), any());
+    }
+
+    @Test
+    void refreshDoesNotRotateForAnIneligibleCustomerProjection() {
+        RefreshSession session = new RefreshSession(
+                "refresh", ACCOUNT_ID, OffsetDateTime.now(CLOCK).plusDays(1));
+        when(tokenProvider.validateToken("refresh")).thenReturn(true);
+        when(tokenProvider.getAccountIdFromToken("refresh")).thenReturn(ACCOUNT_ID);
+        when(sessionPort.findByToken("refresh")).thenReturn(Optional.of(session));
+        when(accountStatusPort.findStatus(ACCOUNT_ID)).thenReturn(Optional.of(AccountStatus.ACTIVE));
+        when(claimsPort.getIdentityClaims(ACCOUNT_ID))
+                .thenReturn(new CRMIdentityClaims(ORGANIZATION_ID, "CUSTOMER", PUBLIC_ID));
+
+        assertThatThrownBy(() -> service.refreshToken("refresh"))
+                .isInstanceOfSatisfying(CRMIdentityProjectionException.class, error ->
+                        assertThat(error.reason())
+                                .isEqualTo(CRMIdentityProjectionException.Reason.PRODUCT_ROLE_NOT_ELIGIBLE));
 
         verify(tokenProvider, never()).generateAccessToken(any(), any(), any(), any());
         verify(tokenProvider, never()).generateRefreshToken(any());

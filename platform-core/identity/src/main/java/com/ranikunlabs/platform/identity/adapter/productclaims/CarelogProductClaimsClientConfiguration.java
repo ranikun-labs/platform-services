@@ -25,6 +25,7 @@ public class CarelogProductClaimsClientConfiguration {
     RestClient carelogProductClaimsRestClient(CarelogProductClaimsProperties properties) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(properties.getConnectTimeout())
+                .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(properties.getReadTimeout());
@@ -41,6 +42,6 @@ public class CarelogProductClaimsClientConfiguration {
     ) {
         return new CarelogProductClaimsHttpAdapter(
                 restClient,
-                properties.requiredServiceToken());
+                properties.requiredServiceSecret());
     }
 }

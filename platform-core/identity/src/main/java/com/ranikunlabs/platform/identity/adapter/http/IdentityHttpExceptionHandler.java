@@ -32,6 +32,8 @@ public class IdentityHttpExceptionHandler {
         return switch (exception.reason()) {
             case PRODUCT_PROFILE_NOT_FOUND -> error(
                     HttpStatus.NOT_FOUND, "Product identity 정보를 찾을 수 없습니다.");
+            case PRODUCT_ROLE_NOT_ELIGIBLE -> error(
+                    HttpStatus.FORBIDDEN, "Product identity 권한이 없습니다.");
             case DEPENDENCY_AUTH_FAILURE, DEPENDENCY_UNAVAILABLE, DEPENDENCY_CONTRACT_FAILURE -> error(
                     HttpStatus.SERVICE_UNAVAILABLE, "Product identity 정보를 사용할 수 없습니다.");
         };

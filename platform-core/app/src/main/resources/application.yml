@@ -19,6 +19,8 @@ platform:
       max-output-tokens: ${SHARED_AI_OPENAI_MAX_OUTPUT_TOKENS:128}
       timeout: ${SHARED_AI_OPENAI_TIMEOUT:30s}
   identity:
+    auth:
+      enabled: ${PLATFORM_IDENTITY_AUTH_ENABLED:false}
     datasource:
       url: ${PLATFORM_IDENTITY_DATASOURCE_URL:}
       username: ${PLATFORM_IDENTITY_DATASOURCE_USERNAME:}
@@ -26,6 +28,12 @@ platform:
     redis-host: ${PLATFORM_IDENTITY_REDIS_HOST:}
     redis-port: ${PLATFORM_IDENTITY_REDIS_PORT}
     redis-key-prefix: ${PLATFORM_IDENTITY_REDIS_KEY_PREFIX:}
+    product-claims:
+      enabled: ${PLATFORM_IDENTITY_PRODUCT_CLAIMS_ENABLED:false}
+      base-url: ${PLATFORM_IDENTITY_PRODUCT_CLAIMS_BASE_URL:}
+      service-secret: ${PLATFORM_IDENTITY_PRODUCT_CLAIMS_SERVICE_SECRET:}
+      connect-timeout: ${PLATFORM_IDENTITY_PRODUCT_CLAIMS_CONNECT_TIMEOUT:1s}
+      read-timeout: ${PLATFORM_IDENTITY_PRODUCT_CLAIMS_READ_TIMEOUT:2s}
 
 management:
   endpoints:

@@ -25,6 +25,11 @@ class JwtGlobalFilter(
         val path = request.uri.path
         val sanitizedExchange = exchange.withoutTrustedHeaders()
 
+        if (isInternalPath(path)) {
+            exchange.response.statusCode = HttpStatus.FORBIDDEN
+            return exchange.response.setComplete()
+        }
+
         if (oauthPublicRequestMatcher.matches(request) || gatewayConfig.publicPaths.any(path::startsWith)) {
             return chain.filter(sanitizedExchange.withGatewaySecret(gatewayConfig.internalSecret))
         }
@@ -71,9 +76,14 @@ class JwtGlobalFilter(
                 headers.remove("X-Role")
                 headers.remove("X-Public-Id")
                 headers.remove("X-Gateway-Secret")
+                headers.remove("X-Service-Id")
+                headers.remove("X-Service-Secret")
             }
         }
         .build()
+
+    private fun isInternalPath(path: String): Boolean =
+        path == "/api/v1/internal" || path.startsWith("/api/v1/internal/")
 
     private fun ServerWebExchange.withGatewaySecret(secret: String): ServerWebExchange = mutate()
         .request { it.headers { headers -> headers.set("X-Gateway-Secret", secret) } }

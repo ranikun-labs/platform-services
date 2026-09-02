@@ -472,7 +472,7 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
                 }
 
                 private CRMIdentityClaims claims() {
-                    return new CRMIdentityClaims(ORGANIZATION_ID, "ROLE_MANAGER", PUBLIC_ID);
+                    return new CRMIdentityClaims(ORGANIZATION_ID, "MANAGER", PUBLIC_ID);
                 }
             };
         }

@@ -171,6 +171,31 @@ class OAuthApplicationServiceTest {
     }
 
     @Test
+    void loginRejectsCustomerProjectionBeforeExistingAccountAuthentication() {
+        CapturingStateStore stateStore = new CapturingStateStore();
+        stateStore.record = state();
+        CapturingProvider provider = new CapturingProvider("neutral", false, true);
+        provider.principal = new OAuthPrincipal("neutral", "subject", null, false, null);
+        ExternalIdentityLookupPort external = mock(ExternalIdentityLookupPort.class);
+        CRMIdentityProjectionPort claimsPort = mock(CRMIdentityProjectionPort.class);
+        AuthTokenIssuanceService tokenService = mock(AuthTokenIssuanceService.class);
+        UUID accountId = UUID.randomUUID();
+        when(external.findByProviderSubject("neutral", "subject"))
+                .thenReturn(Optional.of(new LinkedAccountView(accountId, LinkedAccountStatus.ACTIVE)));
+        when(claimsPort.findIdentityClaims(accountId)).thenReturn(Optional.of(
+                new CRMIdentityClaims(UUID.randomUUID(), "CUSTOMER", UUID.randomUUID())));
+
+        OAuthLoginService service = new OAuthLoginService(new OAuthProviderRegistry(List.of(provider)), stateStore,
+                external, claimsPort, tokenService);
+
+        assertThatThrownBy(() -> service.completeLogin(new OAuthCallbackCommand("neutral", "code", "state")))
+                .isInstanceOfSatisfying(CRMIdentityProjectionException.class, error ->
+                        assertThat(error.reason())
+                                .isEqualTo(CRMIdentityProjectionException.Reason.PRODUCT_ROLE_NOT_ELIGIBLE));
+        verify(tokenService, never()).issue(any(), any());
+    }
+
+    @Test
     void providerAuthenticationFailureIsMappedButInfrastructureFailuresPropagate() {
         CapturingStateStore stateStore = new CapturingStateStore();
         stateStore.record = state();
