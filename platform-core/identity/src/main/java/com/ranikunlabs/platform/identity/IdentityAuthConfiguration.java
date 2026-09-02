@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.identity;
 
 import com.ranikunlabs.platform.identity.adapter.http.IdentityAuthHttpConfiguration;
+import com.ranikunlabs.platform.identity.adapter.oauth.kakao.KakaoOAuthConfiguration;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.productclaims.IdentityProductClaimsConfiguration;
@@ -58,7 +59,8 @@ import java.time.Clock;
         OAuthAuthorizationService.class,
         OAuthLoginService.class,
         IdentityAuthHttpConfiguration.class,
-        IdentityProductClaimsConfiguration.class
+        IdentityProductClaimsConfiguration.class,
+        KakaoOAuthConfiguration.class
 })
 public class IdentityAuthConfiguration {
 

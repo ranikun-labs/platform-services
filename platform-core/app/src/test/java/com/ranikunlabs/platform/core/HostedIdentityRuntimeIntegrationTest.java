@@ -348,12 +348,13 @@ class HostedIdentityRuntimeIntegrationTest {
     }
 
     /**
-     * The OAuth HTTP boundary is composed and reachable in the host. No production
-     * {@code OAuthProviderPort} exists yet, so authorization cannot complete against a real
-     * provider; it must fail as an unsupported provider rather than appear live.
+     * The OAuth HTTP boundary is composed and reachable in the host. This hosted profile supplies no
+     * Kakao configuration, so the production Kakao provider is deliberately not registered and
+     * authorization must fail as an unsupported provider rather than appear live. Provider
+     * composition when Kakao <em>is</em> configured is covered by the Identity module's tests.
      */
     @Test
-    void theHostedOauthEndpointIsPublicButHasNoProductionProviderYet() throws Exception {
+    void theHostedOauthEndpointIsPublicButHasNoKakaoProviderConfigured() throws Exception {
         HttpOutcome response = postJson("/api/v1/auth/oauth/kakao/authorization",
                 "{\"clientChannel\":\"WEB\",\"returnTo\":\"/\"}");
 
