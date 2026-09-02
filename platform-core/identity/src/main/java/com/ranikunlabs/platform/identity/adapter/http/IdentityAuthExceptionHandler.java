@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.identity.adapter.http;
 
 import com.ranikunlabs.platform.identity.application.port.InvalidCredentialsException;
+import com.ranikunlabs.platform.identity.application.port.ProductClaimsException;
 import com.ranikunlabs.platform.identity.application.port.TokenLifecycleException;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthAuthorizationRequestException;
 import com.ranikunlabs.platform.identity.application.port.oauth.OAuthStateStoreUnavailableException;
@@ -43,6 +44,21 @@ public class IdentityAuthExceptionHandler {
             case INVALID_REFRESH_TOKEN -> IdentityErrorStatus.INVALID_REFRESH_TOKEN;
             case REFRESH_TOKEN_NOT_FOUND -> IdentityErrorStatus.REFRESH_TOKEN_NOT_FOUND;
             case REFRESH_TOKEN_EXPIRED -> IdentityErrorStatus.REFRESH_TOKEN_EXPIRED;
+        });
+    }
+
+    /**
+     * A missing Product claim snapshot keeps the canonical not-found contract. Every other Product
+     * claims failure is an Identity-side dependency or configuration fault, so it fails closed
+     * without issuing tokens and without describing the Product call to the caller.
+     */
+    @ExceptionHandler(ProductClaimsException.class)
+    public ResponseEntity<IdentityApiResponse<Object>> handleProductClaims(ProductClaimsException e) {
+        return respond(switch (e.reason()) {
+            case PRODUCT_CLAIMS_NOT_FOUND -> IdentityErrorStatus.USER_NOT_FOUND;
+            case PRODUCT_CLAIMS_UNAVAILABLE -> IdentityErrorStatus.PRODUCT_CLAIMS_UNAVAILABLE;
+            case PRODUCT_CLAIMS_ACCESS_DENIED, PRODUCT_CLAIMS_INVALID_RESPONSE ->
+                    IdentityErrorStatus.INTERNAL_ERROR;
         });
     }
 

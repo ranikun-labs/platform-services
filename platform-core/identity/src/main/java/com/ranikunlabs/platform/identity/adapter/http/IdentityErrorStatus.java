@@ -28,13 +28,15 @@ public enum IdentityErrorStatus {
     DISABLED_PRODUCT_CLIENT(HttpStatus.FORBIDDEN, "비활성화된 제품 인증 Client입니다."),
 
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "Refresh Token을 찾을 수 없습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
 
     OAUTH_ACCOUNT_NOT_LINKED(HttpStatus.CONFLICT, "연결된 Carelog 계정이 없습니다."),
     OAUTH_IDENTITY_CONFLICT(HttpStatus.CONFLICT, "OAuth 계정 연결 상태가 유효하지 않습니다."),
 
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에 예상치 못한 오류가 발생했습니다."),
 
-    OAUTH_STATE_STORE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "OAuth 인증 요청 저장소를 사용할 수 없습니다.");
+    OAUTH_STATE_STORE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "OAuth 인증 요청 저장소를 사용할 수 없습니다."),
+    PRODUCT_CLAIMS_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "제품 정보 조회 서비스를 사용할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

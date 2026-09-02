@@ -8,7 +8,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
-@Import({IdentityModuleConfiguration.class, SharedAiModuleConfiguration.class})
+@Import({
+        IdentityModuleConfiguration.class,
+        SharedAiModuleConfiguration.class,
+        PlatformCoreSecurityConfiguration.class
+})
 public class PlatformCoreApplication {
 
     public static void main(String[] args) {

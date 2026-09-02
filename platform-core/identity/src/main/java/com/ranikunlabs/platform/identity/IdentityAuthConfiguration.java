@@ -3,6 +3,7 @@ package com.ranikunlabs.platform.identity;
 import com.ranikunlabs.platform.identity.adapter.http.IdentityAuthHttpConfiguration;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
+import com.ranikunlabs.platform.identity.adapter.productclaims.IdentityProductClaimsConfiguration;
 import com.ranikunlabs.platform.identity.adapter.redis.IdentityRedisConfiguration;
 import com.ranikunlabs.platform.identity.adapter.redis.RedisOAuthStateStore;
 import com.ranikunlabs.platform.identity.adapter.redis.RedisTokenBlacklistAdapter;
@@ -56,7 +57,8 @@ import java.time.Clock;
         RedisOAuthStateStore.class,
         OAuthAuthorizationService.class,
         OAuthLoginService.class,
-        IdentityAuthHttpConfiguration.class
+        IdentityAuthHttpConfiguration.class,
+        IdentityProductClaimsConfiguration.class
 })
 public class IdentityAuthConfiguration {
 
