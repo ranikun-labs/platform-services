@@ -109,12 +109,14 @@ not claim Product reachability or database/Redis business connectivity.
 `docker-compose.yml` defines the two application processes, one PostgreSQL
 physical instance, and one Redis physical instance. It requires
 `PLATFORM_POSTGRES_PASSWORD` and the existing Gateway upstream/security values.
-The checked-in Gateway auth upstream is deliberately dark and points to the
-existing Carelog auth upstream. Promotion is config-only: set
-`PLATFORM_GATEWAY_AUTH_URI` to the Platform Core address, set
-`PLATFORM_IDENTITY_AUTH_ENABLED=true`, and provide the complete JWT/Kakao
-runtime configuration. Rollback is the same no-rebuild change in the other
-direction, pointing `PLATFORM_GATEWAY_AUTH_URI` back to Carelog.
+The source merge remains DARK by default: when `PLATFORM_GATEWAY_AUTH_URI` is
+unset, it follows `PLATFORM_GATEWAY_CARELOG_BE_URI` by construction. Platform
+Identity traffic promotion is an explicit runtime configuration action after
+live verification: set `PLATFORM_GATEWAY_AUTH_URI` to the Platform Core
+address, set `PLATFORM_IDENTITY_AUTH_ENABLED=true`, and provide the complete
+JWT/Kakao runtime configuration. Rollback is also a no-rebuild change: either
+unset `PLATFORM_GATEWAY_AUTH_URI` so it follows `PLATFORM_GATEWAY_CARELOG_BE_URI`
+or explicitly set `PLATFORM_GATEWAY_AUTH_URI` back to the Carelog upstream.
 
 ```sh
 PLATFORM_POSTGRES_PASSWORD='local-only' \
