@@ -7,6 +7,31 @@ spring:
 server:
   port: ${PLATFORM_CORE_PORT}
 
+# Auth-only properties remain empty unless the opt-in Identity runtime is enabled.
+# The Identity module binds these canonical jwt.*, carelog.auth.oauth.kakao.*, and
+# oauth.redirect-uris.* names; no credential or secret default is committed here.
+jwt:
+  secret-key: ${PLATFORM_IDENTITY_JWT_SECRET_KEY:}
+  access-token-validity: ${PLATFORM_IDENTITY_JWT_ACCESS_TOKEN_VALIDITY:}
+  refresh-token-validity: ${PLATFORM_IDENTITY_JWT_REFRESH_TOKEN_VALIDITY:}
+
+carelog:
+  auth:
+    oauth:
+      kakao:
+        client-id: ${PLATFORM_IDENTITY_KAKAO_CLIENT_ID:}
+        client-secret: ${PLATFORM_IDENTITY_KAKAO_CLIENT_SECRET:}
+        authorization-uri: ${PLATFORM_IDENTITY_KAKAO_AUTHORIZATION_URI:}
+        token-uri: ${PLATFORM_IDENTITY_KAKAO_TOKEN_URI:}
+        user-info-uri: ${PLATFORM_IDENTITY_KAKAO_USER_INFO_URI:}
+
+oauth:
+  redirect-uris:
+    kakao:
+      WEB: ${PLATFORM_IDENTITY_OAUTH_KAKAO_WEB_REDIRECT_URI:}
+      MOBILE: ${PLATFORM_IDENTITY_OAUTH_KAKAO_MOBILE_REDIRECT_URI:}
+  allowed-return-origins: ${PLATFORM_IDENTITY_OAUTH_ALLOWED_RETURN_ORIGINS:}
+
 platform:
   shared-ai:
     foundation:

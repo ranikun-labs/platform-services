@@ -46,8 +46,6 @@ class JwtGlobalFilterCharacterizationTest {
         redisTemplate = mock(ReactiveStringRedisTemplate::class.java)
         val config = GatewayConfig(
             publicPaths = listOf(
-                "/api/v1/auth/login",
-                "/api/v1/auth/refresh",
                 "/api/v1/users/managers"
             ),
             internalSecret = internalSecret,
@@ -57,16 +55,17 @@ class JwtGlobalFilterCharacterizationTest {
             JwtVerifier(secret),
             RedisBlacklistService(redisTemplate),
             config,
+            AuthPublicRequestMatcher(),
             OAuthPublicRequestMatcher()
         )
         capturedExchange = null
     }
 
     @Test
-    fun `configured public prefix preserves startsWith behavior and injects only gateway secret`() {
+    fun `configured Product public prefix preserves startsWith behavior and injects only gateway secret`() {
         val exchange = exchange(
-            HttpMethod.POST,
-            "/api/v1/auth/login-extra",
+            HttpMethod.GET,
+            "/api/v1/users/managers/extra",
             mapOf(
                 "X-User-Id" to "spoofed-user",
                 "X-Gateway-Secret" to "spoofed-secret",
@@ -79,6 +78,29 @@ class JwtGlobalFilterCharacterizationTest {
 
         assertThat(headerOf("X-Gateway-Secret")).isEqualTo(internalSecret)
         assertThat(headerOf("X-User-Id")).isNull()
+        assertThat(headerOf("X-Service-Id")).isNull()
+        assertThat(headerOf("X-Service-Secret")).isNull()
+        verifyNoInteractions(redisTemplate)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh"
+    ])
+    fun `exact Auth POST endpoints are public and strip externally supplied service headers`(path: String) {
+        val exchange = exchange(
+            HttpMethod.POST,
+            path,
+            mapOf(
+                "X-Service-Id" to "spoofed-service",
+                "X-Service-Secret" to "spoofed-service-secret"
+            )
+        )
+
+        filter.filter(exchange, chain).block()
+
+        assertThat(headerOf("X-Gateway-Secret")).isEqualTo(internalSecret)
         assertThat(headerOf("X-Service-Id")).isNull()
         assertThat(headerOf("X-Service-Secret")).isNull()
         verifyNoInteractions(redisTemplate)

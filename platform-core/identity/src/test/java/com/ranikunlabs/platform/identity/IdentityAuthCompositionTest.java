@@ -90,6 +90,46 @@ class IdentityAuthCompositionTest {
         });
     }
 
+    @Test
+    void disabledIdentityAuthDoesNotRequireJwtCredentials() {
+        new ApplicationContextRunner()
+                .withUserConfiguration(IdentityModuleConfiguration.class, AuthCompositionTestConfiguration.class)
+                .withPropertyValues(
+                        "platform.identity.auth.enabled=false",
+                        "platform.identity.persistence.enabled=false",
+                        "platform.identity.datasource.url=jdbc:postgresql://postgres:5432/platform",
+                        "platform.identity.datasource.username=identity",
+                        "platform.identity.datasource.password=provided-at-runtime",
+                        "platform.identity.redis-host=redis",
+                        "platform.identity.redis-port=6379",
+                        "platform.identity.redis-key-prefix=platform:identity:")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(IdentityAuthConfiguration.class);
+                    assertThat(context).doesNotHaveBean(IdentityJwtProperties.class);
+                });
+    }
+
+    @Test
+    void enabledIdentityAuthWithoutJwtCredentialsFailsClosed() {
+        new ApplicationContextRunner()
+                .withUserConfiguration(IdentityModuleConfiguration.class, AuthCompositionTestConfiguration.class)
+                .withPropertyValues(
+                        "platform.identity.auth.enabled=true",
+                        "platform.identity.persistence.enabled=false",
+                        "platform.identity.datasource.url=jdbc:postgresql://postgres:5432/platform",
+                        "platform.identity.datasource.username=identity",
+                        "platform.identity.datasource.password=provided-at-runtime",
+                        "platform.identity.redis-host=redis",
+                        "platform.identity.redis-port=6379",
+                        "platform.identity.redis-key-prefix=platform:identity:")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .hasMessageContaining("Could not bind properties to 'IdentityJwtProperties'");
+                });
+    }
+
     @TestConfiguration(proxyBeanMethods = false)
     static class AuthCompositionTestConfiguration {
 
