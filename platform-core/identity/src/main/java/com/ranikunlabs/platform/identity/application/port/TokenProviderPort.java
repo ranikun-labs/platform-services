@@ -13,6 +13,8 @@ public interface TokenProviderPort {
 
     boolean validateToken(String token);
 
+    boolean validateAccessToken(String token);
+
     UUID getAccountIdFromToken(String token);
 
     OffsetDateTime getRefreshTokenExpiryDate();

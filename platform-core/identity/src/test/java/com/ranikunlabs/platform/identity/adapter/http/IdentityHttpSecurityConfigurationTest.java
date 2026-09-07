@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.identity.adapter.http;
 
+import com.ranikunlabs.platform.identity.adapter.token.JwtTokenProvider;
 import com.ranikunlabs.platform.identity.application.AuthService;
 import com.ranikunlabs.platform.identity.application.oauth.OAuthAuthorizationService;
 import com.ranikunlabs.platform.identity.application.oauth.OAuthLoginService;
@@ -19,10 +20,12 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -37,6 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class IdentityHttpSecurityConfigurationTest {
 
     private static final UUID ACCOUNT_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private static final String TOKEN_SECRET =
+            "identity-http-security-test-secret-key-long-enough-for-hmac-signing";
 
     @org.springframework.beans.factory.annotation.Autowired
     private WebApplicationContext webApplicationContext;
@@ -108,19 +113,20 @@ class IdentityHttpSecurityConfigurationTest {
 
     @Test
     void malformedBearerTokenCannotAuthenticateLogout() throws Exception {
-        when(tokenProvider.validateToken("malformed-token")).thenReturn(false);
+        when(tokenProvider.validateAccessToken("malformed-token")).thenReturn(false);
 
         mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", "Bearer malformed-token"))
                 .andExpect(status().isUnauthorized());
 
-        verify(tokenProvider).validateToken("malformed-token");
+        verify(tokenProvider).validateAccessToken("malformed-token");
+        verify(tokenProvider, never()).validateToken("malformed-token");
         verifyNoInteractions(authService);
     }
 
     @Test
     void verifiedBearerSubjectIsTheOnlyLogoutIdentitySource() throws Exception {
-        when(tokenProvider.validateToken("access-token")).thenReturn(true);
+        when(tokenProvider.validateAccessToken("access-token")).thenReturn(true);
         when(tokenProvider.getAccountIdFromToken("access-token")).thenReturn(ACCOUNT_ID);
 
         mockMvc.perform(post("/api/v1/auth/logout")
@@ -129,6 +135,30 @@ class IdentityHttpSecurityConfigurationTest {
                 .andExpect(status().isNoContent());
 
         verify(authService).logout(ACCOUNT_ID, "access-token");
+    }
+
+    @Test
+    void validRefreshBearerTokenRemainsUnauthenticated() throws Exception {
+        JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(
+                TOKEN_SECRET,
+                Duration.ofMinutes(15).toMillis(),
+                Duration.ofDays(14).toMillis(),
+                Clock.systemUTC());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(ACCOUNT_ID);
+        assertThat(jwtTokenProvider.validateToken(refreshToken)).isTrue();
+        assertThat(jwtTokenProvider.validateAccessToken(refreshToken)).isFalse();
+        when(tokenProvider.validateAccessToken(refreshToken)).thenReturn(false);
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header("Authorization", "Bearer " + refreshToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"));
+
+        verify(tokenProvider).validateAccessToken(refreshToken);
+        verify(tokenProvider, never()).validateToken(refreshToken);
+        verify(tokenProvider, never()).getAccountIdFromToken(refreshToken);
+        verifyNoInteractions(authService);
     }
 
     @Test

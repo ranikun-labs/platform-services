@@ -13,6 +13,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,10 +71,52 @@ class JwtTokenProviderTest {
         String token = provider.generateAccessToken(ACCOUNT_ID, ORGANIZATION_ID, "MANAGER", PUBLIC_ID);
 
         assertThat(provider.validateToken(token)).isTrue();
+        assertThat(provider.validateAccessToken(token)).isTrue();
         assertThat(provider.validateToken(token + "tampered")).isFalse();
         assertThat(provider.getRemainingValidity(token)).isEqualTo(Duration.ofMinutes(15));
         assertThat(provider.getRefreshTokenExpiryDate())
                 .isEqualTo(Instant.now(clock).plus(Duration.ofDays(14)).atOffset(ZoneOffset.UTC));
+    }
+
+    @Test
+    void refreshTokenRemainsAuthenticButIsNotAnAccessCredential() {
+        String token = provider.generateRefreshToken(ACCOUNT_ID);
+
+        assertThat(provider.validateToken(token)).isTrue();
+        assertThat(provider.validateAccessToken(token)).isFalse();
+    }
+
+    @Test
+    void accessCredentialValidationRejectsMalformedTamperedAndExpiredTokens() {
+        String accessToken = provider.generateAccessToken(ACCOUNT_ID, ORGANIZATION_ID, "MANAGER", PUBLIC_ID);
+        Instant now = Instant.now();
+        String expiredToken = Jwts.builder()
+                .subject(ACCOUNT_ID.toString())
+                .claim("organizationId", ORGANIZATION_ID.toString())
+                .claim("role", "MANAGER")
+                .claim("publicId", PUBLIC_ID.toString())
+                .issuedAt(Date.from(now.minusSeconds(120)))
+                .expiration(Date.from(now.minusSeconds(60)))
+                .signWith(verificationKey)
+                .compact();
+
+        assertThat(provider.validateAccessToken("not-a-jwt")).isFalse();
+        assertThat(provider.validateAccessToken(accessToken + "tampered")).isFalse();
+        assertThat(provider.validateAccessToken(expiredToken)).isFalse();
+    }
+
+    @Test
+    void accessCredentialValidationRejectsIncompleteAccessClaimShape() {
+        Instant now = Instant.now();
+        String incompleteToken = Jwts.builder()
+                .subject(ACCOUNT_ID.toString())
+                .issuedAt(Date.from(now.minusSeconds(1)))
+                .expiration(Date.from(now.plus(Duration.ofMinutes(15))))
+                .signWith(verificationKey)
+                .compact();
+
+        assertThat(provider.validateToken(incompleteToken)).isTrue();
+        assertThat(provider.validateAccessToken(incompleteToken)).isFalse();
     }
 
     private Claims parse(String token) {

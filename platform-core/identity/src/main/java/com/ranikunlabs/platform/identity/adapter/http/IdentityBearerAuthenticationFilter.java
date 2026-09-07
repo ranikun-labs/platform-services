@@ -42,7 +42,7 @@ public class IdentityBearerAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String rawToken = authorization.substring(7);
-        if (rawToken.isBlank() || !tokenProvider.validateToken(rawToken)) {
+        if (rawToken.isBlank() || !tokenProvider.validateAccessToken(rawToken)) {
             return;
         }
 

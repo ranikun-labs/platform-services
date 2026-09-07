@@ -3,6 +3,7 @@ package com.ranikunlabs.platform.identity.adapter.token;
 import com.ranikunlabs.platform.identity.application.port.TokenProviderPort;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -93,6 +94,20 @@ public class JwtTokenProvider implements TokenProviderPort {
     }
 
     @Override
+    public boolean validateAccessToken(String token) {
+        try {
+            Claims claims = getClaims(token);
+            return isUuid(claims.getSubject())
+                    && isUuid(claims.get("organizationId", String.class))
+                    && isNonBlank(claims.get("role", String.class))
+                    && isUuid(claims.get("publicId", String.class));
+        } catch (SecurityException | JwtException | IllegalArgumentException exception) {
+            log.error("Invalid access JWT: {}", exception.getMessage());
+            return false;
+        }
+    }
+
+    @Override
     public OffsetDateTime getRefreshTokenExpiryDate() {
         return OffsetDateTime.now(clock).plus(Duration.ofMillis(refreshTokenValidity));
     }
@@ -122,5 +137,21 @@ public class JwtTokenProvider implements TokenProviderPort {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    private boolean isUuid(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        try {
+            UUID.fromString(value);
+            return true;
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
+    private boolean isNonBlank(String value) {
+        return value != null && !value.isBlank();
     }
 }
