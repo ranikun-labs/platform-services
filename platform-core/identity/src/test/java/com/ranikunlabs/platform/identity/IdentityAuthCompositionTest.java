@@ -34,24 +34,37 @@ import static org.mockito.Mockito.mock;
 
 class IdentityAuthCompositionTest {
 
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withUserConfiguration(IdentityModuleConfiguration.class, AuthCompositionTestConfiguration.class)
-            .withPropertyValues(
-                    "platform.identity.auth.enabled=true",
-                    "platform.identity.persistence.enabled=false",
-                    "platform.identity.datasource.url=jdbc:postgresql://postgres:5432/platform",
-                    "platform.identity.datasource.username=identity",
-                    "platform.identity.datasource.password=provided-at-runtime",
-                    "platform.identity.redis-host=redis",
-                    "platform.identity.redis-port=6379",
-                    "platform.identity.redis-key-prefix=platform:identity:",
-                    "jwt.secret-key=01234567890123456789012345678901",
-                    "jwt.access-token-validity=900000",
-                    "jwt.refresh-token-validity=1209600000");
+    private static final String VALID_SECRET = "01234567890123456789012345678901";
+
+    private ApplicationContextRunner authContextRunner() {
+        return baseContextRunner()
+                .withPropertyValues(
+                        "platform.identity.auth.enabled=true",
+                        "jwt.access-token-validity=900000",
+                        "jwt.refresh-token-validity=1209600000");
+    }
+
+    private ApplicationContextRunner foundationContextRunner() {
+        return baseContextRunner()
+                .withPropertyValues("platform.identity.auth.enabled=false");
+    }
+
+    private ApplicationContextRunner baseContextRunner() {
+        return new ApplicationContextRunner()
+                .withUserConfiguration(IdentityModuleConfiguration.class, AuthCompositionTestConfiguration.class)
+                .withPropertyValues(
+                        "platform.identity.persistence.enabled=false",
+                        "platform.identity.datasource.url=jdbc:postgresql://postgres:5432/platform",
+                        "platform.identity.datasource.username=identity",
+                        "platform.identity.datasource.password=provided-at-runtime",
+                        "platform.identity.redis-host=redis",
+                        "platform.identity.redis-port=6379",
+                        "platform.identity.redis-key-prefix=platform:identity:");
+    }
 
     @Test
     void composesTheEnabledIdentityAuthBeanGraphWithoutExternalServices() {
-        contextRunner.run(context -> {
+        authContextRunner().withPropertyValues("jwt.secret-key=" + VALID_SECRET).run(context -> {
             assertThat(context).hasNotFailed();
             assertThat(context).hasSingleBean(IdentityAuthConfiguration.class);
             assertThat(context).hasSingleBean(IdentityJwtProperties.class);
@@ -88,6 +101,60 @@ class IdentityAuthCompositionTest {
             assertThat(context.getBean(AuthService.class))
                     .isSameAs(context.getBean(AuthServiceImpl.class));
         });
+    }
+
+    @Test
+    void foundationModeBootsWithoutJwtConfigurationWhenAuthIsDisabled() {
+        foundationContextRunner().run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context).doesNotHaveBean(IdentityAuthConfiguration.class);
+            assertThat(context).doesNotHaveBean(IdentityJwtProperties.class);
+            assertThat(context).doesNotHaveBean(JwtTokenProvider.class);
+        });
+    }
+
+    @Test
+    void authEnabledWithoutSecretKeyFailsConfigurationBinding() {
+        assertAuthStartupFails(authContextRunner());
+    }
+
+    @Test
+    void authEnabledWithBlankSecretKeyFailsConfigurationBinding() {
+        assertAuthStartupFails(authContextRunner().withPropertyValues("jwt.secret-key="));
+    }
+
+    @Test
+    void authEnabledWithNonPositiveAccessValidityFailsConfigurationBinding() {
+        assertAuthStartupFails(authContextRunner()
+                .withPropertyValues("jwt.secret-key=" + VALID_SECRET, "jwt.access-token-validity=0"));
+        assertAuthStartupFails(authContextRunner()
+                .withPropertyValues("jwt.secret-key=" + VALID_SECRET, "jwt.access-token-validity=-1"));
+    }
+
+    @Test
+    void authEnabledWithNonPositiveRefreshValidityFailsConfigurationBinding() {
+        assertAuthStartupFails(authContextRunner()
+                .withPropertyValues("jwt.secret-key=" + VALID_SECRET, "jwt.refresh-token-validity=0"));
+        assertAuthStartupFails(authContextRunner()
+                .withPropertyValues("jwt.secret-key=" + VALID_SECRET, "jwt.refresh-token-validity=-1"));
+    }
+
+    @Test
+    void authEnabledWithCryptographicallyShortSecretFailsStartup() {
+        assertAuthStartupFails(authContextRunner().withPropertyValues("jwt.secret-key=short"));
+    }
+
+    @Test
+    void jwtPropertiesRedactSecretInDiagnostics() {
+        IdentityJwtProperties properties = new IdentityJwtProperties(VALID_SECRET, 900000, 1209600000);
+
+        assertThat(properties.toString())
+                .contains("secretKey=REDACTED")
+                .doesNotContain(VALID_SECRET);
+    }
+
+    private void assertAuthStartupFails(ApplicationContextRunner runner) {
+        runner.run(context -> assertThat(context).hasFailed());
     }
 
     @TestConfiguration(proxyBeanMethods = false)
