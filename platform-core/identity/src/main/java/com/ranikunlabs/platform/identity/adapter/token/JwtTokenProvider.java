@@ -62,6 +62,7 @@ public class JwtTokenProvider implements TokenProviderPort {
         Instant now = Instant.now(clock);
         return Jwts.builder()
                 .subject(accountId.toString())
+                .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(refreshTokenValidity)))
                 .signWith(secretKey)

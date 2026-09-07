@@ -47,6 +47,7 @@ class JwtTokenProviderTest {
         assertThat(claims.get("organizationId", String.class)).isEqualTo(ORGANIZATION_ID.toString());
         assertThat(claims.get("role", String.class)).isEqualTo("MANAGER");
         assertThat(claims.get("publicId", String.class)).isEqualTo(PUBLIC_ID.toString());
+        assertThat(claims.getId()).isNull();
         assertThat(claims.get("managerType")).isNull();
         assertThat(claims.getExpiration().getTime() - claims.getIssuedAt().getTime())
                 .isEqualTo(Duration.ofMinutes(15).toMillis());
@@ -61,9 +62,33 @@ class JwtTokenProviderTest {
         assertThat(claims.get("organizationId")).isNull();
         assertThat(claims.get("role")).isNull();
         assertThat(claims.get("publicId")).isNull();
+        assertThat(claims.getId()).isNotBlank();
         assertThat(claims.getExpiration().getTime() - claims.getIssuedAt().getTime())
                 .isEqualTo(Duration.ofDays(14).toMillis());
         assertThat(provider.getAccountIdFromToken(token)).isEqualTo(ACCOUNT_ID);
+    }
+
+    @Test
+    void refreshTokensIssuedAtTheSameInstantHaveDistinctJtiValues() {
+        String firstToken = provider.generateRefreshToken(ACCOUNT_ID);
+        String secondToken = provider.generateRefreshToken(ACCOUNT_ID);
+        Claims firstClaims = parse(firstToken);
+        Claims secondClaims = parse(secondToken);
+
+        assertThat(firstToken).isNotEqualTo(secondToken);
+        assertThat(firstClaims.getId()).isNotBlank();
+        assertThat(secondClaims.getId()).isNotBlank();
+        assertThat(firstClaims.getId()).isNotEqualTo(secondClaims.getId());
+        assertThat(firstClaims.getSubject()).isEqualTo(ACCOUNT_ID.toString());
+        assertThat(secondClaims.getSubject()).isEqualTo(ACCOUNT_ID.toString());
+        assertThat(firstClaims.getExpiration().getTime() - firstClaims.getIssuedAt().getTime())
+                .isEqualTo(Duration.ofDays(14).toMillis());
+        assertThat(secondClaims.getExpiration().getTime() - secondClaims.getIssuedAt().getTime())
+                .isEqualTo(Duration.ofDays(14).toMillis());
+        assertThat(provider.validateToken(firstToken)).isTrue();
+        assertThat(provider.validateToken(secondToken)).isTrue();
+        assertThat(provider.validateAccessToken(firstToken)).isFalse();
+        assertThat(provider.validateAccessToken(secondToken)).isFalse();
     }
 
     @Test
@@ -117,6 +142,23 @@ class JwtTokenProviderTest {
 
         assertThat(provider.validateToken(incompleteToken)).isTrue();
         assertThat(provider.validateAccessToken(incompleteToken)).isFalse();
+    }
+
+    @Test
+    void legacyRefreshTokenWithoutJtiRemainsValid() {
+        Instant now = Instant.now();
+        String legacyRefreshToken = Jwts.builder()
+                .subject(ACCOUNT_ID.toString())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(Duration.ofDays(14))))
+                .signWith(verificationKey)
+                .compact();
+
+        Claims claims = parse(legacyRefreshToken);
+
+        assertThat(claims.getId()).isNull();
+        assertThat(provider.validateToken(legacyRefreshToken)).isTrue();
+        assertThat(provider.validateAccessToken(legacyRefreshToken)).isFalse();
     }
 
     private Claims parse(String token) {
