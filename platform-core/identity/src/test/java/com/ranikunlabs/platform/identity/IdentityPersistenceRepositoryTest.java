@@ -401,6 +401,20 @@ class IdentityPersistenceRepositoryTest {
     }
 
     @Test
+    void missingRotationTargetDoesNotExposeTheConsumedRefreshCredential() {
+        String staleRefreshToken = "synthetic-stale-refresh-token";
+
+        assertThatThrownBy(() -> tokenSession.rotate(
+                new RefreshSession(staleRefreshToken, UUID.randomUUID(), OffsetDateTime.now().plusDays(1)),
+                "replacement-token",
+                OffsetDateTime.now().plusDays(2)
+        ))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Refresh session rotation target is no longer available")
+                .hasMessageNotContaining(staleRefreshToken);
+    }
+
+    @Test
     void concurrentSessionReplacementUsesAccountLockAndLeavesOneSession() throws Exception {
         PlatformAccountEntity account = platformAccountRepository.saveAndFlush(
                 PlatformAccountEntity.create("replacement-race@example.com"));

@@ -51,7 +51,7 @@ public class TokenSessionJpaAdapter implements TokenSessionPort {
     public void rotate(RefreshSession session, String newToken, OffsetDateTime newExpiresAt) {
         RefreshTokenEntity entity = repository.findByRefreshTokenForUpdate(session.tokenValue())
                 .orElseThrow(() -> new IllegalStateException(
-                        "rotate target refresh token was not found: " + session.tokenValue()));
+                        "Refresh session rotation target is no longer available"));
         entity.updateToken(newToken, newExpiresAt);
         repository.flush();
     }
