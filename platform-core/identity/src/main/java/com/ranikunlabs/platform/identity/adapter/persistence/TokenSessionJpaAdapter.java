@@ -1,7 +1,9 @@
 package com.ranikunlabs.platform.identity.adapter.persistence;
 
 import com.ranikunlabs.platform.identity.adapter.persistence.entity.RefreshTokenEntity;
+import com.ranikunlabs.platform.identity.adapter.persistence.repository.PlatformAccountJpaRepository;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.RefreshTokenJpaRepository;
+import com.ranikunlabs.platform.identity.application.port.IdentityAccountNotFoundException;
 import com.ranikunlabs.platform.identity.application.port.RefreshSession;
 import com.ranikunlabs.platform.identity.application.port.TokenSessionPort;
 import org.springframework.stereotype.Component;
@@ -17,29 +19,41 @@ import java.util.UUID;
 public class TokenSessionJpaAdapter implements TokenSessionPort {
 
     private final RefreshTokenJpaRepository repository;
+    private final PlatformAccountJpaRepository platformAccountRepository;
 
-    public TokenSessionJpaAdapter(RefreshTokenJpaRepository repository) {
+    public TokenSessionJpaAdapter(
+            RefreshTokenJpaRepository repository,
+            PlatformAccountJpaRepository platformAccountRepository
+    ) {
         this.repository = repository;
+        this.platformAccountRepository = platformAccountRepository;
     }
 
     @Override
     public void replaceForAccount(UUID accountId, String newToken, OffsetDateTime expiresAt) {
-        repository.deleteByAccountId(accountId);
-        repository.save(RefreshTokenEntity.create(newToken, accountId, expiresAt));
+        platformAccountRepository.findByIdForSessionReplacement(accountId)
+                .orElseThrow(IdentityAccountNotFoundException::new);
+
+        repository.findByAccountId(accountId)
+                .ifPresentOrElse(
+                        existing -> existing.updateToken(newToken, expiresAt),
+                        () -> repository.save(RefreshTokenEntity.create(newToken, accountId, expiresAt))
+                );
+        repository.flush();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<RefreshSession> findByToken(String rawToken) {
-        return repository.findByRefreshToken(rawToken).map(this::toSession);
+        return repository.findByRefreshTokenForUpdate(rawToken).map(this::toSession);
     }
 
     @Override
     public void rotate(RefreshSession session, String newToken, OffsetDateTime newExpiresAt) {
-        RefreshTokenEntity entity = repository.findByRefreshToken(session.tokenValue())
+        RefreshTokenEntity entity = repository.findByRefreshTokenForUpdate(session.tokenValue())
                 .orElseThrow(() -> new IllegalStateException(
                         "rotate target refresh token was not found: " + session.tokenValue()));
         entity.updateToken(newToken, newExpiresAt);
+        repository.flush();
     }
 
     @Override

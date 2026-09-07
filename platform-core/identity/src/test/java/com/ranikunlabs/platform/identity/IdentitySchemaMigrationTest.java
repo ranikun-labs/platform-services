@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.identity;
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationVersion;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +58,7 @@ class IdentitySchemaMigrationTest {
         var result = flyway().migrate();
 
         assertThat(result.success).isTrue();
-        assertThat(result.migrationsExecuted).isEqualTo(1);
+        assertThat(result.migrationsExecuted).isEqualTo(2);
 
         try (Connection connection = connection()) {
             assertThat(tableNames(connection)).containsExactlyInAnyOrder(
@@ -96,6 +97,7 @@ class IdentitySchemaMigrationTest {
                     "fk_external_identities_account",
                     "refresh_token_pkey",
                     "refresh_token_refresh_token_key",
+                    "refresh_token_account_id_key",
                     "fk_refresh_token_account",
                     "uq_product_clients_client_id",
                     "chk_product_clients_client_id_format",
@@ -173,15 +175,18 @@ class IdentitySchemaMigrationTest {
         flyway().migrate();
 
         UUID accountId = UUID.randomUUID();
+        UUID otherAccountId = UUID.randomUUID();
         try (Connection connection = connection()) {
             insertAccount(connection, accountId, "ACTIVE");
+            insertAccount(connection, otherAccountId, "ACTIVE");
             insertRefreshToken(connection, "schema-refresh", accountId, null);
+            insertRefreshToken(connection, "other-account-refresh", otherAccountId, null);
         }
 
         assertSqlState(
                 "INSERT INTO refresh_token (refresh_token, account_id, token_expires_at, created_at, updated_at) "
                         + "VALUES (?, ?, ?, ?, ?)",
-                "23505", "schema-refresh", accountId, now().plusDays(1), now(), now()
+                "23505", "different-refresh", accountId, now().plusDays(1), now(), now()
         );
         assertSqlState(
                 "INSERT INTO refresh_token (refresh_token, account_id, token_expires_at, created_at, updated_at) "
@@ -199,6 +204,26 @@ class IdentitySchemaMigrationTest {
                         + "VALUES (?, ?, ?, ?, ?)",
                 "23503", UUID.randomUUID(), "kakao", "orphan-subject", now(), now()
         );
+    }
+
+    @Test
+    void upgradingV1WithDuplicateAccountSessionsFailsClosed() throws Exception {
+        Flyway v1 = Flyway.configure()
+                .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
+                .locations("classpath:db/migration")
+                .target(MigrationVersion.fromVersion("1"))
+                .load();
+        assertThat(v1.migrate().migrationsExecuted).isEqualTo(1);
+
+        UUID accountId = UUID.randomUUID();
+        try (Connection connection = connection()) {
+            insertAccount(connection, accountId, "ACTIVE");
+            insertRefreshToken(connection, "legacy-refresh-one", accountId, null);
+            insertRefreshToken(connection, "legacy-refresh-two", accountId, null);
+        }
+
+        assertThatThrownBy(() -> flyway().migrate())
+                .satisfies(failure -> assertThat(hasSqlState(failure, "23505")).isTrue());
     }
 
     private Flyway flyway() {
@@ -356,6 +381,15 @@ class IdentitySchemaMigrationTest {
                 statement.executeUpdate();
             }
         }).isInstanceOfSatisfying(SQLException.class, error -> assertThat(error.getSQLState()).isEqualTo(expectedState));
+    }
+
+    private boolean hasSqlState(Throwable failure, String expectedState) {
+        for (Throwable current = failure; current != null; current = current.getCause()) {
+            if (current instanceof SQLException sqlException && expectedState.equals(sqlException.getSQLState())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void bind(PreparedStatement statement, Object... values) throws SQLException {
