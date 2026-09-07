@@ -18,9 +18,10 @@ validation, JWT access/refresh issuance, refresh-session persistence/rotation,
 Redis token blacklisting using `blacklist:<rawToken>`, password-account
 registration persistence, and password updates. Identity auth composition is
 opt-in: `platform.identity.auth.enabled=false` remains foundation mode without
-the Identity Auth runtime. OAuth application/provider behavior is not part of
-the current implementation. Shared AI is a Kotlin library module hosted by the
-app, not another server.
+the Identity Auth runtime. The current OAuth provider runtime is the ordinary
+Kakao Login flow described below; no other provider is activated by this
+module. Shared AI is a Kotlin library module hosted by the app, not another
+server.
 
 ## Build structure
 
@@ -88,6 +89,65 @@ Readiness endpoints are `GET /actuator/health/readiness` on each process.
 Readiness proves only that the corresponding host can receive requests; it does
 not claim Product reachability or database/Redis business connectivity.
 
+## Shared Identity OAuth / Kakao
+
+Identity exposes a provider-neutral OAuth boundary with a production Kakao REST
+Login adapter. Its HTTP contract is:
+
+- `POST /api/v1/auth/oauth/kakao/authorization`
+- `POST /api/v1/auth/oauth/kakao/exchange`
+
+The browser callback is the configured product-client redirect, not the
+Platform exchange endpoint. The current WEB Carelog integration boundary is:
+
+`http://localhost:5173/oauth/kakao/callback`
+
+The callback is resolved for the `carelog-web` product client through
+`oauth.provider-callbacks.kakao.carelog-web`. The existing resolver also
+retains its `oauth.redirect-uris.kakao.WEB` fallback. The Shared Identity
+namespace is `oauth.kakao.*`; legacy `carelog.auth.oauth.kakao.*` references
+are not the canonical configuration namespace and have no compatibility alias
+in this slice.
+
+Kakao provider properties are source-backed as follows:
+
+| Property | Type | Default / requirement |
+| --- | --- | --- |
+| `oauth.kakao.client-id` | String | Required when the provider is configured; no default |
+| `oauth.kakao.client-secret` | String | Required when `client-secret-enabled=true`; no default |
+| `oauth.kakao.client-secret-enabled` | boolean | `true` |
+| `oauth.kakao.authorization-uri` | String URI | `https://kauth.kakao.com/oauth/authorize` |
+| `oauth.kakao.token-uri` | String URI | `https://kauth.kakao.com/oauth/token` |
+| `oauth.kakao.user-info-uri` | String URI | `https://kapi.kakao.com/v2/user/me` |
+| `oauth.kakao.connect-timeout` | Duration | `2s` |
+| `oauth.kakao.read-timeout` | Duration | `3s` |
+
+Endpoint values must be absolute HTTP(S) URIs and timeout values must be
+positive. With no externally supplied `oauth.kakao.*` property, the Kakao
+provider bean is absent and foundation mode can boot. Supplying any
+`oauth.kakao.*` property expresses intent to enable Kakao, so incomplete or
+invalid configuration fails fast rather than silently disabling the provider.
+When Client Secret mode is enabled, the secret is supplied externally and is
+sent only during the authorization-code exchange; no credential default is
+embedded or committed.
+
+The implemented flow is ordinary Kakao Login: non-OIDC, with PKCE off and no
+nonce. It does not require an `id_token`, JWKS, issuer validation, or audience
+validation in this slice. The authorization request uses the provider's
+`client_id`, `redirect_uri`, `response_type=code`, and server-side `state`.
+
+The positive Kakao service user ID is the provider subject. Email and profile
+attributes are not account-linking evidence, and the flow does not implicitly
+link by email or create an account. If the external identity is not linked,
+the exchange returns HTTP `409 OAUTH_ACCOUNT_NOT_LINKED` and leaves onboarding
+or linking as a separate product decision.
+
+The accepted live smoke exercised the real Kakao authorization callback,
+`/oauth/token`, Client Secret authentication, `/v2/user/me`, and positive
+provider-subject resolution. A clean, unlinked local identity returned the
+expected HTTP `409 OAUTH_ACCOUNT_NOT_LINKED` without implicit account creation
+or linking.
+
 ## Local topology
 
 `docker-compose.yml` defines the two application processes, one PostgreSQL
@@ -123,11 +183,12 @@ integration, production authorization, Finance/Carelog behavior, Commerce, or
 Audit. The internal HTTP execution route exists only in the integration-test
 boundary; normal runtime does not expose the unauthenticated fixture flow.
 
-Identity's current password-authentication and token-lifecycle capabilities do
-not include OAuth application orchestration, authorization/callback flows,
-Redis OAuth State, PKCE runtime behavior, Kakao, or OAuth HTTP compatibility
-endpoints. Framework-neutral OAuth contracts do not imply an implemented OAuth
-runtime. Identity account registration persistence is not Carelog user/profile
-enrollment or authorization; Carelog migration/cutover including RPL-55,
-Finance consumer adapters, and RPL-107 Bedrock/provider/streaming functionality
-remain outside the current baseline.
+Identity's current auth boundary includes the extracted password-authentication
+and token-lifecycle capabilities plus the Kakao OAuth flow described above.
+Other OAuth providers, OIDC, PKCE runtime behavior, and provider-specific
+application flows outside Kakao remain outside this slice. Identity account
+registration persistence is not Carelog user/profile enrollment or
+authorization. Carelog full production cutover and legacy-auth removal,
+RPL-55 migration completion, Finance production consumer integration and
+cross-repository E2E, and RPL-107 Bedrock/provider/streaming functionality
+remain separate follow-up work.
