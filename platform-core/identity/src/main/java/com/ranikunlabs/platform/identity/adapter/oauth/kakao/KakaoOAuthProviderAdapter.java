@@ -38,22 +38,28 @@ public class KakaoOAuthProviderAdapter implements OAuthProviderPort {
     }
 
     @Override
+    public boolean supportsPkce() {
+        return false;
+    }
+
+    @Override
+    public boolean requiresNonce() {
+        return false;
+    }
+
+    @Override
     public URI buildAuthorizationUrl(OAuthAuthorizationRequest request) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(properties.getAuthorizationUri())
                 .queryParam("client_id", properties.getClientId())
                 .queryParam("redirect_uri", request.redirectUri().toString())
                 .queryParam("response_type", "code")
                 .queryParam("state", request.state());
-        if (request.codeChallenge() != null) {
-            builder.queryParam("code_challenge", request.codeChallenge())
-                    .queryParam("code_challenge_method", request.codeChallengeMethod());
-        }
         return builder.build().encode().toUri();
     }
 
     @Override
     public OAuthTokenGrant exchangeCode(String authorizationCode, URI redirectUri, String codeVerifier) {
-        KakaoTokenResponse response = apiClient.exchangeCode(authorizationCode, redirectUri, codeVerifier);
+        KakaoTokenResponse response = apiClient.exchangeCode(authorizationCode, redirectUri);
         long expiresIn = response.expiresIn() == null ? 0L : response.expiresIn();
         return new OAuthTokenGrant(
                 response.accessToken(),

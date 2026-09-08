@@ -54,11 +54,11 @@ class KakaoOAuthApiClientHttpTest {
     }
 
     @Test
-    void tokenRequestSendsCanonicalFormWithClientSecretAndPkceExactlyOnce() throws Exception {
+    void tokenRequestSendsCanonicalFormWithClientSecretAndNoPkceVerifier() throws Exception {
         server.enqueue(json("{\"access_token\":\"provider-token\",\"expires_in\":60}"));
         KakaoOAuthApiClient client = client("client-secret-value");
 
-        assertThat(client.exchangeCode("authorization-code", REDIRECT_URI, "code-verifier").accessToken())
+        assertThat(client.exchangeCode("authorization-code", REDIRECT_URI).accessToken())
                 .isEqualTo("provider-token");
 
         RecordedRequest request = server.takeRequest();
@@ -70,8 +70,7 @@ class KakaoOAuthApiClientHttpTest {
                 "client_id", "test-client",
                 "client_secret", "client-secret-value",
                 "redirect_uri", REDIRECT_URI.toString(),
-                "code", "authorization-code",
-                "code_verifier", "code-verifier"
+                "code", "authorization-code"
         ));
         assertThat(server.getRequestCount()).isEqualTo(1);
     }
@@ -79,18 +78,19 @@ class KakaoOAuthApiClientHttpTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = " ")
-    void tokenRequestOmitsOptionalClientSecretAndVerifierWhenBlank(String clientSecret) throws Exception {
+    void tokenRequestOmitsOptionalClientSecretWhenBlank(String clientSecret) throws Exception {
         server.enqueue(json("{\"access_token\":\"provider-token\"}"));
         KakaoOAuthApiClient client = client(clientSecret);
 
-        client.exchangeCode("authorization-code", REDIRECT_URI, null);
+        client.exchangeCode("authorization-code", REDIRECT_URI);
 
         Map<String, String> form = form(server.takeRequest());
         assertThat(form).containsEntry("grant_type", "authorization_code")
                 .containsEntry("client_id", "test-client")
                 .containsEntry("redirect_uri", REDIRECT_URI.toString())
                 .containsEntry("code", "authorization-code")
-                .doesNotContainKeys("client_secret", "code_verifier");
+                .doesNotContainKey("client_secret")
+                .doesNotContainKey("code_verifier");
         assertThat(server.getRequestCount()).isEqualTo(1);
     }
 
@@ -121,7 +121,7 @@ class KakaoOAuthApiClientHttpTest {
         server.enqueue(json(responseBody));
 
         OAuthProviderException exception = catchThrowableOfType(
-                () -> client(null).exchangeCode("authorization-code", REDIRECT_URI, null),
+                () -> client(null).exchangeCode("authorization-code", REDIRECT_URI),
                 OAuthProviderException.class);
 
         assertThat(exception.reason()).isEqualTo(OAuthLoginResult.FailureReason.CODE_EXCHANGE_FAILED);
@@ -154,7 +154,7 @@ class KakaoOAuthApiClientHttpTest {
         server.enqueue(new MockResponse().setResponseCode(status).setBody("sensitive-provider-body"));
 
         OAuthProviderException exception = catchThrowableOfType(
-                () -> client("client-secret-value").exchangeCode("authorization-code", REDIRECT_URI, null),
+                () -> client("client-secret-value").exchangeCode("authorization-code", REDIRECT_URI),
                 OAuthProviderException.class);
 
         assertThat(exception.reason()).isEqualTo(status == 429 || status >= 500

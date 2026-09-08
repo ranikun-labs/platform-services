@@ -54,24 +54,28 @@ class KakaoOAuthAdapterTest {
     }
 
     @Test
-    void authorizationUrlContainsOnlyKakaoRequiredValuesAndPkce() {
+    void authorizationUrlContainsOnlyOrdinaryKakaoLoginValuesEvenWhenPkceIsRequested() {
         KakaoOAuthProviderAdapter adapter = adapterWithClientId(1L);
         URI url = adapter.buildAuthorizationUrl(new OAuthAuthorizationRequest(
                 "kakao", URI.create("https://app.example.test/callback"),
-                "state-value", "challenge", "S256", null));
+                "state-value", "challenge", "S256", "nonce-value"));
 
-        assertThat(UriComponentsBuilder.fromUri(url).build().getQueryParams())
+        var queryParams = UriComponentsBuilder.fromUri(url).build().getQueryParams();
+        assertThat(queryParams)
                 .containsEntry("client_id", java.util.List.of("test-client"))
                 .containsEntry("redirect_uri", java.util.List.of("https://app.example.test/callback"))
                 .containsEntry("response_type", java.util.List.of("code"))
-                .containsEntry("state", java.util.List.of("state-value"))
-                .containsEntry("code_challenge", java.util.List.of("challenge"))
-                .containsEntry("code_challenge_method", java.util.List.of("S256"));
-        assertThat(url.toString()).doesNotContain("scope=", "nonce=");
+                .containsEntry("state", java.util.List.of("state-value"));
+        assertThat(queryParams.keySet())
+                .containsExactlyInAnyOrder("client_id", "redirect_uri", "response_type", "state");
+        assertThat(url.toString()).doesNotContain(
+                "code_challenge=", "code_challenge_method=", "nonce=", "scope=", "openid=", "prompt=", "login_hint=");
+        assertThat(adapter.supportsPkce()).isFalse();
+        assertThat(adapter.requiresNonce()).isFalse();
     }
 
     @Test
-    void tokenExchangeSendsFormAndProviderAdapterMapsExpiry() throws Exception {
+    void tokenExchangeSendsOrdinaryLoginFormAndProviderAdapterMapsExpiry() throws Exception {
         server.enqueue(new MockResponse().setBody("{\"access_token\":\"token\",\"expires_in\":60}")
                 .addHeader("Content-Type", "application/json"));
         KakaoOAuthProviderAdapter adapter = adapterWithClientId(1L);
@@ -84,15 +88,16 @@ class KakaoOAuthAdapterTest {
         Map<String, String> form = form(request);
         assertThat(form).containsEntry("grant_type", "authorization_code")
                 .containsEntry("client_id", "test-client")
+                .containsEntry("redirect_uri", "https://app.example/callback")
                 .containsEntry("code", "auth-code")
-                .containsEntry("code_verifier", "verifier");
+                .doesNotContainKey("code_verifier");
     }
 
     @Test
     void malformedOrErrorProviderResponsesBecomeNeutralFailuresWithoutResponseBody() {
         server.enqueue(new MockResponse().setResponseCode(500).setBody("sensitive-provider-body"));
 
-        assertThatThrownBy(() -> client.exchangeCode("code", URI.create("https://app.example/callback"), null))
+        assertThatThrownBy(() -> client.exchangeCode("code", URI.create("https://app.example/callback")))
                 .isInstanceOfSatisfying(OAuthProviderException.class, exception -> {
                     assertThat(exception.reason()).isEqualTo(OAuthLoginResult.FailureReason.PROVIDER_UNAVAILABLE);
                     assertThat(exception).hasMessage(null);

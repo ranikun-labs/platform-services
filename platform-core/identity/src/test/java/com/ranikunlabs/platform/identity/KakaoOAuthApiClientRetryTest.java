@@ -74,7 +74,7 @@ class KakaoOAuthApiClientRetryTest {
 
         OAuthProviderException exception = catchThrowableOfType(
                 () -> client(builder.build()).exchangeCode(
-                        "authorization-code", URI.create("https://app.example.test/oauth/callback"), null),
+                        "authorization-code", URI.create("https://app.example.test/oauth/callback")),
                 OAuthProviderException.class);
 
         assertThat(exception.reason()).isEqualTo(OAuthLoginResult.FailureReason.PROVIDER_UNAVAILABLE);

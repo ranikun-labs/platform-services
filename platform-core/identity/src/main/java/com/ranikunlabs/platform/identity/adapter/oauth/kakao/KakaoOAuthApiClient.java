@@ -31,16 +31,13 @@ public class KakaoOAuthApiClient {
         this.errorMapper = errorMapper;
     }
 
-    public KakaoTokenResponse exchangeCode(String code, URI redirectUri, String codeVerifier) {
+    public KakaoTokenResponse exchangeCode(String code, URI redirectUri) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "authorization_code");
         form.add("client_id", properties.getClientId());
         form.add("redirect_uri", redirectUri.toString());
         form.add("code", code);
         optional(properties.getClientSecret()).ifPresent(value -> form.add("client_secret", value));
-        if (codeVerifier != null) {
-            form.add("code_verifier", codeVerifier);
-        }
 
         try {
             KakaoTokenResponse response = restClient.post().uri(properties.getTokenUri())
