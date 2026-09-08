@@ -5,6 +5,7 @@ import com.ranikunlabs.platform.identity.adapter.persistence.entity.PlatformAcco
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.PlatformAccountJpaRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.flyway.autoconfigure.FlywayConfigurationCustomizer;
+import org.springframework.boot.flyway.autoconfigure.FlywayMigrationStrategy;
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -65,6 +66,11 @@ public class IdentityPersistenceConfiguration {
                 .schemas(IdentityDatabaseSchema.NAME)
                 .defaultSchema(IdentityDatabaseSchema.NAME)
                 .createSchemas(true);
+    }
+
+    @Bean
+    FlywayMigrationStrategy identityFlywayMigrationStrategy() {
+        return new IdentityLegacySchemaGuard()::migrate;
     }
 
     @Bean
