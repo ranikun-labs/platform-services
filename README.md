@@ -19,21 +19,24 @@ Redis token blacklisting using `blacklist:<rawToken>`, password-account
 registration persistence, and password updates. Identity also owns
 provider-neutral OAuth Core/State: authorization/callback orchestration, PKCE,
 server-side state lifecycle, and the Redis OAuth state store using
-`oauth:state:<state>`. The accepted Kakao provider adapter and Auth/OAuth HTTP
-compatibility layer are hosted by the Platform Core Spring MVC app. The
+`oauth:state:<state>`. The provider-neutral core has PKCE and nonce extension
+points; the current Kakao adapter uses ordinary non-OIDC REST Login with both
+disabled. The Kakao provider adapter and Auth/OAuth HTTP compatibility layer
+are hosted by the Platform Core Spring MVC app. The
 compatibility endpoints are available under `/api/v1/auth` when
 `platform.identity.auth.enabled=true`; Platform Core hosted Identity
 composition is covered by runtime verification. Carelog traffic cutover,
 production Product claims integration, and Product enrollment remain outside
-this module. Live Kakao smoke is `LIVE_KAKAO_SMOKE_DEFERRED_TO_RPL55`, and no
-Carelog traffic has been cut over to it. Identity auth composition is opt-in:
+this module. A real-provider local Kakao live smoke has been verified at the
+approved implementation state; that evidence does not represent production
+deployment or Carelog cutover. Identity auth composition is opt-in:
 `platform.identity.auth.enabled=false` remains foundation mode without the
 Identity Auth runtime. Identity does not have an independent deployable
 process in this repository state. Shared AI is a Kotlin library module hosted
-by the app, not another server. After the auth cutover, Shared Identity owns
-the complete public `/api/v1/auth/**` namespace. Product/Carelog must not add
-public product endpoints there; unknown auth requests are allowed to reach
-Platform Identity and must never fall through to Carelog.
+by the app, not another server. The Identity HTTP adapter owns its current
+Auth/OAuth compatibility endpoints; routing Gateway traffic to Platform Core
+is a separate explicit runtime promotion decision, and Product/Carelog must
+not add product endpoints to the Identity-owned auth surface.
 
 ## Build structure
 
@@ -87,11 +90,48 @@ ModelGateway, but no live provider is configured or required by tests.
 
 Gateway configuration remains under `PLATFORM_GATEWAY_*`. The Platform Core
 host owns `PLATFORM_CORE_PORT`; hosted Identity configuration remains under
-`PLATFORM_IDENTITY_*`. Required values have no usable application defaults and
-fail startup when absent. When Identity Auth is enabled, the host binds the
-existing `jwt.*`, `carelog.auth.oauth.kakao.*`, and
-`oauth.redirect-uris.kakao.*` property families from environment variables;
-JWT credentials and OAuth secrets have no checked-in defaults.
+`PLATFORM_IDENTITY_*`. Identity Auth is opt-in. When
+`platform.identity.auth.enabled` is absent or `false`, foundation mode can
+boot without JWT or Kakao Auth configuration. When it is `true`, the host
+binds the JWT and Identity Auth configuration and validates the required
+runtime values; missing or invalid JWT settings fail startup, token validity
+values must be positive, and no usable JWT secret or OAuth credential is
+checked in.
+
+The current Spring property contract is:
+
+```text
+jwt.secret-key
+jwt.access-token-validity
+jwt.refresh-token-validity
+
+carelog.auth.oauth.kakao.client-id
+carelog.auth.oauth.kakao.client-secret
+carelog.auth.oauth.kakao.authorization-uri
+carelog.auth.oauth.kakao.token-uri
+carelog.auth.oauth.kakao.user-info-uri
+carelog.auth.oauth.kakao.connect-timeout   # default 2s
+carelog.auth.oauth.kakao.read-timeout      # default 3s
+
+oauth.redirect-uris.kakao.WEB
+oauth.redirect-uris.kakao.MOBILE
+oauth.allowed-return-origins
+```
+
+Platform Core's `application.yml` maps the JWT values to
+`PLATFORM_IDENTITY_JWT_SECRET_KEY`,
+`PLATFORM_IDENTITY_JWT_ACCESS_TOKEN_VALIDITY`, and
+`PLATFORM_IDENTITY_JWT_REFRESH_TOKEN_VALIDITY`. It maps the Kakao provider
+values to `PLATFORM_IDENTITY_KAKAO_CLIENT_ID`,
+`PLATFORM_IDENTITY_KAKAO_CLIENT_SECRET`,
+`PLATFORM_IDENTITY_KAKAO_AUTHORIZATION_URI`,
+`PLATFORM_IDENTITY_KAKAO_TOKEN_URI`, and
+`PLATFORM_IDENTITY_KAKAO_USER_INFO_URI`. WEB/MOBILE callbacks map to
+`PLATFORM_IDENTITY_OAUTH_KAKAO_WEB_REDIRECT_URI` and
+`PLATFORM_IDENTITY_OAUTH_KAKAO_MOBILE_REDIRECT_URI`; allowed return origins
+map to `PLATFORM_IDENTITY_OAUTH_ALLOWED_RETURN_ORIGINS`. The current Shared
+Identity configuration namespace is `carelog.auth.oauth.kakao.*`; no
+`oauth.kakao.*` compatibility alias is provided at this implementation state.
 
 Run the artifacts independently:
 
@@ -104,6 +144,52 @@ Readiness endpoints are `GET /actuator/health/readiness` on each process.
 Readiness proves only that the corresponding host can receive requests; it does
 not claim Product reachability or database/Redis business connectivity.
 
+## Shared Identity Auth and Kakao Login
+
+When Identity Auth is enabled, Platform Core hosts password login, JWT
+access/refresh token handling, refresh-session persistence and rotation,
+logout, and bearer-protected Identity endpoints. The same opt-in composition
+hosts the current Auth/OAuth compatibility endpoints:
+
+```text
+POST /api/v1/auth/oauth/kakao/authorization
+POST /api/v1/auth/oauth/kakao/exchange
+```
+
+Kakao uses the ordinary authorization-code REST Login flow. The current
+adapter has PKCE off, OIDC off, and does not use a nonce, `id_token`, JWKS,
+issuer, or audience validation. Client Secret transport is supported and the
+secret is supplied externally when that mode is used; no credential default is
+embedded in the repository. The provider subject is Kakao's positive service
+user ID. Email, profile, and display attributes are not account-linking
+evidence, and Identity does not perform implicit email-based linking or
+implicit Platform account creation.
+
+The WEB callback is configured through `oauth.redirect-uris.kakao.WEB`. The
+approved local provider smoke used:
+
+```text
+http://localhost:5173/oauth/kakao/callback
+```
+
+This is a local verification callback example, not a fixed production URI.
+The browser callback receives the provider code/state; it is not the Platform
+exchange endpoint. The client integration then calls the Platform exchange
+endpoint above with the callback result.
+
+If the provider principal is valid but no external identity is linked to a
+Platform account, the current HTTP contract returns HTTP `409` with the
+message `연결된 Carelog 계정이 없습니다.`. The response does not contain an
+`OAUTH_ACCOUNT_NOT_LINKED` code field. This is an unlinked-account/onboarding
+boundary and does not create or link an account implicitly.
+
+The RPL-54 real-provider local live smoke verified the Kakao authorization and
+callback round trip, real Kakao token exchange, Client Secret authentication,
+real user-info retrieval, and positive provider-subject resolution. It ended
+with the expected clean-database HTTP `409` unlinked-account result. This is
+local provider evidence only; it does not claim production deployment,
+Carelog cutover, or completion of downstream consumer migration.
+
 ## Local topology
 
 `docker-compose.yml` defines the two application processes, one PostgreSQL
@@ -111,10 +197,11 @@ physical instance, and one Redis physical instance. It requires
 `PLATFORM_POSTGRES_PASSWORD` and the existing Gateway upstream/security values.
 The source merge remains DARK by default: when `PLATFORM_GATEWAY_AUTH_URI` is
 unset, it follows `PLATFORM_GATEWAY_CARELOG_BE_URI` by construction. Platform
-Identity traffic promotion is an explicit runtime configuration action after
-live verification: set `PLATFORM_GATEWAY_AUTH_URI` to the Platform Core
-address, set `PLATFORM_IDENTITY_AUTH_ENABLED=true`, and provide the complete
-JWT/Kakao runtime configuration. Rollback is also a no-rebuild change: either
+Identity traffic promotion is separate from the RPL-54 implementation and
+live-provider evidence; it is an explicit runtime configuration action. Set
+`PLATFORM_GATEWAY_AUTH_URI` to the Platform Core address, set
+`PLATFORM_IDENTITY_AUTH_ENABLED=true`, and provide the complete JWT/Kakao
+runtime configuration. Rollback is also a no-rebuild change: either
 unset `PLATFORM_GATEWAY_AUTH_URI` so it follows `PLATFORM_GATEWAY_CARELOG_BE_URI`
 or explicitly set `PLATFORM_GATEWAY_AUTH_URI` back to the Carelog upstream.
 
@@ -127,11 +214,11 @@ PLATFORM_GATEWAY_INTERNAL_SECRET='local-only' \
 docker compose up --build gateway-app platform-core-app
 ```
 
-Before promotion, the live compatibility gates must pass: Platform login and
-token use, refresh, shared-blacklist logout, Kakao OAuth, public internal
-claims returning 403, and the direct Platform-to-Carelog claims call. The
-Carelog-to-Platform switch and rollback use the same compiled artifacts; only
-the upstream and opt-in runtime configuration change.
+Gateway promotion, Carelog traffic cutover, legacy Auth removal, and any
+remaining consumer compatibility or Product claims gates are separate
+operational decisions. The Carelog-to-Platform switch and rollback use the
+same compiled artifacts; only the upstream and opt-in runtime configuration
+change.
 
 `gateway-app/Dockerfile` and `platform-core/app/Dockerfile` are separate image
 targets. Pin or roll back `PLATFORM_GATEWAY_IMAGE` and `PLATFORM_CORE_IMAGE`
