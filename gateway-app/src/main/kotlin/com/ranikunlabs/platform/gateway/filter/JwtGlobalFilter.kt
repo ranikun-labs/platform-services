@@ -17,6 +17,7 @@ class JwtGlobalFilter(
     private val jwtVerifier: JwtVerifier,
     private val blacklistService: RedisBlacklistService,
     private val gatewayConfig: GatewayConfig,
+    private val authPublicRequestMatcher: AuthPublicRequestMatcher,
     private val oauthPublicRequestMatcher: OAuthPublicRequestMatcher
 ) : GlobalFilter, Ordered {
 
@@ -30,7 +31,10 @@ class JwtGlobalFilter(
             return exchange.response.setComplete()
         }
 
-        if (oauthPublicRequestMatcher.matches(request) || gatewayConfig.publicPaths.any(path::startsWith)) {
+        if (authPublicRequestMatcher.matches(request)
+            || oauthPublicRequestMatcher.matches(request)
+            || gatewayConfig.publicPaths.any(path::startsWith)
+        ) {
             return chain.filter(sanitizedExchange.withGatewaySecret(gatewayConfig.internalSecret))
         }
 

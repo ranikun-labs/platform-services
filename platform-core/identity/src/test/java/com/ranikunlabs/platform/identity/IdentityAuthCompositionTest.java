@@ -115,7 +115,11 @@ class IdentityAuthCompositionTest {
 
     @Test
     void authEnabledWithoutSecretKeyFailsConfigurationBinding() {
-        assertAuthStartupFails(authContextRunner());
+        authContextRunner().run(context -> {
+            assertThat(context).hasFailed();
+            assertThat(context.getStartupFailure())
+                    .hasMessageContaining("Could not bind properties to 'IdentityJwtProperties'");
+        });
     }
 
     @Test

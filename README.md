@@ -30,7 +30,10 @@ Carelog traffic has been cut over to it. Identity auth composition is opt-in:
 `platform.identity.auth.enabled=false` remains foundation mode without the
 Identity Auth runtime. Identity does not have an independent deployable
 process in this repository state. Shared AI is a Kotlin library module hosted
-by the app, not another server.
+by the app, not another server. After the auth cutover, Shared Identity owns
+the complete public `/api/v1/auth/**` namespace. Product/Carelog must not add
+public product endpoints there; unknown auth requests are allowed to reach
+Platform Identity and must never fall through to Carelog.
 
 ## Build structure
 
@@ -85,7 +88,10 @@ ModelGateway, but no live provider is configured or required by tests.
 Gateway configuration remains under `PLATFORM_GATEWAY_*`. The Platform Core
 host owns `PLATFORM_CORE_PORT`; hosted Identity configuration remains under
 `PLATFORM_IDENTITY_*`. Required values have no usable application defaults and
-fail startup when absent.
+fail startup when absent. When Identity Auth is enabled, the host binds the
+existing `jwt.*`, `carelog.auth.oauth.kakao.*`, and
+`oauth.redirect-uris.kakao.*` property families from environment variables;
+JWT credentials and OAuth secrets have no checked-in defaults.
 
 Run the artifacts independently:
 
@@ -103,6 +109,14 @@ not claim Product reachability or database/Redis business connectivity.
 `docker-compose.yml` defines the two application processes, one PostgreSQL
 physical instance, and one Redis physical instance. It requires
 `PLATFORM_POSTGRES_PASSWORD` and the existing Gateway upstream/security values.
+The source merge remains DARK by default: when `PLATFORM_GATEWAY_AUTH_URI` is
+unset, it follows `PLATFORM_GATEWAY_CARELOG_BE_URI` by construction. Platform
+Identity traffic promotion is an explicit runtime configuration action after
+live verification: set `PLATFORM_GATEWAY_AUTH_URI` to the Platform Core
+address, set `PLATFORM_IDENTITY_AUTH_ENABLED=true`, and provide the complete
+JWT/Kakao runtime configuration. Rollback is also a no-rebuild change: either
+unset `PLATFORM_GATEWAY_AUTH_URI` so it follows `PLATFORM_GATEWAY_CARELOG_BE_URI`
+or explicitly set `PLATFORM_GATEWAY_AUTH_URI` back to the Carelog upstream.
 
 ```sh
 PLATFORM_POSTGRES_PASSWORD='local-only' \
@@ -112,6 +126,12 @@ PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET='local-only' \
 PLATFORM_GATEWAY_INTERNAL_SECRET='local-only' \
 docker compose up --build gateway-app platform-core-app
 ```
+
+Before promotion, the live compatibility gates must pass: Platform login and
+token use, refresh, shared-blacklist logout, Kakao OAuth, public internal
+claims returning 403, and the direct Platform-to-Carelog claims call. The
+Carelog-to-Platform switch and rollback use the same compiled artifacts; only
+the upstream and opt-in runtime configuration change.
 
 `gateway-app/Dockerfile` and `platform-core/app/Dockerfile` are separate image
 targets. Pin or roll back `PLATFORM_GATEWAY_IMAGE` and `PLATFORM_CORE_IMAGE`

@@ -2,6 +2,7 @@ package com.ranikunlabs.platform.identity.adapter.http;
 
 import com.ranikunlabs.platform.identity.application.port.TokenProviderPort;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -27,6 +28,20 @@ public class IdentityHttpConfiguration {
     @Bean
     IdentityBearerAuthenticationFilter identityBearerAuthenticationFilter(TokenProviderPort tokenProvider) {
         return new IdentityBearerAuthenticationFilter(tokenProvider);
+    }
+
+    /**
+     * The bearer filter is owned by the Identity {@link SecurityFilterChain}; it must not also
+     * be registered as an independent servlet filter by Spring Boot.
+     */
+    @Bean
+    FilterRegistrationBean<IdentityBearerAuthenticationFilter> identityBearerAuthenticationFilterRegistration(
+            IdentityBearerAuthenticationFilter authenticationFilter
+    ) {
+        FilterRegistrationBean<IdentityBearerAuthenticationFilter> registration =
+                new FilterRegistrationBean<>(authenticationFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
