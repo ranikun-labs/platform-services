@@ -1,7 +1,9 @@
 package com.ranikunlabs.platform.identity;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +30,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /** Verifies the standalone post-V6 Identity schema without importing Carelog product tables. */
 class IdentitySchemaMigrationTest {
 
+    private static final Set<String> IDENTITY_TABLES = Set.of(
+            "platform_accounts",
+            "password_credentials",
+            "external_identities",
+            "refresh_token",
+            "product_clients"
+    );
     private static PostgreSQLContainer<?> postgres;
 
     @BeforeAll
@@ -45,12 +54,7 @@ class IdentitySchemaMigrationTest {
 
     @BeforeEach
     void resetSchema() {
-        Flyway.configure()
-                .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
-                .locations("classpath:db/migration")
-                .cleanDisabled(false)
-                .load()
-                .clean();
+        flyway().clean();
     }
 
     @Test
@@ -59,16 +63,15 @@ class IdentitySchemaMigrationTest {
 
         assertThat(result.success).isTrue();
         assertThat(result.migrationsExecuted).isEqualTo(2);
+        assertThat(flyway().migrate().migrationsExecuted).isZero();
 
         try (Connection connection = connection()) {
-            assertThat(tableNames(connection)).containsExactlyInAnyOrder(
-                    "flyway_schema_history",
-                    "platform_accounts",
-                    "password_credentials",
-                    "external_identities",
-                    "refresh_token",
-                    "product_clients"
-            );
+            Set<String> expectedTables = new HashSet<>(IDENTITY_TABLES);
+            expectedTables.add("flyway_schema_history");
+            assertThat(tableNames(connection, IdentityDatabaseSchema.NAME))
+                    .containsExactlyInAnyOrderElementsOf(expectedTables);
+            assertThat(tableNames(connection, "public"))
+                    .doesNotContainAnyElementsOf(IDENTITY_TABLES);
 
             assertColumn(connection, "platform_accounts", "id", "uuid", "NO", null);
             assertColumn(connection, "platform_accounts", "status", "varchar", "NO", 20);
@@ -114,7 +117,7 @@ class IdentitySchemaMigrationTest {
             assertSequence(connection, "product_clients_id_seq");
 
             assertThat(foreignKeysReferencingCarelogTables(connection)).isZero();
-            assertThat(tableNames(connection)).doesNotContain(
+            assertThat(tableNames(connection, IdentityDatabaseSchema.NAME)).doesNotContain(
                     "users", "customers", "relations", "journals", "customer_event"
             );
         }
@@ -208,9 +211,7 @@ class IdentitySchemaMigrationTest {
 
     @Test
     void upgradingV1WithDuplicateAccountSessionsFailsClosed() throws Exception {
-        Flyway v1 = Flyway.configure()
-                .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
-                .locations("classpath:db/migration")
+        Flyway v1 = flywayConfiguration()
                 .target(MigrationVersion.fromVersion("1"))
                 .load();
         assertThat(v1.migrate().migrationsExecuted).isEqualTo(1);
@@ -227,21 +228,32 @@ class IdentitySchemaMigrationTest {
     }
 
     private Flyway flyway() {
+        return flywayConfiguration().load();
+    }
+
+    private FluentConfiguration flywayConfiguration() {
         return Flyway.configure()
                 .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
                 .locations("classpath:db/migration")
-                .load();
+                .schemas(IdentityDatabaseSchema.NAME)
+                .defaultSchema(IdentityDatabaseSchema.NAME)
+                .createSchemas(true)
+                .cleanDisabled(false);
     }
 
     private Connection connection() throws SQLException {
-        return DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+        Connection connection = DriverManager.getConnection(
+                postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+        connection.setSchema(IdentityDatabaseSchema.NAME);
+        return connection;
     }
 
-    private Set<String> tableNames(Connection connection) throws SQLException {
+    private Set<String> tableNames(Connection connection, String schema) throws SQLException {
         Set<String> names = new HashSet<>();
         try (PreparedStatement statement = connection.prepareStatement(
                 "SELECT table_name FROM information_schema.tables "
-                        + "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'")) {
+                        + "WHERE table_schema = ? AND table_type = 'BASE TABLE'")) {
+            statement.setString(1, schema);
             try (ResultSet result = statement.executeQuery()) {
                 while (result.next()) {
                     names.add(result.getString(1));
@@ -256,10 +268,11 @@ class IdentitySchemaMigrationTest {
     ) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "SELECT udt_name, is_nullable, character_maximum_length "
-                        + "FROM information_schema.columns WHERE table_schema = 'public' "
+                        + "FROM information_schema.columns WHERE table_schema = ? "
                         + "AND table_name = ? AND column_name = ?")) {
-            statement.setString(1, table);
-            statement.setString(2, column);
+            statement.setString(1, IdentityDatabaseSchema.NAME);
+            statement.setString(2, table);
+            statement.setString(3, column);
             try (ResultSet result = statement.executeQuery()) {
                 assertThat(result.next()).as("column %s.%s exists", table, column).isTrue();
                 assertThat(result.getString("udt_name")).isEqualTo(udtName);
@@ -272,8 +285,12 @@ class IdentitySchemaMigrationTest {
 
     private void assertConstraint(Connection connection, String name) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT 1 FROM pg_constraint WHERE conname = ?")) {
-            statement.setString(1, name);
+                "SELECT 1 FROM pg_constraint c "
+                        + "JOIN pg_class table_ref ON table_ref.oid = c.conrelid "
+                        + "JOIN pg_namespace schema_ref ON schema_ref.oid = table_ref.relnamespace "
+                        + "WHERE schema_ref.nspname = ? AND c.conname = ?")) {
+            statement.setString(1, IdentityDatabaseSchema.NAME);
+            statement.setString(2, name);
             try (ResultSet result = statement.executeQuery()) {
                 assertThat(result.next()).as("constraint %s exists", name).isTrue();
             }
@@ -282,8 +299,9 @@ class IdentitySchemaMigrationTest {
 
     private void assertIndex(Connection connection, String name) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = ?")) {
-            statement.setString(1, name);
+                "SELECT 1 FROM pg_indexes WHERE schemaname = ? AND indexname = ?")) {
+            statement.setString(1, IdentityDatabaseSchema.NAME);
+            statement.setString(2, name);
             try (ResultSet result = statement.executeQuery()) {
                 assertThat(result.next()).as("index %s exists", name).isTrue();
             }
@@ -292,8 +310,12 @@ class IdentitySchemaMigrationTest {
 
     private void assertSequence(Connection connection, String name) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT 1 FROM pg_class WHERE relkind = 'S' AND relname = ?")) {
-            statement.setString(1, name);
+                "SELECT 1 FROM pg_class relation_ref "
+                        + "JOIN pg_namespace schema_ref ON schema_ref.oid = relation_ref.relnamespace "
+                        + "WHERE relation_ref.relkind = 'S' "
+                        + "AND schema_ref.nspname = ? AND relation_ref.relname = ?")) {
+            statement.setString(1, IdentityDatabaseSchema.NAME);
+            statement.setString(2, name);
             try (ResultSet result = statement.executeQuery()) {
                 assertThat(result.next()).as("sequence %s exists", name).isTrue();
             }

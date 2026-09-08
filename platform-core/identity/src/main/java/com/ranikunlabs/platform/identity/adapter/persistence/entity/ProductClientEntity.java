@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.identity.adapter.persistence.entity;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import com.ranikunlabs.platform.identity.core.Product;
 import com.ranikunlabs.platform.identity.core.ProductClientChannel;
 import com.ranikunlabs.platform.identity.core.ProductClientIdPolicy;
@@ -21,7 +22,7 @@ import java.util.Objects;
 
 /** Persistence model for the Identity-owned product client registry. */
 @Entity
-@Table(name = "product_clients")
+@Table(name = "product_clients", schema = IdentityDatabaseSchema.NAME)
 @EntityListeners(AuditingEntityListener.class)
 public class ProductClientEntity {
 

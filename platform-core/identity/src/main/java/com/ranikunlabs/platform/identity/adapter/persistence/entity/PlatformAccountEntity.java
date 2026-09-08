@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.identity.adapter.persistence.entity;
 
 import com.ranikunlabs.platform.identity.core.AccountStatus;
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -17,7 +18,7 @@ import java.util.UUID;
 
 /** Persistence model for the Identity-owned platform account table. */
 @Entity
-@Table(name = "platform_accounts")
+@Table(name = "platform_accounts", schema = IdentityDatabaseSchema.NAME)
 @EntityListeners(AuditingEntityListener.class)
 public class PlatformAccountEntity {
 

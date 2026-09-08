@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.identity;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.ExternalIdentityLookupJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
@@ -62,6 +63,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import javax.sql.DataSource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -118,6 +123,7 @@ class IdentityPersistenceRepositoryTest {
     private final TokenProviderPort tokenProvider;
     private final CRMIdentityProjectionPort crmIdentityProjectionPort;
     private final ApplicationContext applicationContext;
+    private final DataSource dataSource;
 
     private static final RegistrationRaceGate REGISTRATION_RACE_GATE = new RegistrationRaceGate();
 
@@ -137,7 +143,8 @@ class IdentityPersistenceRepositoryTest {
             PasswordEncoder passwordEncoder,
             AuthService authService,
             TokenProviderPort tokenProvider,
-            CRMIdentityProjectionPort crmIdentityProjectionPort
+            CRMIdentityProjectionPort crmIdentityProjectionPort,
+            DataSource dataSource
     ) {
         this.applicationContext = applicationContext;
         this.platformAccountRepository = platformAccountRepository;
@@ -154,6 +161,7 @@ class IdentityPersistenceRepositoryTest {
         this.authService = authService;
         this.tokenProvider = tokenProvider;
         this.crmIdentityProjectionPort = crmIdentityProjectionPort;
+        this.dataSource = dataSource;
     }
 
     @BeforeAll
@@ -161,6 +169,9 @@ class IdentityPersistenceRepositoryTest {
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .locations("classpath:db/migration")
+                .schemas(IdentityDatabaseSchema.NAME)
+                .defaultSchema(IdentityDatabaseSchema.NAME)
+                .createSchemas(true)
                 .load()
                 .migrate();
     }
@@ -215,7 +226,7 @@ class IdentityPersistenceRepositoryTest {
     }
 
     @Test
-    void passwordAccountRegistrationPersistsTheIdentityOwnedRows() {
+    void passwordAccountRegistrationPersistsTheIdentityOwnedRows() throws SQLException {
         String loginId = unique("registration-login");
         String rawPassword = unique("registration-raw");
         String email = loginId + "@example.com";
@@ -239,6 +250,10 @@ class IdentityPersistenceRepositoryTest {
                     assertThat(credential.getPasswordHash()).isEqualTo(result.encodedPasswordHash());
                     assertThat(credential.getPasswordHash()).doesNotContain(rawPassword);
                 });
+
+        assertThat(tableExists(IdentityDatabaseSchema.NAME, "platform_accounts")).isTrue();
+        assertThat(tableExists("public", "platform_accounts")).isFalse();
+        assertThat(accountRowCount(result.accountId())).isOne();
     }
 
     @Test
@@ -617,6 +632,30 @@ class IdentityPersistenceRepositoryTest {
 
     private void assertSingleBean(Class<?> beanType) {
         assertThat(applicationContext.getBeansOfType(beanType)).hasSize(1);
+    }
+
+    private boolean tableExists(String schema, String table) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT 1 FROM information_schema.tables WHERE table_schema = ? AND table_name = ?")) {
+            statement.setString(1, schema);
+            statement.setString(2, table);
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next();
+            }
+        }
+    }
+
+    private int accountRowCount(UUID accountId) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT COUNT(*) FROM identity.platform_accounts WHERE id = ?")) {
+            statement.setObject(1, accountId);
+            try (ResultSet result = statement.executeQuery()) {
+                assertThat(result.next()).isTrue();
+                return result.getInt(1);
+            }
+        }
     }
 
     @SpringBootConfiguration

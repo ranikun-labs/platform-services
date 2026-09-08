@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.identity.adapter.persistence.entity;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -16,7 +17,7 @@ import java.util.UUID;
 
 /** Persistence model for a provider-neutral external identity link. */
 @Entity
-@Table(name = "external_identities")
+@Table(name = "external_identities", schema = IdentityDatabaseSchema.NAME)
 @EntityListeners(AuditingEntityListener.class)
 public class ExternalIdentityEntity {
 

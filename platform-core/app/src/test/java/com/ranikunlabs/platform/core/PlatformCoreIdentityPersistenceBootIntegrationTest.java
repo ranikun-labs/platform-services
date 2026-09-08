@@ -7,6 +7,7 @@ import com.ranikunlabs.platform.identity.adapter.http.IdentityBearerAuthenticati
 import com.ranikunlabs.platform.identity.adapter.http.IdentityHttpConfiguration;
 import com.ranikunlabs.platform.identity.adapter.oauth.kakao.KakaoOAuthClientConfig;
 import com.ranikunlabs.platform.identity.adapter.oauth.kakao.KakaoOAuthProviderAdapter;
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import com.ranikunlabs.platform.identity.adapter.persistence.ExternalIdentityLookupJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityPersistenceConfiguration;
@@ -74,6 +75,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -120,6 +122,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(PlatformCoreIdentityPersistenceBootIntegrationTest.HostedCompositionTestConfiguration.class)
 class PlatformCoreIdentityPersistenceBootIntegrationTest {
 
+    private static final Set<String> IDENTITY_TABLES = Set.of(
+            "platform_accounts",
+            "password_credentials",
+            "external_identities",
+            "refresh_token",
+            "product_clients"
+    );
     private static final Pattern AUTHORIZATION_URL_PATTERN =
             Pattern.compile("\\\"authorizationUrl\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -427,39 +436,37 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
     }
 
     private void assertIdentityTablesAndMigration() throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet result = statement.executeQuery("""
-                     select table_name
-                       from information_schema.tables
-                      where table_schema = 'public'
-                        and table_name in (
-                            'platform_accounts',
-                            'password_credentials',
-                            'external_identities',
-                            'refresh_token',
-                            'product_clients'
-                        )
-                     """)) {
-            Set<String> tables = new HashSet<>();
-            while (result.next()) {
-                tables.add(result.getString(1));
-            }
-            assertThat(tables).containsExactlyInAnyOrder(
-                    "platform_accounts",
-                    "password_credentials",
-                    "external_identities",
-                    "refresh_token",
-                    "product_clients");
+        try (Connection connection = dataSource.getConnection()) {
+            Set<String> identityTables = tableNames(connection, IdentityDatabaseSchema.NAME);
+            Set<String> expectedTables = new HashSet<>(IDENTITY_TABLES);
+            expectedTables.add("flyway_schema_history");
+            assertThat(identityTables).containsExactlyInAnyOrderElementsOf(expectedTables);
+            assertThat(tableNames(connection, "public"))
+                    .doesNotContainAnyElementsOf(IDENTITY_TABLES);
         }
 
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
              ResultSet result = statement.executeQuery(
-                     "select count(*) from flyway_schema_history where success = true")) {
+                     "select count(*) from identity.flyway_schema_history where success = true")) {
             assertThat(result.next()).isTrue();
             assertThat(result.getInt(1)).isPositive();
         }
+    }
+
+    private Set<String> tableNames(Connection connection, String schema) throws SQLException {
+        Set<String> tables = new HashSet<>();
+        try (PreparedStatement statement = connection.prepareStatement(
+                "select table_name from information_schema.tables "
+                        + "where table_schema = ? and table_type = 'BASE TABLE'")) {
+            statement.setString(1, schema);
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    tables.add(result.getString(1));
+                }
+            }
+        }
+        return tables;
     }
 
     private String extractAuthorizationUrl(String responseBody) {

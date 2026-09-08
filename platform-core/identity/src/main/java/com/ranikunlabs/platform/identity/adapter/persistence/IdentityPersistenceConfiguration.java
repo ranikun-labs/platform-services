@@ -60,7 +60,11 @@ public class IdentityPersistenceConfiguration {
 
     @Bean
     FlywayConfigurationCustomizer identityFlywayLocation() {
-        return configuration -> configuration.locations("classpath:db/migration");
+        return configuration -> configuration
+                .locations("classpath:db/migration")
+                .schemas(IdentityDatabaseSchema.NAME)
+                .defaultSchema(IdentityDatabaseSchema.NAME)
+                .createSchemas(true);
     }
 
     @Bean

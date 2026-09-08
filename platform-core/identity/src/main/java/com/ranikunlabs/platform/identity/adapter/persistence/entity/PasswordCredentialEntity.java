@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.identity.adapter.persistence.entity;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -14,7 +15,7 @@ import java.util.UUID;
 
 /** Persistence model for the one-to-one password credential owned by Identity. */
 @Entity
-@Table(name = "password_credentials")
+@Table(name = "password_credentials", schema = IdentityDatabaseSchema.NAME)
 @EntityListeners(AuditingEntityListener.class)
 public class PasswordCredentialEntity {
 

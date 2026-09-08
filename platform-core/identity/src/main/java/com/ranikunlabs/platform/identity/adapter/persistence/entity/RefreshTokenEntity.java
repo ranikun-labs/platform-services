@@ -1,5 +1,6 @@
 package com.ranikunlabs.platform.identity.adapter.persistence.entity;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "refresh_token",
+        schema = IdentityDatabaseSchema.NAME,
         uniqueConstraints = @UniqueConstraint(
                 name = "refresh_token_account_id_key",
                 columnNames = "account_id"
