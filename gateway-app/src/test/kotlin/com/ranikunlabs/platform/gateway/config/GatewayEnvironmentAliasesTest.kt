@@ -42,6 +42,25 @@ class GatewayEnvironmentAliasesTest {
     }
 
     @Test
+    fun `canonical auth upstream is required and published without a legacy alias`() {
+        val resolved = requiredEnvironment()
+            .withProperty("PLATFORM_GATEWAY_REDIS_HOST", "redis")
+
+        assertThat(GatewayEnvironmentAliases.resolve(resolved)["PLATFORM_GATEWAY_AUTH_URI"])
+            .isEqualTo("http://platform-core")
+    }
+
+    @Test
+    fun `missing auth upstream fails before runtime binding`() {
+        val environment = requiredEnvironment(includeAuth = false)
+            .withProperty("PLATFORM_GATEWAY_REDIS_HOST", "redis")
+
+        assertThatThrownBy { GatewayEnvironmentAliases.resolve(environment) }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessage("CONFIG_ALIAS_MISSING: PLATFORM_GATEWAY_AUTH_URI")
+    }
+
+    @Test
     fun `different canonical and legacy values fail without exposing either value`() {
         val environment = requiredEnvironment()
             .withProperty("PLATFORM_GATEWAY_REDIS_HOST", "canonical-secret-host")
@@ -137,6 +156,7 @@ class GatewayEnvironmentAliasesTest {
                 "--REDIS_HOST=legacy-redis",
                 "--PLATFORM_GATEWAY_REDIS_PORT=6379",
                 "--PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
+                "--PLATFORM_GATEWAY_AUTH_URI=http://platform-core",
                 "--PLATFORM_GATEWAY_CARELOG_BE_URI=http://carelog-be",
                 "--PLATFORM_GATEWAY_CARELOG_RAG_URI=http://carelog-rag",
                 "--PLATFORM_GATEWAY_INTERNAL_SECRET=internal-secret",
@@ -145,12 +165,18 @@ class GatewayEnvironmentAliasesTest {
         }.isInstanceOf(IllegalStateException::class.java)
     }
 
-    private fun requiredEnvironment(): MockEnvironment = MockEnvironment()
-        .withProperty("PLATFORM_GATEWAY_PORT", "9000")
-        .withProperty("PLATFORM_GATEWAY_REDIS_PORT", "6379")
-        .withProperty("PLATFORM_GATEWAY_REDIS_KEY_PREFIX", "platform:gateway:")
-        .withProperty("PLATFORM_GATEWAY_CARELOG_BE_URI", "http://carelog-be")
-        .withProperty("PLATFORM_GATEWAY_CARELOG_RAG_URI", "http://carelog-rag")
-        .withProperty("PLATFORM_GATEWAY_INTERNAL_SECRET", "internal-secret")
-        .withProperty("PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET", "jwt-secret")
+    private fun requiredEnvironment(includeAuth: Boolean = true): MockEnvironment {
+        val environment = MockEnvironment()
+            .withProperty("PLATFORM_GATEWAY_PORT", "9000")
+            .withProperty("PLATFORM_GATEWAY_REDIS_PORT", "6379")
+            .withProperty("PLATFORM_GATEWAY_REDIS_KEY_PREFIX", "platform:gateway:")
+            .withProperty("PLATFORM_GATEWAY_CARELOG_BE_URI", "http://carelog-be")
+            .withProperty("PLATFORM_GATEWAY_CARELOG_RAG_URI", "http://carelog-rag")
+            .withProperty("PLATFORM_GATEWAY_INTERNAL_SECRET", "internal-secret")
+            .withProperty("PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET", "jwt-secret")
+        if (includeAuth) {
+            environment.withProperty("PLATFORM_GATEWAY_AUTH_URI", "http://platform-core")
+        }
+        return environment
+    }
 }

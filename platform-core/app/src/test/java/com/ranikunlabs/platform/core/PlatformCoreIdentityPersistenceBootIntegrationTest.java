@@ -43,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.web.server.context.WebServerApplicationContext;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -68,6 +69,9 @@ import org.testcontainers.utility.DockerImageName;
 import javax.sql.DataSource;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -301,6 +305,43 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
         assertThat(tokenProvider.validateToken(httpTokens.accessToken())).isTrue();
         assertThat(account.accountId()).isEqualTo(tokenProvider.getAccountIdFromToken(
                 httpTokens.accessToken()));
+    }
+
+    @Test
+    void actualServerLogoutAcceptsTokenIssuedByTheActualLoginHttpPath() throws Exception {
+        String loginId = "actual-server-" + UUID.randomUUID();
+        IdentityAccount account = registerAccount(loginId);
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpRequest loginRequest = HttpRequest.newBuilder(actualServerUri("/api/v1/auth/login"))
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        "{\"userId\":\"" + loginId
+                                + "\",\"password\":\"Password123!\"}"))
+                .build();
+        HttpResponse<String> login = httpClient.send(loginRequest, HttpResponse.BodyHandlers.ofString());
+
+        assertThat(login.statusCode()).isEqualTo(200);
+        String accessToken = extractJsonString(login.body(), "accessToken");
+        String refreshToken = extractJsonString(login.body(), "refreshToken");
+        assertThat(accessToken).isNotBlank();
+        assertThat(refreshToken).isNotBlank();
+
+        HttpRequest logoutRequest = HttpRequest.newBuilder(actualServerUri("/api/v1/auth/logout"))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+        HttpResponse<String> logout = httpClient.send(
+                logoutRequest, HttpResponse.BodyHandlers.ofString());
+
+        assertThat(logout.statusCode()).isEqualTo(204);
+        assertThat(redisTemplate.hasKey("blacklist:" + accessToken)).isTrue();
+        assertThat(tokenSessionPort.findByToken(refreshToken)).isEmpty();
+        assertThat(account.accountId()).isEqualTo(tokenProvider.getAccountIdFromToken(accessToken));
+    }
+
+    private URI actualServerUri(String path) {
+        int port = ((WebServerApplicationContext) applicationContext).getWebServer().getPort();
+        return URI.create("http://127.0.0.1:" + port + path);
     }
 
     @Test
