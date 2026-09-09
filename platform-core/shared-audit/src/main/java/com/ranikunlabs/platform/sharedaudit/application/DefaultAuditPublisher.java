@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.sharedaudit.application;
 
 import com.ranikunlabs.platform.sharedaudit.core.AuditEvent;
+import com.ranikunlabs.platform.sharedaudit.core.AuditActor;
 import com.ranikunlabs.platform.sharedaudit.core.ActorType;
 import com.ranikunlabs.platform.sharedaudit.internal.AuditCaptureCapability;
 import com.ranikunlabs.platform.sharedaudit.internal.AuditCaptureResult;
@@ -107,13 +108,24 @@ public final class DefaultAuditPublisher implements AuditPublisher {
             return new AuditPublicationResult.Rejected(AuditRejectionReason.RESOURCE_CONTEXT_MISMATCH);
         }
 
-        if (event.originatingActor() != null
-                && (policy.originatingActorRule() == OriginatingActorRule.FORBIDDEN
-                || event.actor().actorType() == ActorType.ANONYMOUS
-                || event.originatingActor().actorType() == ActorType.ANONYMOUS)) {
-            return new AuditPublicationResult.Rejected(AuditRejectionReason.ORIGINATING_ACTOR_NOT_ALLOWED);
+        AuditActor originatingActor = event.originatingActor();
+        if (originatingActor != null) {
+            if (policy.originatingActorRule() == OriginatingActorRule.FORBIDDEN
+                    || event.actor().actorType() == ActorType.ANONYMOUS
+                    || originatingActor.actorType() == ActorType.ANONYMOUS) {
+                return new AuditPublicationResult.Rejected(AuditRejectionReason.ORIGINATING_ACTOR_NOT_ALLOWED);
+            }
+            if (policy.originatingActorRule() == OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL
+                    && samePrincipal(event.actor(), originatingActor)) {
+                return new AuditPublicationResult.Rejected(AuditRejectionReason.ORIGINATING_ACTOR_NOT_ALLOWED);
+            }
         }
         return null;
+    }
+
+    private static boolean samePrincipal(AuditActor first, AuditActor second) {
+        return first.actorType() == second.actorType()
+                && Objects.equals(first.actorId(), second.actorId());
     }
 
     private static boolean validResource(

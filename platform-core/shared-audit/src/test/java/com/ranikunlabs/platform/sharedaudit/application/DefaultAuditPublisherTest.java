@@ -64,6 +64,53 @@ class DefaultAuditPublisherTest {
     }
 
     @Test
+    void sameOriginatingPrincipalIsRejectedBeforeCapture() {
+        AuditActor primaryActor = new AuditActor(ActorType.AUTHENTICATED_USER, "account-A", Set.of());
+        AuditPublicationResult result = publisher.publish(eventWithContext(
+                "identity.authentication.login_succeeded",
+                AuditAction.AUTHENTICATE,
+                AuditOutcome.SUCCEEDED,
+                primaryActor,
+                new AuditResource("platform_account", "account-A"),
+                new AuditActor(ActorType.AUTHENTICATED_USER, "account-A", Set.of("ADMIN")),
+                Map.of("authentication_method", "PASSWORD")));
+
+        assertThat(result).isEqualTo(new AuditPublicationResult.Rejected(
+                AuditRejectionReason.ORIGINATING_ACTOR_NOT_ALLOWED));
+        verify(capture, never()).capture(any(), any());
+    }
+
+    @Test
+    void differentTrustedPrincipalReachesCapture() {
+        AuditPublicationResult result = publisher.publish(eventWithContext(
+                "identity.authentication.login_succeeded",
+                AuditAction.AUTHENTICATE,
+                AuditOutcome.SUCCEEDED,
+                new AuditActor(ActorType.AUTHENTICATED_USER, "account-A", Set.of()),
+                new AuditResource("platform_account", "account-A"),
+                new AuditActor(ActorType.AUTHENTICATED_USER, "account-B", Set.of()),
+                Map.of("authentication_method", "PASSWORD")));
+
+        assertThat(result).isEqualTo(new AuditPublicationResult.Accepted());
+        verify(capture).capture(any(), any());
+    }
+
+    @Test
+    void differentTrustedActorTypeReachesCapture() {
+        AuditPublicationResult result = publisher.publish(eventWithContext(
+                "identity.authentication.login_succeeded",
+                AuditAction.AUTHENTICATE,
+                AuditOutcome.SUCCEEDED,
+                new AuditActor(ActorType.AUTHENTICATED_USER, "account-A", Set.of()),
+                new AuditResource("platform_account", "account-A"),
+                new AuditActor(ActorType.SYSTEM, "system-audit", Set.of()),
+                Map.of("authentication_method", "PASSWORD")));
+
+        assertThat(result).isEqualTo(new AuditPublicationResult.Accepted());
+        verify(capture).capture(any(), any());
+    }
+
+    @Test
     void loginRejectedAuthenticatedContextIsRejectedBeforeCapture() {
         AuditPublicationResult result = publisher.publish(eventWithContext(
                 "identity.authentication.login_rejected",
