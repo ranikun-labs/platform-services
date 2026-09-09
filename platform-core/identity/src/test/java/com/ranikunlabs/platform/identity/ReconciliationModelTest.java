@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -12,6 +13,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReconciliationModelTest {
@@ -38,7 +40,8 @@ class ReconciliationModelTest {
     @Test
     void unresolvedConflictPreventsReadiness() {
         ReconciliationModel.ConflictDescriptor conflict = conflict(
-                ReconciliationModel.ConflictCode.CREDENTIAL_MISMATCH);
+                ReconciliationModel.ConflictCode.CREDENTIAL_MISMATCH,
+                ReconciliationModel.Domain.CREDENTIAL);
         ReconciliationModel.ReconciliationPlanSummary summary = summary(
                 List.of(source(ReconciliationModel.SourceAttestation.IN_SCOPE)),
                 List.of(conflict),
@@ -80,20 +83,135 @@ class ReconciliationModelTest {
     }
 
     @Test
-    void disposableSourceIsCountedAsExplicitlyExcluded() {
+    void disposableSourceIsExplicitlyExcludedWithoutDecisionCountCoupling() {
         ReconciliationModel.SourceIdentity disposable = source(
                 ReconciliationModel.SourceAttestation.DISPOSABLE);
         ReconciliationModel.ReconciliationPlanSummary summary = summary(
                 List.of(source(ReconciliationModel.SourceAttestation.IN_SCOPE), disposable),
                 List.of(),
                 0,
-                Map.of(ReconciliationModel.Decision.EXCLUDED_SOURCE, 1)
+                Map.of()
         );
 
         assertTrue(disposable.isExplicitlyExcluded());
         assertEquals(1, summary.excludedSourceCount());
-        assertEquals(1, summary.decisionCount(ReconciliationModel.Decision.EXCLUDED_SOURCE));
+        assertEquals(0, summary.decisionCount(ReconciliationModel.Decision.EXCLUDED_SOURCE));
         assertTrue(summary.readiness().isReady());
+    }
+
+    @Test
+    void conflictDecisionCountMustMatchUnresolvedConflictDescriptors() {
+        ReconciliationModel.ConflictDescriptor conflict = conflict(
+                ReconciliationModel.ConflictCode.CREDENTIAL_MISMATCH,
+                ReconciliationModel.Domain.CREDENTIAL);
+        List<ReconciliationModel.SourceIdentity> sources =
+                List.of(source(ReconciliationModel.SourceAttestation.IN_SCOPE));
+
+        assertThrows(IllegalArgumentException.class, () -> summary(
+                sources,
+                List.of(),
+                0,
+                Map.of(ReconciliationModel.Decision.CONFLICT, 1)
+        ));
+        assertThrows(IllegalArgumentException.class, () -> summary(
+                sources,
+                List.of(conflict),
+                0,
+                Map.of()
+        ));
+
+        ReconciliationModel.ReconciliationPlanSummary coherent = summary(
+                sources,
+                List.of(conflict),
+                0,
+                Map.of(ReconciliationModel.Decision.CONFLICT, 1)
+        );
+        assertFalse(coherent.readiness().isReady());
+    }
+
+    @Test
+    void duplicateLogicalSourceIsRejectedWhetherAttestationAgreesOrContradicts() {
+        assertThrows(IllegalArgumentException.class, () -> summary(
+                List.of(
+                        source("platform", ReconciliationModel.SourceAttestation.IN_SCOPE),
+                        source("platform", ReconciliationModel.SourceAttestation.IN_SCOPE)
+                ),
+                List.of(),
+                0,
+                Map.of()
+        ));
+        assertThrows(IllegalArgumentException.class, () -> summary(
+                List.of(
+                        source("platform", ReconciliationModel.SourceAttestation.IN_SCOPE),
+                        source("platform", ReconciliationModel.SourceAttestation.DISPOSABLE)
+                ),
+                List.of(),
+                0,
+                Map.of()
+        ));
+    }
+
+    @Test
+    void conflictCodeAndDomainMustAgree() {
+        assertThrows(IllegalArgumentException.class, () -> new ReconciliationModel.ConflictDescriptor(
+                ReconciliationModel.ConflictCode.CREDENTIAL_MISMATCH,
+                ReconciliationModel.Domain.ACCOUNT,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        assertThrows(IllegalArgumentException.class, () -> new ReconciliationModel.ConflictDescriptor(
+                ReconciliationModel.ConflictCode.OAUTH_OWNERSHIP_COLLISION,
+                ReconciliationModel.Domain.ACCOUNT,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+    }
+
+    @Test
+    void candidateDomainMustMatchConflictDomain() {
+        ReconciliationModel.SourceIdentity source = source(
+                "platform", ReconciliationModel.SourceAttestation.IN_SCOPE);
+        ReconciliationModel.CandidateIdentity candidate = new ReconciliationModel.CandidateIdentity(
+                ReconciliationModel.Domain.CREDENTIAL,
+                new ReconciliationModel.OpaqueIdentifier("candidate-key"),
+                source
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> new ReconciliationModel.ConflictDescriptor(
+                ReconciliationModel.ConflictCode.ACCOUNT_SEMANTIC_MISMATCH,
+                ReconciliationModel.Domain.ACCOUNT,
+                List.of(),
+                List.of(candidate),
+                List.of()
+        ));
+    }
+
+    @Test
+    void onlyDisposableSourcesAreNotReady() {
+        ReconciliationModel.ReconciliationPlanSummary summary = summary(
+                List.of(source("legacy", ReconciliationModel.SourceAttestation.DISPOSABLE)),
+                List.of(),
+                0,
+                Map.of()
+        );
+
+        assertFalse(summary.readiness().isReady());
+        assertEquals(List.of("NO_IN_SCOPE_SOURCE"), summary.readiness().blockingReasons());
+    }
+
+    @Test
+    void unsupportedSourceStatePreventsReadiness() {
+        ReconciliationModel.ReconciliationPlanSummary summary = summary(
+                List.of(source(ReconciliationModel.SourceAttestation.IN_SCOPE)),
+                List.of(),
+                1,
+                Map.of()
+        );
+
+        assertFalse(summary.readiness().isReady());
+        assertEquals(List.of("UNSUPPORTED_SOURCE_STATE"), summary.readiness().blockingReasons());
     }
 
     @Test
@@ -139,6 +257,39 @@ class ReconciliationModelTest {
     }
 
     @Test
+    void everyConflictCodeHasOneCanonicalDomain() {
+        Map<ReconciliationModel.ConflictCode, ReconciliationModel.Domain> expected = Map.ofEntries(
+                Map.entry(ReconciliationModel.ConflictCode.SOURCE_UNATTESTED,
+                        ReconciliationModel.Domain.SOURCE),
+                Map.entry(ReconciliationModel.ConflictCode.UNEXPECTED_SCHEMA_HISTORY,
+                        ReconciliationModel.Domain.SOURCE),
+                Map.entry(ReconciliationModel.ConflictCode.ACCOUNT_SEMANTIC_MISMATCH,
+                        ReconciliationModel.Domain.ACCOUNT),
+                Map.entry(ReconciliationModel.ConflictCode.DUPLICATE_LOGIN_OWNERSHIP,
+                        ReconciliationModel.Domain.CREDENTIAL),
+                Map.entry(ReconciliationModel.ConflictCode.CREDENTIAL_MISMATCH,
+                        ReconciliationModel.Domain.CREDENTIAL),
+                Map.entry(ReconciliationModel.ConflictCode.ORPHAN_CREDENTIAL,
+                        ReconciliationModel.Domain.CREDENTIAL),
+                Map.entry(ReconciliationModel.ConflictCode.OAUTH_OWNERSHIP_COLLISION,
+                        ReconciliationModel.Domain.OAUTH),
+                Map.entry(ReconciliationModel.ConflictCode.ORPHAN_OAUTH_IDENTITY,
+                        ReconciliationModel.Domain.OAUTH),
+                Map.entry(ReconciliationModel.ConflictCode.CARELOG_UUID_INVARIANT_VIOLATION,
+                        ReconciliationModel.Domain.ACCOUNT),
+                Map.entry(ReconciliationModel.ConflictCode.UNEXPECTED_PRODUCT_CLIENT,
+                        ReconciliationModel.Domain.PRODUCT_CLIENT),
+                Map.entry(ReconciliationModel.ConflictCode.TARGET_ROW_UNEXPECTED,
+                        ReconciliationModel.Domain.TARGET),
+                Map.entry(ReconciliationModel.ConflictCode.TARGET_SEMANTIC_MISMATCH,
+                        ReconciliationModel.Domain.TARGET)
+        );
+
+        assertEquals(expected.size(), ReconciliationModel.ConflictCode.values().length);
+        expected.forEach((code, domain) -> assertEquals(domain, code.domain()));
+    }
+
+    @Test
     void opaqueIdentifierDoesNotExposeItsValueThroughStringOutput() {
         String sensitiveCorrelation = UUID.randomUUID().toString();
         ReconciliationModel.OpaqueIdentifier identifier =
@@ -155,7 +306,9 @@ class ReconciliationModelTest {
                         source(ReconciliationModel.SourceAttestation.IN_SCOPE),
                         source(ReconciliationModel.SourceAttestation.UNATTESTED)
                 ),
-                List.of(conflict(ReconciliationModel.ConflictCode.SOURCE_UNATTESTED)),
+                List.of(conflict(
+                        ReconciliationModel.ConflictCode.SOURCE_UNATTESTED,
+                        ReconciliationModel.Domain.SOURCE)),
                 1,
                 Map.of(ReconciliationModel.Decision.CONFLICT, 1)
         );
@@ -185,19 +338,30 @@ class ReconciliationModelTest {
     private static ReconciliationModel.SourceIdentity source(
             ReconciliationModel.SourceAttestation attestation
     ) {
+        return source(
+                "source-" + attestation.name().toLowerCase(Locale.ROOT),
+                attestation
+        );
+    }
+
+    private static ReconciliationModel.SourceIdentity source(
+            String logicalName,
+            ReconciliationModel.SourceAttestation attestation
+    ) {
         return new ReconciliationModel.SourceIdentity(
-                "source-" + attestation.name().toLowerCase(),
+                logicalName,
                 ReconciliationModel.SourceKind.PLATFORM_IDENTITY,
                 attestation
         );
     }
 
     private static ReconciliationModel.ConflictDescriptor conflict(
-            ReconciliationModel.ConflictCode code
+            ReconciliationModel.ConflictCode code,
+            ReconciliationModel.Domain domain
     ) {
         return new ReconciliationModel.ConflictDescriptor(
                 code,
-                ReconciliationModel.Domain.ACCOUNT,
+                domain,
                 List.of(),
                 List.of(),
                 List.of()

@@ -3,9 +3,11 @@ package com.ranikunlabs.platform.identity.reconciliation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Framework-neutral contract for a read-only identity reconciliation plan.
@@ -71,18 +73,28 @@ public final class ReconciliationModel {
 
     /** Explicit hard-conflict categories recognized by the reconciliation contract. */
     public enum ConflictCode {
-        SOURCE_UNATTESTED,
-        UNEXPECTED_SCHEMA_HISTORY,
-        ACCOUNT_SEMANTIC_MISMATCH,
-        DUPLICATE_LOGIN_OWNERSHIP,
-        CREDENTIAL_MISMATCH,
-        ORPHAN_CREDENTIAL,
-        OAUTH_OWNERSHIP_COLLISION,
-        ORPHAN_OAUTH_IDENTITY,
-        CARELOG_UUID_INVARIANT_VIOLATION,
-        UNEXPECTED_PRODUCT_CLIENT,
-        TARGET_ROW_UNEXPECTED,
-        TARGET_SEMANTIC_MISMATCH
+        SOURCE_UNATTESTED(Domain.SOURCE),
+        UNEXPECTED_SCHEMA_HISTORY(Domain.SOURCE),
+        ACCOUNT_SEMANTIC_MISMATCH(Domain.ACCOUNT),
+        DUPLICATE_LOGIN_OWNERSHIP(Domain.CREDENTIAL),
+        CREDENTIAL_MISMATCH(Domain.CREDENTIAL),
+        ORPHAN_CREDENTIAL(Domain.CREDENTIAL),
+        OAUTH_OWNERSHIP_COLLISION(Domain.OAUTH),
+        ORPHAN_OAUTH_IDENTITY(Domain.OAUTH),
+        CARELOG_UUID_INVARIANT_VIOLATION(Domain.ACCOUNT),
+        UNEXPECTED_PRODUCT_CLIENT(Domain.PRODUCT_CLIENT),
+        TARGET_ROW_UNEXPECTED(Domain.TARGET),
+        TARGET_SEMANTIC_MISMATCH(Domain.TARGET);
+
+        private final Domain domain;
+
+        ConflictCode(Domain domain) {
+            this.domain = Objects.requireNonNull(domain, "domain must not be null");
+        }
+
+        public Domain domain() {
+            return domain;
+        }
     }
 
     /**
@@ -103,6 +115,7 @@ public final class ReconciliationModel {
         }
     }
 
+    /** The exact {@code logicalName} value is the plan's source-uniqueness key. */
     public record SourceIdentity(
             String logicalName,
             SourceKind kind,
@@ -141,8 +154,9 @@ public final class ReconciliationModel {
     }
 
     /**
-     * A structured conflict descriptor. Details remain category- and evidence-based; raw login,
-     * provider, credential, token, and secret values have no field in this contract.
+     * A structured conflict descriptor whose supplied domain must match the conflict code's
+     * canonical domain. Details remain category- and evidence-based; raw login, provider,
+     * credential, token, and secret values have no field in this contract.
      */
     public record ConflictDescriptor(
             ConflictCode code,
@@ -157,6 +171,15 @@ public final class ReconciliationModel {
             sources = List.copyOf(Objects.requireNonNull(sources, "sources must not be null"));
             candidates = List.copyOf(Objects.requireNonNull(candidates, "candidates must not be null"));
             evidence = List.copyOf(Objects.requireNonNull(evidence, "evidence must not be null"));
+            if (domain != code.domain()) {
+                throw new IllegalArgumentException(
+                        "conflict code " + code + " requires domain " + code.domain());
+            }
+            for (CandidateIdentity candidate : candidates) {
+                if (candidate.domain() != domain) {
+                    throw new IllegalArgumentException("candidate domain must match conflict domain");
+                }
+            }
         }
     }
 
@@ -184,9 +207,10 @@ public final class ReconciliationModel {
     /**
      * Summary inputs required to decide whether a reconciliation plan may proceed.
      *
-     * <p>A disposable source is retained in {@code sources} and must be represented by an
-     * {@link Decision#EXCLUDED_SOURCE} count. It is never treated as an in-scope source by the
-     * readiness calculation.
+     * <p>A disposable source is retained in {@code sources} as a source-level exclusion and is
+     * never treated as an in-scope source by the readiness calculation. The
+     * {@link Decision#EXCLUDED_SOURCE} count is independent candidate/planner accounting; no
+     * numerical equality with the number of disposable sources is implied.
      */
     public record ReconciliationPlanSummary(
             List<SourceIdentity> sources,
@@ -195,13 +219,18 @@ public final class ReconciliationModel {
             List<ConflictDescriptor> unresolvedConflicts
     ) {
         public ReconciliationPlanSummary {
-            sources = List.copyOf(Objects.requireNonNull(sources, "sources must not be null"));
+            sources = uniqueSources(sources);
             decisionCounts = immutableDecisionCounts(decisionCounts);
             if (unsupportedSourceStateCount < 0) {
                 throw new IllegalArgumentException("unsupportedSourceStateCount must not be negative");
             }
             unresolvedConflicts = List.copyOf(Objects.requireNonNull(unresolvedConflicts,
                     "unresolvedConflicts must not be null"));
+            int conflictDecisionCount = decisionCounts.get(Decision.CONFLICT);
+            if (conflictDecisionCount != unresolvedConflicts.size()) {
+                throw new IllegalArgumentException(
+                        "CONFLICT decision count must equal unresolved conflict descriptor count");
+            }
         }
 
         public Readiness readiness() {
@@ -264,6 +293,18 @@ public final class ReconciliationModel {
             normalized.put(decision, count);
         });
         return Collections.unmodifiableMap(normalized);
+    }
+
+    private static List<SourceIdentity> uniqueSources(List<SourceIdentity> sources) {
+        List<SourceIdentity> copy = List.copyOf(Objects.requireNonNull(sources, "sources must not be null"));
+        Set<String> logicalNames = new HashSet<>();
+        for (SourceIdentity source : copy) {
+            if (!logicalNames.add(source.logicalName())) {
+                throw new IllegalArgumentException(
+                        "duplicate logical source: " + source.logicalName());
+            }
+        }
+        return copy;
     }
 
     private static String requireText(String value, String field) {
