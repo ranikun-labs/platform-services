@@ -43,6 +43,8 @@ platform:
       model: ${SHARED_AI_OPENAI_MODEL:}
       max-output-tokens: ${SHARED_AI_OPENAI_MAX_OUTPUT_TOKENS:128}
       timeout: ${SHARED_AI_OPENAI_TIMEOUT:30s}
+  shared-audit:
+    enabled: ${SHARED_AUDIT_ENABLED:false}
   identity:
     auth:
       enabled: ${PLATFORM_IDENTITY_AUTH_ENABLED:false}
