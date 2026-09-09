@@ -18,8 +18,38 @@ public record StructuralInspectionResult(
         StructuralState state,
         Set<String> presentExpectedTables,
         Set<String> missingExpectedTables,
+        Set<String> unexpectedIdentityTables,
+        boolean unexpectedIdentityHistory,
         FlywayHistoryInspection history
 ) {
+
+    public StructuralInspectionResult(
+            String logicalName,
+            SourceKind sourceKind,
+            String databaseName,
+            String currentSchema,
+            SourceInspectionProfile profile,
+            boolean schemaPresent,
+            StructuralState state,
+            Set<String> presentExpectedTables,
+            Set<String> missingExpectedTables,
+            FlywayHistoryInspection history
+    ) {
+        this(
+                logicalName,
+                sourceKind,
+                databaseName,
+                currentSchema,
+                profile,
+                schemaPresent,
+                state,
+                presentExpectedTables,
+                missingExpectedTables,
+                Set.of(),
+                false,
+                history
+        );
+    }
 
     public StructuralInspectionResult {
         logicalName = requireText(logicalName, "logicalName");
@@ -30,6 +60,7 @@ public record StructuralInspectionResult(
         state = Objects.requireNonNull(state, "state must not be null");
         presentExpectedTables = copySet(presentExpectedTables, "presentExpectedTables");
         missingExpectedTables = copySet(missingExpectedTables, "missingExpectedTables");
+        unexpectedIdentityTables = copySet(unexpectedIdentityTables, "unexpectedIdentityTables");
         history = Objects.requireNonNull(history, "history must not be null");
     }
 
@@ -40,14 +71,37 @@ public record StructuralInspectionResult(
             Set<String> presentExpectedTables,
             FlywayHistoryInspection.HistoryState historyState
     ) {
+        return classify(
+                schemaPresent,
+                expectedTables,
+                presentExpectedTables,
+                historyState,
+                Set.of(),
+                false
+        );
+    }
+
+    /** Pure classification including bounded known Identity footprint checks. */
+    public static StructuralState classify(
+            boolean schemaPresent,
+            Set<String> expectedTables,
+            Set<String> presentExpectedTables,
+            FlywayHistoryInspection.HistoryState historyState,
+            Set<String> unexpectedIdentityTables,
+            boolean unexpectedIdentityHistory
+    ) {
         Objects.requireNonNull(expectedTables, "expectedTables must not be null");
         Objects.requireNonNull(presentExpectedTables, "presentExpectedTables must not be null");
         Objects.requireNonNull(historyState, "historyState must not be null");
+        Objects.requireNonNull(unexpectedIdentityTables, "unexpectedIdentityTables must not be null");
         if (expectedTables.isEmpty()) {
             throw new IllegalArgumentException("expectedTables must not be empty");
         }
         if (!expectedTables.containsAll(presentExpectedTables)) {
             throw new IllegalArgumentException("presentExpectedTables must be a subset of expectedTables");
+        }
+        if (unexpectedIdentityHistory || !unexpectedIdentityTables.isEmpty()) {
+            return StructuralState.UNEXPECTED;
         }
         if (!schemaPresent && (!presentExpectedTables.isEmpty()
                 || historyState != FlywayHistoryInspection.HistoryState.ABSENT)) {

@@ -90,16 +90,44 @@ class JdbcSourceInspectorIntegrationTest {
     }
 
     @Test
-    void unrelatedPublicObjectsDoNotBecomeIdentityStructure() throws SQLException {
+    void canonicalTargetWithLegacyPublicIdentityFootprintIsUnexpected() {
+        migrate("identity", null);
         migrate("public", null);
+
+        StructuralInspectionResult result = INSPECTOR.inspect(
+                targetSource(), SourceInspectionProfile.canonicalTarget());
+
+        assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.UNEXPECTED);
+        assertThat(result.unexpectedIdentityTables()).contains("public.platform_accounts");
+        assertThat(result.unexpectedIdentityHistory()).isTrue();
+    }
+
+    @Test
+    void unrelatedPublicObjectsDoNotBecomeIdentityStructure() throws SQLException {
+        migrate("identity", null);
         try (Connection connection = connection(); Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE public.unrelated_table (id integer PRIMARY KEY)");
         }
 
-        StructuralInspectionResult result = INSPECTOR.inspect(platformSource(), SourceInspectionProfile.platformLegacy());
+        StructuralInspectionResult result = INSPECTOR.inspect(
+                targetSource(), SourceInspectionProfile.canonicalTarget());
 
         assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.EXPECTED);
         assertThat(result.presentExpectedTables()).doesNotContain("unrelated_table");
+    }
+
+    @Test
+    void knownIdentityLikeTableOutsidePlatformProfileIsUnexpected() throws SQLException {
+        migrate("public", null);
+        try (Connection connection = connection(); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE public.users (id integer PRIMARY KEY)");
+        }
+
+        StructuralInspectionResult result = INSPECTOR.inspect(
+                platformSource(), SourceInspectionProfile.platformLegacy());
+
+        assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.UNEXPECTED);
+        assertThat(result.unexpectedIdentityTables()).contains("public.users");
     }
 
     @Test
@@ -111,6 +139,19 @@ class JdbcSourceInspectorIntegrationTest {
 
         assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.EXPECTED);
         assertThat(result.history().entries()).hasSize(8);
+    }
+
+    @Test
+    void carelogBaselineOnMigrateHistoryIsExpected() throws SQLException {
+        SourceInspectionProfile profile = SourceInspectionProfile.carelogLegacy();
+        createCarelogLikeStructure(
+                profile, profile.historyProfile().alternateVariants().get(0).migrations());
+
+        StructuralInspectionResult result = INSPECTOR.inspect(carelogSource(), profile);
+
+        assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.EXPECTED);
+        assertThat(result.history().state()).isEqualTo(FlywayHistoryInspection.HistoryState.EXPECTED);
+        assertThat(result.history().entries().get(0).type()).isEqualTo("BASELINE");
     }
 
     @Test
@@ -139,6 +180,13 @@ class JdbcSourceInspectorIntegrationTest {
     }
 
     private void createCarelogLikeStructure(SourceInspectionProfile profile) throws SQLException {
+        createCarelogLikeStructure(profile, profile.historyProfile().expectedMigrations());
+    }
+
+    private void createCarelogLikeStructure(
+            SourceInspectionProfile profile,
+            List<HistoryProfile.MigrationExpectation> migrations
+    ) throws SQLException {
         try (Connection connection = connection(); Statement statement = connection.createStatement()) {
             for (String table : profile.expectedIdentityTables()) {
                 statement.execute("CREATE TABLE public.\"" + table + "\" (marker integer)");
@@ -160,14 +208,17 @@ class JdbcSourceInspectorIntegrationTest {
                             + "(installed_rank, version, description, type, script, checksum, installed_by, "
                             + "execution_time, success) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 int installedRank = 1;
-                for (HistoryProfile.MigrationExpectation migration
-                        : profile.historyProfile().expectedMigrations()) {
+                for (HistoryProfile.MigrationExpectation migration : migrations) {
                     insert.setInt(1, installedRank++);
                     insert.setString(2, migration.version());
                     insert.setString(3, migration.description());
-                    insert.setString(4, "SQL");
+                    insert.setString(4, migration.type());
                     insert.setString(5, migration.script());
-                    insert.setInt(6, 123);
+                    if (migration.checksum() == null) {
+                        insert.setNull(6, java.sql.Types.INTEGER);
+                    } else {
+                        insert.setInt(6, migration.checksum());
+                    }
                     insert.setString(7, "test");
                     insert.setInt(8, 1);
                     insert.setBoolean(9, true);

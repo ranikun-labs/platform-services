@@ -16,9 +16,11 @@ import java.util.Arrays;
 public final class ReadOnlyJdbcConnection implements AutoCloseable {
 
     private final Connection connection;
+    private final String logicalName;
 
-    private ReadOnlyJdbcConnection(Connection connection) {
+    private ReadOnlyJdbcConnection(Connection connection, String logicalName) {
         this.connection = connection;
+        this.logicalName = logicalName;
     }
 
     public static ReadOnlyJdbcConnection open(JdbcSourceConfiguration source) throws SQLException {
@@ -32,17 +34,22 @@ public final class ReadOnlyJdbcConnection implements AutoCloseable {
             try (Statement statement = connection.createStatement()) {
                 statement.execute("SET TRANSACTION READ ONLY");
             }
-            return new ReadOnlyJdbcConnection(connection);
+            return new ReadOnlyJdbcConnection(connection, source.logicalName());
         } catch (SQLException failure) {
-            closeAfterOpenFailure(connection, failure);
-            throw failure;
+            closeAfterOpenFailure(connection);
+            throw new SourceInspectionException(
+                    source.logicalName(), "open read-only JDBC session", failure);
         } finally {
             Arrays.fill(password, '\0');
         }
     }
 
-    public boolean isReadOnly() throws SQLException {
-        return connection.isReadOnly();
+    public boolean isReadOnly() {
+        try {
+            return connection.isReadOnly();
+        } catch (SQLException failure) {
+            throw new SourceInspectionException(logicalName, "read JDBC session mode", failure);
+        }
     }
 
     Connection connection() {
@@ -67,18 +74,18 @@ public final class ReadOnlyJdbcConnection implements AutoCloseable {
             }
         }
         if (failure != null) {
-            throw failure;
+            throw new SourceInspectionException(logicalName, "close read-only JDBC session", failure);
         }
     }
 
-    private static void closeAfterOpenFailure(Connection connection, SQLException failure) {
+    private static void closeAfterOpenFailure(Connection connection) {
         if (connection == null) {
             return;
         }
         try {
             connection.close();
-        } catch (SQLException closeFailure) {
-            failure.addSuppressed(closeFailure);
+        } catch (SQLException ignored) {
+            // Never attach the driver's URL-bearing diagnostic as a public suppressed cause.
         }
     }
 }

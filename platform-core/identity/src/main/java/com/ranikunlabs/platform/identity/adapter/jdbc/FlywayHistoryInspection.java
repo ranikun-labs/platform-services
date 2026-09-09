@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.identity.adapter.jdbc;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,83 +39,159 @@ public record FlywayHistoryInspection(
         Objects.requireNonNull(profile, "profile must not be null");
         List<Entry> actualEntries = List.copyOf(Objects.requireNonNull(entries, "entries must not be null"));
         if (!historyTablePresent) {
-            if (!actualEntries.isEmpty()) {
-                throw new IllegalArgumentException("history entries require a present history table");
-            }
             return new FlywayHistoryInspection(
                     profile.schema(),
                     profile.historyTable(),
                     false,
-                    HistoryState.ABSENT,
+                    actualEntries.isEmpty() ? HistoryState.ABSENT : HistoryState.UNEXPECTED,
                     actualEntries,
                     profile.expectedMigrations(),
-                    List.of()
+                    actualEntries
             );
         }
 
+        List<VariantAssessment> assessments = profile.acceptedVariants().stream()
+                .map(variant -> assessVariant(profile, variant, actualEntries))
+                .toList();
+        VariantAssessment selected = assessments.stream()
+                .filter(assessment -> assessment.state() == HistoryState.EXPECTED)
+                .findFirst()
+                .orElseGet(() -> assessments.stream()
+                        .filter(assessment -> assessment.state() == HistoryState.PARTIAL)
+                        .findFirst()
+                        .orElse(assessments.get(0)));
+
+        return new FlywayHistoryInspection(
+                profile.schema(),
+                profile.historyTable(),
+                true,
+                selected.state(),
+                actualEntries,
+                selected.missingMigrations(),
+                selected.unexpectedEntries()
+        );
+    }
+
+    private static VariantAssessment assessVariant(
+            HistoryProfile profile,
+            HistoryProfile.HistoryVariant variant,
+            List<Entry> actualEntries
+    ) {
         Map<String, HistoryProfile.MigrationExpectation> expectedByVersion = new HashMap<>();
-        for (HistoryProfile.MigrationExpectation expected : profile.expectedMigrations()) {
+        for (HistoryProfile.MigrationExpectation expected : variant.migrations()) {
             expectedByVersion.put(expected.version(), expected);
         }
 
-        List<Entry> migrationEntries = actualEntries.stream()
-                .filter(entry -> !isSchemaCreationMarker(profile, entry))
-                .toList();
-        Set<String> matchedVersions = new HashSet<>();
+        List<Entry> migrationEntries = new ArrayList<>();
         List<Entry> unexpectedEntries = new ArrayList<>();
+        Set<String> matchedVersions = new HashSet<>();
+        Set<Integer> installedRanks = new HashSet<>();
         for (Entry entry : actualEntries) {
-            if (isSchemaCreationMarker(profile, entry)) {
+            if (isSchemaCreationMarkerCandidate(entry)) {
+                if (!isValidSchemaCreationMarker(profile, entry)) {
+                    unexpectedEntries.add(entry);
+                }
                 continue;
+            }
+            migrationEntries.add(entry);
+            if (!installedRanks.add(entry.installedRank())) {
+                unexpectedEntries.add(entry);
             }
             HistoryProfile.MigrationExpectation expected = expectedByVersion.get(entry.version());
             boolean matches = expected != null
                     && entry.success()
                     && expected.description().equals(entry.description())
+                    && expected.type().equals(entry.type())
                     && expected.script().equals(entry.script())
-                    && !matchedVersions.contains(entry.version());
+                    && checksumMatches(expected, entry)
+                    && matchedVersions.add(entry.version());
             if (!matches) {
                 unexpectedEntries.add(entry);
-            } else {
-                matchedVersions.add(entry.version());
             }
         }
 
-        List<HistoryProfile.MigrationExpectation> missingMigrations = profile.expectedMigrations().stream()
+        List<Entry> orderedMigrations = migrationEntries.stream()
+                .sorted(Comparator.comparingInt(Entry::installedRank))
+                .toList();
+        List<HistoryProfile.MigrationExpectation> missingMigrations = variant.migrations().stream()
                 .filter(expected -> !matchedVersions.contains(expected.version()))
                 .toList();
-
-        boolean expectedOrder = migrationEntries.size() == profile.expectedMigrations().size()
-                && migrationEntries.stream().map(Entry::version).toList().equals(
-                profile.expectedMigrations().stream()
-                        .map(HistoryProfile.MigrationExpectation::version)
-                        .toList());
+        List<String> actualVersions = orderedMigrations.stream().map(Entry::version).toList();
+        List<String> expectedVersions = variant.migrations().stream()
+                .map(HistoryProfile.MigrationExpectation::version)
+                .toList();
+        boolean sequentialRanks = sequentialRanks(orderedMigrations);
+        boolean exactOrder = actualVersions.equals(expectedVersions)
+                && sequentialRanks
+                && matchedVersions.size() == variant.migrations().size()
+                && unexpectedEntries.isEmpty();
+        boolean recognizablePrefix = isPrefix(actualVersions, expectedVersions)
+                && sequentialRanks
+                && unexpectedEntries.isEmpty();
 
         HistoryState state;
-        if (!unexpectedEntries.isEmpty()) {
-            state = HistoryState.UNEXPECTED;
-        } else if (!missingMigrations.isEmpty() || !expectedOrder) {
+        if (exactOrder) {
+            state = HistoryState.EXPECTED;
+        } else if (recognizablePrefix) {
             state = HistoryState.PARTIAL;
         } else {
-            state = HistoryState.EXPECTED;
+            state = HistoryState.UNEXPECTED;
+            if (unexpectedEntries.isEmpty()) {
+                // Ordering/rank contradictions are themselves evidence even when every row tuple
+                // individually matches a known migration.
+                unexpectedEntries = new ArrayList<>(orderedMigrations);
+            }
         }
-        return new FlywayHistoryInspection(
-                profile.schema(),
-                profile.historyTable(),
-                true,
-                state,
-                actualEntries,
-                missingMigrations,
-                unexpectedEntries
-        );
+        return new VariantAssessment(state, missingMigrations, List.copyOf(unexpectedEntries));
     }
 
-    private static boolean isSchemaCreationMarker(HistoryProfile profile, Entry entry) {
+    private static boolean checksumMatches(
+            HistoryProfile.MigrationExpectation expected,
+            Entry actual
+    ) {
+        return !expected.checksumValidated()
+                || Objects.equals(expected.checksum(), actual.checksum());
+    }
+
+    private static boolean sequentialRanks(List<Entry> entries) {
+        for (int index = 0; index < entries.size(); index++) {
+            if (entries.get(index).installedRank() != index + 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isPrefix(List<String> actual, List<String> expected) {
+        if (actual.size() > expected.size()) {
+            return false;
+        }
+        return actual.equals(expected.subList(0, actual.size()));
+    }
+
+    private static boolean isSchemaCreationMarkerCandidate(Entry entry) {
         return entry.installedRank() == 0
                 && entry.version() == null
+                && "<< Flyway Schema Creation >>".equals(entry.description());
+    }
+
+    private static boolean isValidSchemaCreationMarker(
+            HistoryProfile profile,
+            Entry entry
+    ) {
+        return isSchemaCreationMarkerCandidate(entry)
                 && entry.success()
-                && "<< Flyway Schema Creation >>".equals(entry.description())
+                && "SCHEMA".equals(entry.type())
+                && entry.checksum() == null
                 && (profile.schema().equals(entry.script())
                 || ('"' + profile.schema() + '"').equals(entry.script()));
+    }
+
+    private record VariantAssessment(
+            HistoryState state,
+            List<HistoryProfile.MigrationExpectation> missingMigrations,
+            List<Entry> unexpectedEntries
+    ) {
     }
 
     public enum HistoryState {
@@ -134,22 +211,7 @@ public record FlywayHistoryInspection(
             Integer checksum,
             boolean success
     ) {
-
-        public Entry {
-            if (installedRank < 0) {
-                throw new IllegalArgumentException("installedRank must not be negative");
-            }
-            description = requireText(description, "description");
-            type = requireText(type, "type");
-            script = requireText(script, "script");
-        }
-
-        private static String requireText(String value, String field) {
-            Objects.requireNonNull(value, field + " must not be null");
-            if (value.isBlank()) {
-                throw new IllegalArgumentException(field + " must not be blank");
-            }
-            return value;
-        }
+        // Raw JDBC history values are intentionally tolerated here so assess() can classify
+        // malformed rows as UNEXPECTED instead of leaking a constructor NPE/IllegalArgumentException.
     }
 }
