@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.sharedaudit.policy;
 
 import com.ranikunlabs.platform.sharedaudit.core.AuditAction;
+import com.ranikunlabs.platform.sharedaudit.core.ActorType;
 import com.ranikunlabs.platform.sharedaudit.core.AuditEventType;
 import com.ranikunlabs.platform.sharedaudit.core.AuditOutcome;
 
@@ -28,6 +29,9 @@ public record AuditEventPolicy(
         String approvalReference,
         AuditAction action,
         AuditOutcome outcome,
+        ActorConstraint actorConstraint,
+        ResourceConstraint resourceConstraint,
+        OriginatingActorRule originatingActorRule,
         Set<String> allowedPayloadKeys,
         Map<String, Set<String>> allowedPayloadValues
 ) {
@@ -57,12 +61,82 @@ public record AuditEventPolicy(
         approvalReference = requireText(approvalReference, "approvalReference");
         action = Objects.requireNonNull(action, "action must not be null");
         outcome = Objects.requireNonNull(outcome, "outcome must not be null");
+        actorConstraint = Objects.requireNonNull(actorConstraint, "actorConstraint must not be null");
+        resourceConstraint = Objects.requireNonNull(
+                resourceConstraint, "resourceConstraint must not be null");
+        originatingActorRule = Objects.requireNonNull(
+                originatingActorRule, "originatingActorRule must not be null");
         allowedPayloadKeys = immutableKeys(allowedPayloadKeys);
         allowedPayloadValues = immutableValues(allowedPayloadValues, allowedPayloadKeys);
     }
 
     public boolean requiresDurableCapture() {
         return durabilityClass == AuditDurabilityClass.SECURITY_CRITICAL;
+    }
+
+    public enum ResourcePresence {
+        FORBIDDEN,
+        OPTIONAL,
+        REQUIRED
+    }
+
+    public enum OriginatingActorRule {
+        FORBIDDEN,
+        TRUSTED_ACTOR_OPTIONAL
+    }
+
+    public record ActorConstraint(Set<ActorType> allowedActorTypes, boolean anonymousRolesAllowed) {
+
+        public ActorConstraint {
+            Objects.requireNonNull(allowedActorTypes, "allowedActorTypes must not be null");
+            if (allowedActorTypes.isEmpty()) {
+                throw new IllegalArgumentException("allowedActorTypes must not be empty");
+            }
+            for (ActorType actorType : allowedActorTypes) {
+                Objects.requireNonNull(actorType, "allowedActorTypes must not contain null");
+            }
+            if (anonymousRolesAllowed && !allowedActorTypes.contains(ActorType.ANONYMOUS)) {
+                throw new IllegalArgumentException(
+                        "anonymousRolesAllowed requires ANONYMOUS to be an allowed actor type");
+            }
+            allowedActorTypes = Set.copyOf(allowedActorTypes);
+        }
+    }
+
+    public record ResourceConstraint(
+            ResourcePresence presence,
+            Set<String> allowedResourceTypes,
+            boolean resourceIdRequired,
+            boolean resourceIdMustMatchActorId
+    ) {
+
+        public ResourceConstraint {
+            presence = Objects.requireNonNull(presence, "resource presence must not be null");
+            allowedResourceTypes = immutableTextSet(allowedResourceTypes, "allowed resource type");
+            if (presence == ResourcePresence.FORBIDDEN) {
+                if (!allowedResourceTypes.isEmpty() || resourceIdRequired || resourceIdMustMatchActorId) {
+                    throw new IllegalArgumentException(
+                        "forbidden resources must not declare resource types or identifier constraints");
+                }
+            } else if (allowedResourceTypes.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "optional and required resources must declare allowed resource types");
+            }
+            if (resourceIdMustMatchActorId && !resourceIdRequired) {
+                throw new IllegalArgumentException(
+                        "matching resource identifiers must be required");
+            }
+        }
+
+        private static Set<String> immutableTextSet(Set<String> values, String field) {
+            Objects.requireNonNull(values, field + "s must not be null");
+            for (String value : values) {
+                if (value == null || value.isBlank()) {
+                    throw new IllegalArgumentException(field + "s must not contain blank values");
+                }
+            }
+            return Set.copyOf(values);
+        }
     }
 
     private static Set<String> immutableKeys(Set<String> keys) {

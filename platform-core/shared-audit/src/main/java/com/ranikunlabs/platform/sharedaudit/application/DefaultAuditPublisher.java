@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.sharedaudit.application;
 
 import com.ranikunlabs.platform.sharedaudit.core.AuditEvent;
+import com.ranikunlabs.platform.sharedaudit.core.ActorType;
 import com.ranikunlabs.platform.sharedaudit.internal.AuditCaptureCapability;
 import com.ranikunlabs.platform.sharedaudit.internal.AuditCaptureResult;
 import com.ranikunlabs.platform.sharedaudit.internal.AuditEventCapture;
@@ -10,6 +11,8 @@ import com.ranikunlabs.platform.sharedaudit.ports.AuditPublisher;
 import com.ranikunlabs.platform.sharedaudit.ports.AuditRejectionReason;
 import com.ranikunlabs.platform.sharedaudit.policy.AuditEventPolicy;
 import com.ranikunlabs.platform.sharedaudit.policy.AuditEventPolicyRegistry;
+import com.ranikunlabs.platform.sharedaudit.policy.AuditEventPolicy.OriginatingActorRule;
+import com.ranikunlabs.platform.sharedaudit.policy.AuditEventPolicy.ResourcePresence;
 
 import java.util.Locale;
 import java.util.Map;
@@ -57,6 +60,11 @@ public final class DefaultAuditPublisher implements AuditPublisher {
             return new AuditPublicationResult.Rejected(AuditRejectionReason.EVENT_POLICY_MISMATCH);
         }
 
+        AuditPublicationResult contextValidation = validateContext(event, policy);
+        if (contextValidation != null) {
+            return contextValidation;
+        }
+
         AuditPublicationResult payloadValidation = validatePayload(event.payload(), policy);
         if (payloadValidation != null) {
             return payloadValidation;
@@ -83,6 +91,54 @@ public final class DefaultAuditPublisher implements AuditPublisher {
                             : AuditFailureReason.CAPTURE_MECHANISM_UNAVAILABLE);
         }
         return new AuditPublicationResult.Failed(AuditFailureReason.CAPTURE_FAILED);
+    }
+
+    private AuditPublicationResult validateContext(AuditEvent event, AuditEventPolicy policy) {
+        AuditEventPolicy.ActorConstraint actorConstraint = policy.actorConstraint();
+        if (!actorConstraint.allowedActorTypes().contains(event.actor().actorType())
+                || (event.actor().actorType() == ActorType.ANONYMOUS
+                && !actorConstraint.anonymousRolesAllowed()
+                && !event.actor().roles().isEmpty())) {
+            return new AuditPublicationResult.Rejected(AuditRejectionReason.ACTOR_CONTEXT_MISMATCH);
+        }
+
+        AuditEventPolicy.ResourceConstraint resourceConstraint = policy.resourceConstraint();
+        if (!validResource(event, resourceConstraint)) {
+            return new AuditPublicationResult.Rejected(AuditRejectionReason.RESOURCE_CONTEXT_MISMATCH);
+        }
+
+        if (event.originatingActor() != null
+                && (policy.originatingActorRule() == OriginatingActorRule.FORBIDDEN
+                || event.actor().actorType() == ActorType.ANONYMOUS
+                || event.originatingActor().actorType() == ActorType.ANONYMOUS)) {
+            return new AuditPublicationResult.Rejected(AuditRejectionReason.ORIGINATING_ACTOR_NOT_ALLOWED);
+        }
+        return null;
+    }
+
+    private static boolean validResource(
+            AuditEvent event,
+            AuditEventPolicy.ResourceConstraint constraint
+    ) {
+        boolean present = event.resource() != null;
+        if (constraint.presence() == ResourcePresence.FORBIDDEN && present) {
+            return false;
+        }
+        if (constraint.presence() == ResourcePresence.REQUIRED && !present) {
+            return false;
+        }
+        if (!present) {
+            return true;
+        }
+
+        if (!constraint.allowedResourceTypes().contains(event.resource().resourceType())) {
+            return false;
+        }
+        if (constraint.resourceIdRequired() && event.resource().resourceId() == null) {
+            return false;
+        }
+        return !constraint.resourceIdMustMatchActorId()
+                || Objects.equals(event.resource().resourceId(), event.actor().actorId());
     }
 
     private AuditPublicationResult validatePayload(

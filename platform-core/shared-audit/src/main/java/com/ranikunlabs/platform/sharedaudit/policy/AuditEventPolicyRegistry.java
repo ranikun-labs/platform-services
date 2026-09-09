@@ -1,8 +1,11 @@
 package com.ranikunlabs.platform.sharedaudit.policy;
 
 import com.ranikunlabs.platform.sharedaudit.core.AuditAction;
+import com.ranikunlabs.platform.sharedaudit.core.ActorType;
 import com.ranikunlabs.platform.sharedaudit.core.AuditEventType;
 import com.ranikunlabs.platform.sharedaudit.core.AuditOutcome;
+import com.ranikunlabs.platform.sharedaudit.policy.AuditEventPolicy.OriginatingActorRule;
+import com.ranikunlabs.platform.sharedaudit.policy.AuditEventPolicy.ResourcePresence;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -101,6 +104,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.STATE_CHECK_ONLY_NO_FACT_RECONSTRUCTION,
                         Set.of("authentication_method"),
                         Map.of(),
+                        actors(ActorType.AUTHENTICATED_USER),
+                        accountResource(ResourcePresence.REQUIRED, true),
+                        OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL,
                         "Successful authentication decisions remain attributable",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -116,7 +122,10 @@ public final class AuditEventPolicyRegistry {
                         ReplayPolicy.CAPTURED_EVENT_SAME_EVENT_ID_ONLY,
                         ReconciliationPolicy.NO_SAFE_RECONSTRUCTION,
                         Set.of("rejection_reason"),
-                        Map.of(),
+                        Map.of("rejection_reason", Set.of("CREDENTIALS_REJECTED")),
+                        actors(ActorType.ANONYMOUS),
+                        noResource(),
+                        OriginatingActorRule.FORBIDDEN,
                         "Rejected authentication attempts remain visible without account enumeration",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -133,6 +142,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.NO_SAFE_RECONSTRUCTION,
                         Set.of("rejection_reason"),
                         Map.of(),
+                        actors(ActorType.ANONYMOUS),
+                        noResource(),
+                        OriginatingActorRule.FORBIDDEN,
                         "Refresh rejection decisions remain attributable without exposing credentials",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -149,6 +161,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.NO_SAFE_RECONSTRUCTION,
                         Set.of("revocation_scope"),
                         Map.of(),
+                        actors(ActorType.AUTHENTICATED_USER),
+                        accountResource(ResourcePresence.REQUIRED, true),
+                        OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL,
                         "A successful current-access revocation remains forensically visible",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -165,6 +180,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.PRODUCER_DURABLE_PUBLICATION_STATE,
                         Set.of("session_scope"),
                         Map.of(),
+                        actors(ActorType.AUTHENTICATED_USER),
+                        accountResource(ResourcePresence.REQUIRED, true),
+                        OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL,
                         "Committed refresh-session revocation is never silently lost",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -181,6 +199,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.STATE_CHECK_ONLY_NO_FACT_RECONSTRUCTION,
                         Set.of("provider_code", "authentication_method"),
                         Map.of(),
+                        actors(ActorType.AUTHENTICATED_USER),
+                        accountResource(ResourcePresence.REQUIRED, true),
+                        OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL,
                         "Successful OAuth authentication decisions remain attributable",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -197,6 +218,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.NO_SAFE_RECONSTRUCTION,
                         Set.of("provider_code", "rejection_reason"),
                         Map.of(),
+                        actors(ActorType.ANONYMOUS),
+                        noResource(),
+                        OriginatingActorRule.FORBIDDEN,
                         "OAuth rejection decisions remain visible without principal enumeration",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -213,6 +237,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.NO_SAFE_RECONSTRUCTION,
                         Set.of("provider_code", "linkage_status"),
                         Map.of("linkage_status", Set.of("UNLINKED")),
+                        actors(ActorType.ANONYMOUS),
+                        noResource(),
+                        OriginatingActorRule.FORBIDDEN,
                         "Verified external principals lacking an account link remain visible without identifying the principal",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -229,6 +256,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.PRODUCER_DURABLE_PUBLICATION_STATE,
                         Set.of("registration_channel"),
                         Map.of(),
+                        actors(ActorType.ANONYMOUS, ActorType.AUTHENTICATED_USER, ActorType.SYSTEM),
+                        accountResource(ResourcePresence.REQUIRED, false),
+                        OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL,
                         "Every committed account-lifecycle creation has durable forensic evidence",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109 owner-settled baseline"),
@@ -245,6 +275,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.PRODUCER_DURABLE_PUBLICATION_STATE,
                         Set.of("change_channel", "change_reason"),
                         Map.of(),
+                        actors(ActorType.AUTHENTICATED_USER, ActorType.SYSTEM),
+                        accountResource(ResourcePresence.REQUIRED, false),
+                        OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL,
                         "Every committed password mutation has durable forensic evidence",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109 owner-settled baseline"),
@@ -261,6 +294,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.STATE_CHECK_ONLY_NO_FACT_RECONSTRUCTION,
                         Set.of("authentication_method"),
                         Map.of(),
+                        actors(ActorType.AUTHENTICATED_USER),
+                        accountResource(ResourcePresence.REQUIRED, true),
+                        OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL,
                         "Successful refresh decisions can be investigated without making refresh availability fail-closed",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -277,6 +313,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.NONE_REQUIRED,
                         Set.of("provider_code", "client_channel"),
                         Map.of(),
+                        actors(ActorType.ANONYMOUS),
+                        noResource(),
+                        OriginatingActorRule.FORBIDDEN,
                         "High-level authorization initiation can be correlated when available",
                         "Shared Identity Domain Owner",
                         "RPL-109"),
@@ -293,6 +332,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.NO_SAFE_RECONSTRUCTION,
                         Set.of("reason_code"),
                         Map.of(),
+                        actors(ActorType.AUTHENTICATED_USER, ActorType.SYSTEM),
+                        accountResource(ResourcePresence.OPTIONAL, false),
+                        OriginatingActorRule.TRUSTED_ACTOR_OPTIONAL,
                         "Material authorization denials remain attributable",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"),
@@ -309,6 +351,9 @@ public final class AuditEventPolicyRegistry {
                         ReconciliationPolicy.NO_SAFE_RECONSTRUCTION,
                         Set.of("reason_code"),
                         Map.of("reason_code", Set.of("REVOKED", "REPLAY", "POLICY")),
+                        actors(ActorType.ANONYMOUS),
+                        noResource(),
+                        OriginatingActorRule.FORBIDDEN,
                         "High-signal bearer abuse or revocation decisions remain visible",
                         "Shared Identity Domain Owner + Architecture/Security Review",
                         "ADR-0021 / DEC-070 / RPL-109"));
@@ -327,6 +372,9 @@ public final class AuditEventPolicyRegistry {
             ReconciliationPolicy reconciliationPolicy,
             Set<String> allowedPayloadKeys,
             Map<String, Set<String>> allowedPayloadValues,
+            AuditEventPolicy.ActorConstraint actorConstraint,
+            AuditEventPolicy.ResourceConstraint resourceConstraint,
+            OriginatingActorRule originatingActorRule,
             String affectedBusinessInvariant,
             String classificationOwner,
             String approvalReference
@@ -348,7 +396,33 @@ public final class AuditEventPolicyRegistry {
                 approvalReference,
                 action,
                 outcome,
+                actorConstraint,
+                resourceConstraint,
+                originatingActorRule,
                 allowedPayloadKeys,
                 allowedPayloadValues);
+    }
+
+    private static AuditEventPolicy.ActorConstraint actors(ActorType... actorTypes) {
+        return new AuditEventPolicy.ActorConstraint(Set.of(actorTypes), false);
+    }
+
+    private static AuditEventPolicy.ResourceConstraint accountResource(
+            ResourcePresence presence,
+            boolean resourceIdMustMatchActorId
+    ) {
+        return new AuditEventPolicy.ResourceConstraint(
+                presence,
+                Set.of("platform_account"),
+                true,
+                resourceIdMustMatchActorId);
+    }
+
+    private static AuditEventPolicy.ResourceConstraint noResource() {
+        return new AuditEventPolicy.ResourceConstraint(
+                ResourcePresence.FORBIDDEN,
+                Set.of(),
+                false,
+                false);
     }
 }
