@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.identity.adapter.persistence;
 
 import java.util.List;
+import java.util.Locale;
 
 /** Canonical PostgreSQL schema owned by Shared Identity. */
 public final class IdentityDatabaseSchema {
@@ -14,6 +15,16 @@ public final class IdentityDatabaseSchema {
             "refresh_token",
             "product_clients"
     );
+
+    /** The bounded version/description signature used to detect legacy public Identity state. */
+    public static boolean isLegacyIdentityHistorySignature(String version, String description) {
+        if (version == null || description == null) {
+            return false;
+        }
+        String normalizedDescription = description.trim().toLowerCase(Locale.ROOT);
+        return ("1".equals(version) && "identity schema".equals(normalizedDescription))
+                || ("2".equals(version) && "refresh session single account".equals(normalizedDescription));
+    }
 
     private IdentityDatabaseSchema() {
     }

@@ -83,18 +83,20 @@ public record FlywayHistoryInspection(
         }
 
         List<Entry> migrationEntries = new ArrayList<>();
+        List<Entry> schemaMarkers = new ArrayList<>();
         List<Entry> unexpectedEntries = new ArrayList<>();
         Set<String> matchedVersions = new HashSet<>();
         Set<Integer> installedRanks = new HashSet<>();
         for (Entry entry : actualEntries) {
             if (isSchemaCreationMarkerCandidate(entry)) {
+                schemaMarkers.add(entry);
                 if (!isValidSchemaCreationMarker(profile, entry)) {
                     unexpectedEntries.add(entry);
                 }
                 continue;
             }
             migrationEntries.add(entry);
-            if (!installedRanks.add(entry.installedRank())) {
+            if (entry.installedRank() == null || !installedRanks.add(entry.installedRank())) {
                 unexpectedEntries.add(entry);
             }
             HistoryProfile.MigrationExpectation expected = expectedByVersion.get(entry.version());
@@ -109,9 +111,18 @@ public record FlywayHistoryInspection(
                 unexpectedEntries.add(entry);
             }
         }
+        if (schemaMarkers.size() > 1) {
+            for (Entry marker : schemaMarkers) {
+                if (!unexpectedEntries.contains(marker)) {
+                    unexpectedEntries.add(marker);
+                }
+            }
+        }
 
         List<Entry> orderedMigrations = migrationEntries.stream()
-                .sorted(Comparator.comparingInt(Entry::installedRank))
+                .sorted(Comparator.comparing(
+                        Entry::installedRank,
+                        Comparator.nullsLast(Integer::compareTo)))
                 .toList();
         List<HistoryProfile.MigrationExpectation> missingMigrations = variant.migrations().stream()
                 .filter(expected -> !matchedVersions.contains(expected.version()))
@@ -155,7 +166,7 @@ public record FlywayHistoryInspection(
 
     private static boolean sequentialRanks(List<Entry> entries) {
         for (int index = 0; index < entries.size(); index++) {
-            if (entries.get(index).installedRank() != index + 1) {
+            if (!Objects.equals(entries.get(index).installedRank(), index + 1)) {
                 return false;
             }
         }
@@ -170,7 +181,7 @@ public record FlywayHistoryInspection(
     }
 
     private static boolean isSchemaCreationMarkerCandidate(Entry entry) {
-        return entry.installedRank() == 0
+        return Integer.valueOf(0).equals(entry.installedRank())
                 && entry.version() == null
                 && "<< Flyway Schema Creation >>".equals(entry.description());
     }
@@ -183,8 +194,7 @@ public record FlywayHistoryInspection(
                 && entry.success()
                 && "SCHEMA".equals(entry.type())
                 && entry.checksum() == null
-                && (profile.schema().equals(entry.script())
-                || ('"' + profile.schema() + '"').equals(entry.script()));
+                && ('"' + profile.schema() + '"').equals(entry.script());
     }
 
     private record VariantAssessment(
@@ -203,7 +213,7 @@ public record FlywayHistoryInspection(
 
     /** Non-sensitive subset of one Flyway history row. */
     public record Entry(
-            int installedRank,
+            Integer installedRank,
             String version,
             String description,
             String type,

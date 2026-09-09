@@ -1,17 +1,32 @@
 package com.ranikunlabs.platform.identity.adapter.jdbc;
 
+import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import com.ranikunlabs.platform.identity.reconciliation.ReconciliationModel.SourceKind;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JdbcSourceInspectorTest {
+
+    private static final String CARELOG_SOURCE_COMMIT =
+            "daf55ab033ee155786b93fe26c37e758121ee541";
+    private static final Map<String, Integer> CARELOG_CHECKSUM_MANIFEST = Map.of(
+            "1", 1489460835,
+            "2", -609239330,
+            "3", -1875117566,
+            "4", -511745124,
+            "5", 1803198638,
+            "6", -758176464,
+            "7", -577931420,
+            "8", 801962331
+    );
 
     @Test
     void checkedInIdentityProfilesUseExactTypeAndChecksumTruth() {
@@ -66,6 +81,63 @@ class JdbcSourceInspectorTest {
                 .extracting(HistoryProfile.MigrationExpectation::version)
                 .containsExactly("2");
         assertThat(result.unexpectedEntries()).isEmpty();
+    }
+
+    @Test
+    void oneCanonicalSchemaMarkerIsAccepted() {
+        HistoryProfile profile = HistoryProfile.canonicalTarget();
+        List<FlywayHistoryInspection.Entry> actual = entries(profile.expectedMigrations());
+        actual.add(0, schemaMarker(0, "SCHEMA", '"' + profile.schema() + '"', null, true));
+
+        FlywayHistoryInspection result = FlywayHistoryInspection.assess(profile, true, actual);
+
+        assertThat(result.state()).isEqualTo(FlywayHistoryInspection.HistoryState.EXPECTED);
+    }
+
+    @Test
+    void duplicateSchemaMarkersAreUnexpected() {
+        HistoryProfile profile = HistoryProfile.canonicalTarget();
+        List<FlywayHistoryInspection.Entry> actual = entries(profile.expectedMigrations());
+        actual.add(0, schemaMarker(0, "SCHEMA", '"' + profile.schema() + '"', null, true));
+        actual.add(1, schemaMarker(0, "SCHEMA", '"' + profile.schema() + '"', null, true));
+
+        FlywayHistoryInspection result = FlywayHistoryInspection.assess(profile, true, actual);
+
+        assertThat(result.state()).isEqualTo(FlywayHistoryInspection.HistoryState.UNEXPECTED);
+    }
+
+    @Test
+    void nullInstalledRankCannotMasqueradeAsSchemaMarker() {
+        HistoryProfile profile = HistoryProfile.canonicalTarget();
+        List<FlywayHistoryInspection.Entry> actual = entries(profile.expectedMigrations());
+        actual.add(0, schemaMarker(null, "SCHEMA", '"' + profile.schema() + '"', null, true));
+
+        FlywayHistoryInspection result = FlywayHistoryInspection.assess(profile, true, actual);
+
+        assertThat(result.state()).isEqualTo(FlywayHistoryInspection.HistoryState.UNEXPECTED);
+    }
+
+    @Test
+    void schemaMarkerAtMigrationRankIsUnexpected() {
+        HistoryProfile profile = HistoryProfile.canonicalTarget();
+        List<FlywayHistoryInspection.Entry> actual = entries(profile.expectedMigrations());
+        actual.add(0, schemaMarker(1, "SCHEMA", '"' + profile.schema() + '"', null, true));
+
+        FlywayHistoryInspection result = FlywayHistoryInspection.assess(profile, true, actual);
+
+        assertThat(result.state()).isEqualTo(FlywayHistoryInspection.HistoryState.UNEXPECTED);
+    }
+
+    @Test
+    void malformedSecondSchemaMarkerIsUnexpected() {
+        HistoryProfile profile = HistoryProfile.canonicalTarget();
+        List<FlywayHistoryInspection.Entry> actual = entries(profile.expectedMigrations());
+        actual.add(0, schemaMarker(0, "SCHEMA", '"' + profile.schema() + '"', null, true));
+        actual.add(1, schemaMarker(0, "SQL", '"' + profile.schema() + '"', null, true));
+
+        FlywayHistoryInspection result = FlywayHistoryInspection.assess(profile, true, actual);
+
+        assertThat(result.state()).isEqualTo(FlywayHistoryInspection.HistoryState.UNEXPECTED);
     }
 
     @Test
@@ -241,6 +313,31 @@ class JdbcSourceInspectorTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void carelogChecksumProfileMatchesIndependentPinnedManifest() {
+        assertThat(CARELOG_SOURCE_COMMIT)
+                .isEqualTo("daf55ab033ee155786b93fe26c37e758121ee541");
+
+        Map<String, Integer> actual = HistoryProfile.carelogLegacy().expectedMigrations().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        HistoryProfile.MigrationExpectation::version,
+                        HistoryProfile.MigrationExpectation::checksum));
+
+        assertThat(actual).containsExactlyInAnyOrderEntriesOf(CARELOG_CHECKSUM_MANIFEST);
+    }
+
+    @Test
+    void sliceOneHistorySignatureIsVersionDescriptionBounded() {
+        assertThat(IdentityDatabaseSchema.isLegacyIdentityHistorySignature("1", " identity schema "))
+                .isTrue();
+        assertThat(IdentityDatabaseSchema.isLegacyIdentityHistorySignature(
+                "1", "renamed identity script"))
+                .isFalse();
+        assertThat(IdentityDatabaseSchema.isLegacyIdentityHistorySignature(
+                "9", "identity schema"))
+                .isFalse();
+    }
+
     private static List<FlywayHistoryInspection.Entry> entries(
             List<HistoryProfile.MigrationExpectation> migrations
     ) {
@@ -266,6 +363,23 @@ class JdbcSourceInspectorTest {
                 migration.script(),
                 checksum,
                 true);
+    }
+
+    private static FlywayHistoryInspection.Entry schemaMarker(
+            Integer rank,
+            String type,
+            String script,
+            Integer checksum,
+            boolean success
+    ) {
+        return new FlywayHistoryInspection.Entry(
+                rank,
+                null,
+                "<< Flyway Schema Creation >>",
+                type,
+                script,
+                checksum,
+                success);
     }
 
     private static JdbcSourceConfiguration configuration(String jdbcUrl) {

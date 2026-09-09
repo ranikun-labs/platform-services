@@ -23,7 +23,6 @@ import java.util.Set;
 public final class JdbcSourceInspector {
 
     private static final Set<String> KNOWN_IDENTITY_TABLES = knownIdentityTables();
-    private static final Set<String> KNOWN_IDENTITY_SCRIPTS = knownIdentityScripts();
 
     public StructuralInspectionResult inspect(
             JdbcSourceConfiguration source,
@@ -155,7 +154,8 @@ public final class JdbcSourceInspector {
             }
             for (FlywayHistoryInspection.Entry entry : historyEntries(
                     connection, schema, profile.historyProfile().historyTable())) {
-                if (KNOWN_IDENTITY_SCRIPTS.contains(entry.script())) {
+                if (IdentityDatabaseSchema.isLegacyIdentityHistorySignature(
+                        entry.version(), entry.description())) {
                     return true;
                 }
             }
@@ -192,12 +192,12 @@ public final class JdbcSourceInspector {
             List<FlywayHistoryInspection.Entry> entries = new ArrayList<>();
             while (result.next()) {
                 entries.add(new FlywayHistoryInspection.Entry(
-                        result.getInt("installed_rank"),
+                        nullableInteger(result, "installed_rank"),
                         result.getString("version"),
                         result.getString("description"),
                         result.getString("type"),
                         result.getString("script"),
-                        (Integer) result.getObject("checksum"),
+                        nullableInteger(result, "checksum"),
                         result.getBoolean("success")
                 ));
             }
@@ -211,19 +211,9 @@ public final class JdbcSourceInspector {
         return Set.copyOf(tables);
     }
 
-    private static Set<String> knownIdentityScripts() {
-        LinkedHashSet<String> scripts = new LinkedHashSet<>();
-        addScripts(scripts, HistoryProfile.platformLegacy());
-        addScripts(scripts, HistoryProfile.carelogLegacy());
-        return Set.copyOf(scripts);
-    }
-
-    private static void addScripts(Set<String> scripts, HistoryProfile profile) {
-        profile.acceptedVariants().forEach(variant -> variant.migrations().forEach(expectation -> {
-            if (expectation.script().startsWith("V")) {
-                scripts.add(expectation.script());
-            }
-        }));
+    private static Integer nullableInteger(ResultSet result, String column) throws SQLException {
+        int value = result.getInt(column);
+        return result.wasNull() ? null : value;
     }
 
     private String quoteIdentifier(String identifier) {

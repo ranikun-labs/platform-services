@@ -79,6 +79,25 @@ class JdbcSourceInspectorIntegrationTest {
     }
 
     @Test
+    void nullInstalledRankInFlywayHistoryIsUnexpected() throws SQLException {
+        SourceInspectionProfile profile = SourceInspectionProfile.platformLegacy();
+        HistoryProfile.MigrationExpectation migration = profile.historyProfile().expectedMigrations().get(0);
+        createPublicHistory(List.of(new HistoryRow(
+                null,
+                migration.version(),
+                migration.description(),
+                migration.type(),
+                migration.script(),
+                migration.checksum(),
+                true)));
+
+        StructuralInspectionResult result = INSPECTOR.inspect(platformSource(), profile);
+
+        assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.UNEXPECTED);
+        assertThat(result.history().state()).isEqualTo(FlywayHistoryInspection.HistoryState.UNEXPECTED);
+    }
+
+    @Test
     void expectedCanonicalTargetStructureIsReportedInIdentitySchema() {
         migrate("identity", null);
 
@@ -87,6 +106,18 @@ class JdbcSourceInspectorIntegrationTest {
         assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.EXPECTED);
         assertThat(result.profile().schema()).isEqualTo("identity");
         assertThat(result.history().historyTablePresent()).isTrue();
+        List<FlywayHistoryInspection.Entry> schemaMarkers = result.history().entries().stream()
+                .filter(entry -> "SCHEMA".equals(entry.type()))
+                .toList();
+        assertThat(schemaMarkers).hasSize(1);
+        FlywayHistoryInspection.Entry marker = schemaMarkers.get(0);
+        assertThat(marker.installedRank()).isEqualTo(0);
+        assertThat(marker.version()).isNull();
+        assertThat(marker.description()).isEqualTo("<< Flyway Schema Creation >>");
+        assertThat(marker.type()).isEqualTo("SCHEMA");
+        assertThat(marker.script()).isEqualTo("\"identity\"");
+        assertThat(marker.checksum()).isNull();
+        assertThat(marker.success()).isTrue();
     }
 
     @Test
@@ -100,6 +131,32 @@ class JdbcSourceInspectorIntegrationTest {
         assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.UNEXPECTED);
         assertThat(result.unexpectedIdentityTables()).contains("public.platform_accounts");
         assertThat(result.unexpectedIdentityHistory()).isTrue();
+    }
+
+    @Test
+    void canonicalTargetWithDriftedPublicSliceOneHistorySignatureIsUnexpected() throws SQLException {
+        migrate("identity", null);
+        createPublicHistory(List.of(new HistoryRow(
+                1, "1", "identity schema", "SQL", "V1__renamed_identity_script.sql", null, true)));
+
+        StructuralInspectionResult result = INSPECTOR.inspect(
+                targetSource(), SourceInspectionProfile.canonicalTarget());
+
+        assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.UNEXPECTED);
+        assertThat(result.unexpectedIdentityHistory()).isTrue();
+    }
+
+    @Test
+    void canonicalTargetWithUnrelatedPublicFlywayHistoryIsExpected() throws SQLException {
+        migrate("identity", null);
+        createPublicHistory(List.of(new HistoryRow(
+                1, "9", "unrelated application migration", "SQL", "V9__unrelated.sql", 123, true)));
+
+        StructuralInspectionResult result = INSPECTOR.inspect(
+                targetSource(), SourceInspectionProfile.canonicalTarget());
+
+        assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.EXPECTED);
+        assertThat(result.unexpectedIdentityHistory()).isFalse();
     }
 
     @Test
@@ -181,6 +238,48 @@ class JdbcSourceInspectorIntegrationTest {
 
     private void createCarelogLikeStructure(SourceInspectionProfile profile) throws SQLException {
         createCarelogLikeStructure(profile, profile.historyProfile().expectedMigrations());
+    }
+
+    private void createPublicHistory(List<HistoryRow> rows) throws SQLException {
+        try (Connection connection = connection(); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE public.flyway_schema_history ("
+                    + "installed_rank integer,"
+                    + "version varchar(50),"
+                    + "description varchar(200),"
+                    + "type varchar(20),"
+                    + "script varchar(1000),"
+                    + "checksum integer,"
+                    + "installed_by varchar(100),"
+                    + "installed_on timestamp with time zone DEFAULT CURRENT_TIMESTAMP,"
+                    + "execution_time integer,"
+                    + "success boolean)");
+            try (PreparedStatement insert = connection.prepareStatement(
+                    "INSERT INTO public.flyway_schema_history "
+                            + "(installed_rank, version, description, type, script, checksum, installed_by, "
+                            + "execution_time, success) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                for (HistoryRow row : rows) {
+                    if (row.installedRank() == null) {
+                        insert.setNull(1, java.sql.Types.INTEGER);
+                    } else {
+                        insert.setInt(1, row.installedRank());
+                    }
+                    insert.setString(2, row.version());
+                    insert.setString(3, row.description());
+                    insert.setString(4, row.type());
+                    insert.setString(5, row.script());
+                    if (row.checksum() == null) {
+                        insert.setNull(6, java.sql.Types.INTEGER);
+                    } else {
+                        insert.setInt(6, row.checksum());
+                    }
+                    insert.setString(7, "test");
+                    insert.setInt(8, 1);
+                    insert.setBoolean(9, row.success());
+                    insert.addBatch();
+                }
+                insert.executeBatch();
+            }
+        }
     }
 
     private void createCarelogLikeStructure(
@@ -307,6 +406,17 @@ class JdbcSourceInspectorIntegrationTest {
             Set<String> tables,
             List<String> history,
             Map<String, Integer> rowCounts
+    ) {
+    }
+
+    private record HistoryRow(
+            Integer installedRank,
+            String version,
+            String description,
+            String type,
+            String script,
+            Integer checksum,
+            boolean success
     ) {
     }
 }
