@@ -17,6 +17,7 @@ base {
 dependencies {
     implementation(project(":identity"))
     implementation(project(":shared-ai"))
+    implementation(project(":shared-audit"))
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
