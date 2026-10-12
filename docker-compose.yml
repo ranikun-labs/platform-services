@@ -7,7 +7,7 @@ services:
       context: ./gateway-app
     environment:
       PLATFORM_GATEWAY_PORT: ${PLATFORM_GATEWAY_PORT:-8080}
-      PLATFORM_GATEWAY_REDIS_HOST: redis
+      PLATFORM_GATEWAY_REDIS_HOST: valkey
       PLATFORM_GATEWAY_REDIS_PORT: 6379
       PLATFORM_GATEWAY_REDIS_KEY_PREFIX: "platform:gateway:"
       # Dark default: keep auth on Carelog until the live Platform Identity gate passes.
@@ -19,7 +19,7 @@ services:
     ports:
       - "${PLATFORM_GATEWAY_PUBLISHED_PORT:-8080}:${PLATFORM_GATEWAY_PORT:-8080}"
     depends_on:
-      redis:
+      valkey:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_GATEWAY_PORT}/actuator/health/readiness || exit 1"]
@@ -40,7 +40,7 @@ services:
       PLATFORM_IDENTITY_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PLATFORM_POSTGRES_DB:-platform}
       PLATFORM_IDENTITY_DATASOURCE_USERNAME: ${PLATFORM_POSTGRES_USER:-platform}
       PLATFORM_IDENTITY_DATASOURCE_PASSWORD: ${PLATFORM_POSTGRES_PASSWORD:?PLATFORM_POSTGRES_PASSWORD must be set}
-      PLATFORM_IDENTITY_REDIS_HOST: redis
+      PLATFORM_IDENTITY_REDIS_HOST: valkey
       PLATFORM_IDENTITY_REDIS_PORT: 6379
       PLATFORM_IDENTITY_REDIS_KEY_PREFIX: "platform:identity:"
       PLATFORM_IDENTITY_AUTH_ENABLED: ${PLATFORM_IDENTITY_AUTH_ENABLED:-false}
@@ -63,7 +63,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
+      valkey:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_CORE_PORT}/actuator/health/readiness || exit 1"]
@@ -90,18 +90,39 @@ services:
     networks:
       - platform
 
-  redis:
-    image: redis:7-alpine
+  valkey:
+    image: valkey/valkey:9.1.2-alpine@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11
+    # AOF-only persistence. everysec balances write latency with a maximum
+    # acknowledged-write loss window of about one second after host failure.
+    command:
+      - valkey-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --save
+      - ""
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - noeviction
+    # Leave headroom above maxmemory for allocator and AOF buffers.
+    restart: unless-stopped
+    mem_limit: 384m
+    volumes:
+      - platform-valkey-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
+      start_period: 5s
     networks:
       - platform
 
 volumes:
   platform-postgres-data:
+  platform-valkey-data:
 
 networks:
   platform:
