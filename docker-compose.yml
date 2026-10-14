@@ -92,8 +92,9 @@ services:
 
   valkey:
     image: valkey/valkey:9.1.2-alpine@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11
-    # AOF-only persistence. everysec balances write latency with a maximum
-    # acknowledged-write loss window of about one second after host failure.
+    # AOF-only persistence. everysec is a latency/durability trade-off, not a
+    # hard loss bound: fsync can be delayed, host crashes can lose recent writes,
+    # and storage or volume failure can lose the complete dataset.
     command:
       - valkey-server
       - --appendonly
