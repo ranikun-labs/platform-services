@@ -1,13 +1,16 @@
 package com.ranikunlabs.platform.gateway;
 
 import io.netty.handler.timeout.ReadTimeoutException;
+import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
+import java.time.Duration;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
@@ -94,7 +97,6 @@ class GatewayPrometheusIntegrationTest {
                 .contains("http_server_requests_seconds_bucket")
                 .contains("le=\"0.02\"")
                 .contains("jvm_memory_used_bytes")
-                .contains("jvm_gc_pause_seconds_count")
                 .contains("jvm_threads_live_threads")
                 .contains("process_cpu_usage")
                 .contains("service=\"gateway\"")
@@ -104,6 +106,10 @@ class GatewayPrometheusIntegrationTest {
                 .doesNotContain("user-secret-", "tenant-secret-", "jwt-secret-", "/metrics-probe/account-");
         assertThat(scrape.body()).doesNotContain("uri=", "url=", "user_id=", "tenant_id=", "access_token=");
         assertThat(getSuccessfulGetHistogramLabels(scrape.body())).hasSize(1);
+        awaitObservedGcMetric(managementPort);
+        scrape = get(managementPort, "/actuator/prometheus");
+        assertThat(scrape.body()).contains("jvm_gc_pause_seconds_count");
+        assertThat(hasPositiveGcPauseCount(scrape.body())).isTrue();
         assertCounter(scrape.body(), "platform_http_server_errors_total", 2,
                 "service=\"gateway\"", "environment=\"test\"");
         assertCounter(scrape.body(), "platform_http_server_timeouts_total", 3,
@@ -144,6 +150,36 @@ class GatewayPrometheusIntegrationTest {
                 "service=\"gateway\"", "environment=\"test\"");
         assertCounter(scrape.body(), "platform_http_server_timeouts_total", expectedTimeouts,
                 "service=\"gateway\"", "environment=\"test\"");
+    }
+
+    private static void awaitObservedGcMetric(int managementPort) throws Exception {
+        long initialCollectionCount = totalGcCollectionCount();
+        System.gc();
+        long deadline = System.nanoTime() + Duration.ofSeconds(5).toNanos();
+        while (System.nanoTime() < deadline) {
+            HttpResponse<String> scrape = get(managementPort, "/actuator/prometheus");
+            if (scrape.statusCode() == 200
+                    && totalGcCollectionCount() > initialCollectionCount
+                    && hasPositiveGcPauseCount(scrape.body())) {
+                return;
+            }
+            TimeUnit.MILLISECONDS.sleep(100);
+        }
+        throw new AssertionError("A JVM GC event and its Prometheus pause metric were not observed within 5 seconds");
+    }
+
+    private static long totalGcCollectionCount() {
+        return ManagementFactory.getGarbageCollectorMXBeans().stream()
+                .mapToLong(bean -> Math.max(0, bean.getCollectionCount()))
+                .sum();
+    }
+
+    private static boolean hasPositiveGcPauseCount(String scrape) {
+        return scrape.lines()
+                .filter(line -> line.startsWith("jvm_gc_pause_seconds_count{"))
+                .map(line -> line.substring(line.lastIndexOf(' ') + 1))
+                .mapToDouble(Double::parseDouble)
+                .anyMatch(value -> value > 0);
     }
 
     private static void assertCounter(String scrape, String name, double expectedValue, String... labels) {

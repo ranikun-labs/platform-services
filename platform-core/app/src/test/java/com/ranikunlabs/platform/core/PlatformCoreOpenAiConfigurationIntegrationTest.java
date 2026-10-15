@@ -2,20 +2,17 @@ package com.ranikunlabs.platform.core;
 
 import com.ranikunlabs.platform.sharedai.adapters.model.SpringAiModelGateway;
 import com.ranikunlabs.platform.sharedai.ports.ModelGateway;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
         classes = PlatformCoreApplication.class,
@@ -40,19 +37,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "platform.shared-ai.openai.timeout=5s",
                 "management.endpoints.web.exposure.include=health,info,env,configprops"
         })
-@AutoConfigureMockMvc
 class PlatformCoreOpenAiConfigurationIntegrationTest {
 
     private static final String API_KEY = "configuration-test-api-key";
+    private static final HttpClient HTTP = HttpClient.newHttpClient();
 
     @Autowired
     private ApplicationContext applicationContext;
 
     @Autowired
     private Environment environment;
-
-    @Autowired
-    private MockMvc mockMvc;
 
     @Test
     void bootsWithCurrentDbFreeHostContractAndComposesOneSyncProviderGateway() {
@@ -69,12 +63,26 @@ class PlatformCoreOpenAiConfigurationIntegrationTest {
 
     @Test
     void actuatorEnvironmentAndConfigPropsDoNotExposeTheConfiguredApiKey() throws Exception {
-        mockMvc.perform(get("/actuator/env/platform.shared-ai.openai.api-key"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(not(containsString(API_KEY))));
+        int applicationPort = environment.getRequiredProperty("local.server.port", Integer.class);
+        int managementPort = environment.getRequiredProperty("local.management.port", Integer.class);
 
-        mockMvc.perform(get("/actuator/configprops"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(not(containsString(API_KEY))));
+        HttpResponse<String> applicationActuator = get(applicationPort,
+                "/actuator/env/platform.shared-ai.openai.api-key");
+        assertThat(applicationActuator.statusCode()).isEqualTo(404);
+
+        HttpResponse<String> environmentResponse = get(managementPort,
+                "/actuator/env/platform.shared-ai.openai.api-key");
+        assertThat(environmentResponse.statusCode()).isEqualTo(200);
+        assertThat(environmentResponse.body()).doesNotContain(API_KEY);
+
+        HttpResponse<String> configPropsResponse = get(managementPort, "/actuator/configprops");
+        assertThat(configPropsResponse.statusCode()).isEqualTo(200);
+        assertThat(configPropsResponse.body()).doesNotContain(API_KEY);
+    }
+
+    private static HttpResponse<String> get(int port, String path) throws Exception {
+        return HTTP.send(
+                HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
     }
 }
