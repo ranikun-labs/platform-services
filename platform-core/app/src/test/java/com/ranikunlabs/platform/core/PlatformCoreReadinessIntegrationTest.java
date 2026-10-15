@@ -3,17 +3,17 @@ package com.ranikunlabs.platform.core;
 import com.ranikunlabs.platform.identity.adapter.http.AuthController;
 import com.ranikunlabs.platform.identity.IdentityRuntimeProperties;
 import com.ranikunlabs.platform.sharedai.SharedAiModuleConfiguration;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.ApplicationContext;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.core.env.Environment;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
         classes = PlatformCoreApplication.class,
@@ -32,13 +32,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "spring.autoconfigure.exclude="
                         + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
                         + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
-                        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration"
+                        + "org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration",
+                "management.server.port=0"
         })
-@AutoConfigureMockMvc
 class PlatformCoreReadinessIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private Environment environment;
 
     @Autowired
     private IdentityRuntimeProperties identityRuntimeProperties;
@@ -50,13 +50,27 @@ class PlatformCoreReadinessIntegrationTest {
     private ApplicationContext applicationContext;
 
     @Test
-    void hostsIdentityAndSharedAiAndExposesPlatformCoreReadiness() throws Exception {
+    void hostsIdentityAndSharedAiAndExposesReadinessOnlyOnTheManagementListener() throws Exception {
         assertThat(identityRuntimeProperties.redisKeyPrefix()).isEqualTo("platform:identity:");
         assertThat(sharedAiModuleConfiguration).isNotNull();
         assertThat(applicationContext.getBeansOfType(AuthController.class)).isEmpty();
 
-        mockMvc.perform(get("/actuator/health/readiness"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"));
+        int applicationPort = environment.getRequiredProperty("local.server.port", Integer.class);
+        int managementPort = environment.getRequiredProperty("local.management.port", Integer.class);
+        HttpClient client = HttpClient.newHttpClient();
+
+        HttpResponse<String> readiness = get(client, managementPort);
+        HttpResponse<String> applicationPortProbe = get(client, applicationPort);
+
+        assertThat(readiness.statusCode()).isEqualTo(200);
+        assertThat(readiness.body()).contains("\"status\":\"UP\"");
+        assertThat(applicationPortProbe.statusCode()).isBetween(400, 499);
+    }
+
+    private static HttpResponse<String> get(HttpClient client, int port) throws Exception {
+        return client.send(
+                HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+                        + "/actuator/health/readiness")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
     }
 }

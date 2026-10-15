@@ -16,13 +16,14 @@ services:
       PLATFORM_GATEWAY_CARELOG_RAG_URI: ${PLATFORM_GATEWAY_CARELOG_RAG_URI:?PLATFORM_GATEWAY_CARELOG_RAG_URI must be set}
       PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET: ${PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET:?PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET must be set}
       PLATFORM_GATEWAY_INTERNAL_SECRET: ${PLATFORM_GATEWAY_INTERNAL_SECRET:?PLATFORM_GATEWAY_INTERNAL_SECRET must be set}
+      PLATFORM_GATEWAY_MANAGEMENT_PORT: ${PLATFORM_GATEWAY_MANAGEMENT_PORT:-9091}
     ports:
       - "${PLATFORM_GATEWAY_PUBLISHED_PORT:-8080}:${PLATFORM_GATEWAY_PORT:-8080}"
     depends_on:
       valkey:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_GATEWAY_PORT}/actuator/health/readiness || exit 1"]
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_GATEWAY_MANAGEMENT_PORT}/actuator/health/readiness || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -37,6 +38,7 @@ services:
       dockerfile: app/Dockerfile
     environment:
       PLATFORM_CORE_PORT: ${PLATFORM_CORE_PORT:-8081}
+      PLATFORM_CORE_MANAGEMENT_PORT: ${PLATFORM_CORE_MANAGEMENT_PORT:-9092}
       PLATFORM_IDENTITY_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PLATFORM_POSTGRES_DB:-platform}
       PLATFORM_IDENTITY_DATASOURCE_USERNAME: ${PLATFORM_POSTGRES_USER:-platform}
       PLATFORM_IDENTITY_DATASOURCE_PASSWORD: ${PLATFORM_POSTGRES_PASSWORD:?PLATFORM_POSTGRES_PASSWORD must be set}
@@ -66,7 +68,7 @@ services:
       valkey:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_CORE_PORT}/actuator/health/readiness || exit 1"]
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_CORE_MANAGEMENT_PORT}/actuator/health/readiness || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 12
