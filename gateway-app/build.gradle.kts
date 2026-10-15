@@ -37,6 +37,7 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.cloud:spring-cloud-starter-gateway")
+    testImplementation("org.testcontainers:testcontainers:1.21.4")
 }
 
 tasks.withType<Test>().configureEach {

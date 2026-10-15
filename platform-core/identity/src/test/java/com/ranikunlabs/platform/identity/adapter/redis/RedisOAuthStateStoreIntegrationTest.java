@@ -18,22 +18,25 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Proves RedisOAuthStateStore's exact key/serialization/GETDEL/TTL contract against a real Redis
+ * Proves RedisOAuthStateStore's exact key/serialization/GETDEL/TTL contract against Valkey
  * server, matching the canonical Carelog integration coverage. No new production dependency is
  * introduced; the generic Testcontainers container already used for Postgres is reused here.
  */
 class RedisOAuthStateStoreIntegrationTest {
 
-    private static final GenericContainer<?> REDIS =
-            new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
+    private static final GenericContainer<?> VALKEY =
+            new GenericContainer<>(DockerImageName.parse(
+                    "valkey/valkey:9.1.2-alpine@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11"))
+                    .withExposedPorts(6379);
 
     static {
-        REDIS.start();
+        VALKEY.start();
     }
 
     private LettuceConnectionFactory connectionFactory;
@@ -42,18 +45,18 @@ class RedisOAuthStateStoreIntegrationTest {
 
     @BeforeAll
     static void verifyContainerRunning() {
-        assertThat(REDIS.isRunning()).isTrue();
+        assertThat(VALKEY.isRunning()).isTrue();
     }
 
     @AfterAll
-    static void stopRedis() {
-        REDIS.stop();
+    static void stopValkey() {
+        VALKEY.stop();
     }
 
     @BeforeEach
     void setUp() {
         connectionFactory = new LettuceConnectionFactory(
-                new RedisStandaloneConfiguration(REDIS.getHost(), REDIS.getMappedPort(6379)));
+                new RedisStandaloneConfiguration(VALKEY.getHost(), VALKEY.getMappedPort(6379)));
         connectionFactory.afterPropertiesSet();
         redisTemplate = new StringRedisTemplate(connectionFactory);
         redisTemplate.afterPropertiesSet();
@@ -129,14 +132,27 @@ class RedisOAuthStateStoreIntegrationTest {
     }
 
     @Test
+    void blacklistWriterPreservesTheGatewayKeyValueAndTtlContract() {
+        RedisTokenBlacklistAdapter blacklist = new RedisTokenBlacklistAdapter(redisTemplate);
+        String key = "blacklist:raw-access-token";
+
+        blacklist.addToBlacklist("raw-access-token", Duration.ofSeconds(30));
+
+        assertThat(redisTemplate.opsForValue().get(key)).isEqualTo("1");
+        assertThat(redisTemplate.getExpire(key, TimeUnit.SECONDS))
+                .isPositive()
+                .isLessThanOrEqualTo(30L);
+    }
+
+    @Test
     void unreachableRedisIsSurfacedAsStoreUnavailableNotAsAnUncaughtInfrastructureException() {
         OAuthStateRecord record = new OAuthStateRecord(
                 "kakao", URI.create("https://app.example.test/callback"), "/home", "verifier", null, Instant.now());
         // Point at a real, closed port (nothing bound there) to trigger the same
-        // RedisConnectionFailureException production sees when the real server is unreachable,
+        // RedisConnectionFailureException production sees when the Valkey server is unreachable,
         // rather than a Spring-lifecycle artifact like a destroyed connection factory.
         LettuceConnectionFactory unreachable = new LettuceConnectionFactory(
-                new RedisStandaloneConfiguration(REDIS.getHost(), findClosedPort()));
+                new RedisStandaloneConfiguration(VALKEY.getHost(), findClosedPort()));
         unreachable.afterPropertiesSet();
         RedisOAuthStateStore unreachableStore =
                 new RedisOAuthStateStore(new StringRedisTemplate(unreachable), JsonMapper.builder().build());
