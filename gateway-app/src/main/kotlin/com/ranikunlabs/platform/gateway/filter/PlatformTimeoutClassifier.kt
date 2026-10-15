@@ -1,6 +1,7 @@
 package com.ranikunlabs.platform.gateway.filter
 
 import java.net.SocketTimeoutException
+import java.net.http.HttpTimeoutException
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.concurrent.TimeoutException
@@ -17,7 +18,10 @@ internal object PlatformTimeoutClassifier {
         val seen = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
         var cause: Throwable? = failure
         while (cause != null && seen.add(cause)) {
-            if (cause is TimeoutException || cause is SocketTimeoutException) return true
+            if (cause is TimeoutException
+                || cause is SocketTimeoutException
+                || cause is HttpTimeoutException
+            ) return true
             if (cause.javaClass.name in networkTimeoutTypes) return true
             cause = cause.cause
         }

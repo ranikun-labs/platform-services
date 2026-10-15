@@ -1,9 +1,11 @@
 package com.ranikunlabs.platform.gateway;
 
+import io.netty.handler.timeout.ReadTimeoutException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -28,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
                 "PLATFORM_GATEWAY_PORT=0",
+                "PLATFORM_GATEWAY_MANAGEMENT_PORT=0",
                 "PLATFORM_GATEWAY_REDIS_HOST=127.0.0.1",
                 "PLATFORM_GATEWAY_REDIS_PORT=6379",
                 "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
@@ -52,6 +55,7 @@ class GatewayPrometheusIntegrationTest {
     void servesBoundedHistogramMetricsOnlyOnManagementListenerAndSeparatesTimeouts() throws Exception {
         int applicationPort = environment.getRequiredProperty("local.server.port", Integer.class);
         int managementPort = environment.getRequiredProperty("local.management.port", Integer.class);
+        assertCounts(managementPort, 0, 0);
 
         for (int index = 0; index < 12; index++) {
             HttpResponse<String> response = get(applicationPort,
@@ -61,8 +65,22 @@ class GatewayPrometheusIntegrationTest {
                             + "&access_token=jwt-secret-" + index);
             assertThat(response.statusCode()).isEqualTo(200);
         }
-        assertThat(get(applicationPort, "/metrics-probe/error").statusCode()).isEqualTo(503);
+        assertCounts(managementPort, 0, 0);
+
+        assertThat(get(applicationPort, "/metrics-probe/error").statusCode()).isEqualTo(500);
+        assertCounts(managementPort, 1, 0);
+
+        assertThat(get(applicationPort, "/metrics-probe/504").statusCode()).isEqualTo(504);
+        assertCounts(managementPort, 2, 0);
+
         assertThat(get(applicationPort, "/metrics-probe/timeout").statusCode()).isBetween(500, 599);
+        assertCounts(managementPort, 2, 1);
+
+        assertThat(get(applicationPort, "/metrics-probe/jdk-timeout").statusCode()).isBetween(500, 599);
+        assertCounts(managementPort, 2, 2);
+
+        assertThat(get(applicationPort, "/metrics-probe/netty-timeout").statusCode()).isBetween(500, 599);
+        assertCounts(managementPort, 2, 3);
 
         HttpResponse<String> publicPort = get(applicationPort, "/actuator/prometheus");
         assertThat(publicPort.statusCode()).isBetween(400, 499);
@@ -84,17 +102,12 @@ class GatewayPrometheusIntegrationTest {
                 .contains("platform_http_server_errors_total")
                 .contains("platform_http_server_timeouts_total")
                 .doesNotContain("user-secret-", "tenant-secret-", "jwt-secret-", "/metrics-probe/account-");
-
-        assertThat(scrape.body()).contains("service=\"gateway\"", "environment=\"test\"");
-        assertThat(scrape.body()).contains("platform_http_server_errors_total");
-        assertThat(scrape.body()).contains("platform_http_server_timeouts_total");
-        assertThat(scrape.body()).contains("http_server_requests_seconds_bucket");
         assertThat(scrape.body()).doesNotContain("uri=", "url=", "user_id=", "tenant_id=", "access_token=");
-
-        Set<String> labelSets = getSuccessfulGetHistogramLabels(scrape.body());
-        assertThat(labelSets).hasSize(1);
-        assertCounter(scrape.body(), "platform_http_server_errors_total", "service=\"gateway\"", "environment=\"test\"");
-        assertCounter(scrape.body(), "platform_http_server_timeouts_total", "service=\"gateway\"", "environment=\"test\"");
+        assertThat(getSuccessfulGetHistogramLabels(scrape.body())).hasSize(1);
+        assertCounter(scrape.body(), "platform_http_server_errors_total", 2,
+                "service=\"gateway\"", "environment=\"test\"");
+        assertCounter(scrape.body(), "platform_http_server_timeouts_total", 3,
+                "service=\"gateway\"", "environment=\"test\"");
     }
 
     private static HttpResponse<String> get(int port, String path) throws Exception {
@@ -123,13 +136,23 @@ class GatewayPrometheusIntegrationTest {
         return labelSets;
     }
 
-    private static void assertCounter(String scrape, String name, String... labels) {
+    private static void assertCounts(int managementPort, double expectedErrors, double expectedTimeouts)
+            throws Exception {
+        HttpResponse<String> scrape = get(managementPort, "/actuator/prometheus");
+        assertThat(scrape.statusCode()).isEqualTo(200);
+        assertCounter(scrape.body(), "platform_http_server_errors_total", expectedErrors,
+                "service=\"gateway\"", "environment=\"test\"");
+        assertCounter(scrape.body(), "platform_http_server_timeouts_total", expectedTimeouts,
+                "service=\"gateway\"", "environment=\"test\"");
+    }
+
+    private static void assertCounter(String scrape, String name, double expectedValue, String... labels) {
         String sample = scrape.lines()
                 .filter(line -> line.startsWith(name + "{"))
                 .filter(line -> java.util.Arrays.stream(labels).allMatch(line::contains))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Missing counter sample " + name));
-        assertThat(sample).endsWith(" 1.0");
+        assertThat(sample).endsWith(" " + expectedValue);
     }
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -151,12 +174,27 @@ class GatewayPrometheusIntegrationTest {
 
         @GetMapping("/metrics-probe/error")
         ResponseEntity<Void> failedRequest() {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        @GetMapping("/metrics-probe/504")
+        ResponseEntity<Void> gatewayTimeoutWithoutCause() {
+            return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).build();
         }
 
         @GetMapping("/metrics-probe/timeout")
         Mono<Void> timedOutRequest() {
             return Mono.error(new java.util.concurrent.TimeoutException("synthetic timeout"));
+        }
+
+        @GetMapping("/metrics-probe/jdk-timeout")
+        Mono<Void> jdkTimedOutRequest() {
+            return Mono.error(new HttpTimeoutException("synthetic JDK HTTP timeout"));
+        }
+
+        @GetMapping("/metrics-probe/netty-timeout")
+        Mono<Void> nettyTimedOutRequest() {
+            return Mono.error(ReadTimeoutException.INSTANCE);
         }
     }
 }

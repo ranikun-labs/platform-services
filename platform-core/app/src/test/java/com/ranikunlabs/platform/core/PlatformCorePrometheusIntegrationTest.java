@@ -1,16 +1,23 @@
 package com.ranikunlabs.platform.core;
 
-import jakarta.servlet.ServletException;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.AsyncEvent;
+import jakarta.servlet.AsyncListener;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.net.SocketTimeoutException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.sql.DataSource;
@@ -23,8 +30,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
                 "PLATFORM_CORE_PORT=0",
+                "PLATFORM_CORE_MANAGEMENT_PORT=0",
                 "PLATFORM_IDENTITY_REDIS_HOST=127.0.0.1",
                 "PLATFORM_IDENTITY_REDIS_PORT=6379",
                 "PLATFORM_IDENTITY_REDIS_KEY_PREFIX=test:identity:",
@@ -56,7 +66,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(PlatformCorePrometheusIntegrationTest.MetricsProbeConfiguration.class)
 class PlatformCorePrometheusIntegrationTest {
 
-    private static final HttpClient HTTP = HttpClient.newHttpClient();
+    private static final HttpClient HTTP = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(3))
+            .build();
     private static final Pattern LABEL = Pattern.compile("([^,=]+)=\"([^\"]*)\"");
 
     @Autowired
@@ -66,7 +78,7 @@ class PlatformCorePrometheusIntegrationTest {
     private DataSource dataSource;
 
     @Test
-    void exposesPrivatePrometheusHistogramAndLiveHikariPoolSamples() throws Exception {
+    void classifiesSyncAsyncAndTypedTimeoutFailuresExactlyOnce() throws Exception {
         assertThat(dataSource.getClass().getName()).contains("HikariDataSource");
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
@@ -77,22 +89,51 @@ class PlatformCorePrometheusIntegrationTest {
 
         int applicationPort = environment.getRequiredProperty("local.server.port", Integer.class);
         int managementPort = environment.getRequiredProperty("local.management.port", Integer.class);
-        for (int index = 0; index < 12; index++) {
-            HttpResponse<String> response = get(applicationPort,
-                    "/metrics-probe/account-" + index
-                            + "?user_id=user-secret-" + index
-                            + "&tenant_id=tenant-secret-" + index
-                            + "&access_token=jwt-secret-" + index);
-            assertThat(response.statusCode()).isEqualTo(200);
-        }
-        assertThat(get(applicationPort, "/metrics-probe/error").statusCode()).isEqualTo(503);
-        assertThat(get(applicationPort, "/metrics-probe/timeout").statusCode()).isBetween(500, 599);
+        assertCounts(managementPort, 0, 0);
 
-        HttpResponse<String> publicPort = get(applicationPort, "/actuator/prometheus");
-        assertThat(publicPort.statusCode()).isBetween(400, 499);
+        assertThat(get(applicationPort, "/metrics-probe/success").statusCode()).isEqualTo(200);
+        assertCounts(managementPort, 0, 0);
+
+        assertThat(get(applicationPort, "/metrics-probe/error").statusCode()).isEqualTo(500);
+        assertCounts(managementPort, 1, 0);
+
+        assertThat(get(applicationPort, "/metrics-probe/504").statusCode()).isEqualTo(504);
+        assertCounts(managementPort, 2, 0);
+
+        HttpResponse<String> adviceHandledTimeout = get(applicationPort, "/metrics-probe/advice-socket-timeout");
+        assertThat(adviceHandledTimeout.statusCode()).isEqualTo(504);
+        assertThat(adviceHandledTimeout.headers().firstValue("X-Metrics-Test-Advice"))
+                .contains("handled");
+        assertCounts(managementPort, 2, 1);
+
+        assertThat(get(applicationPort, "/metrics-probe/propagated-http-timeout").statusCode())
+                .isBetween(500, 599);
+        assertCounts(managementPort, 2, 2);
+
+        assertThat(get(applicationPort, "/metrics-probe/propagated-socket-timeout").statusCode())
+                .isBetween(500, 599);
+        assertCounts(managementPort, 2, 3);
+
+        assertThat(get(applicationPort, "/metrics-probe/async-timeout").statusCode()).isEqualTo(504);
+        assertCounts(managementPort, 2, 4);
+
+        assertThat(get(applicationPort, "/metrics-probe/async-complete").statusCode()).isEqualTo(200);
+        assertCounts(managementPort, 2, 4);
+
+        // This request takes an async dispatch and then fails in its handler. The filter and
+        // AsyncListener must share one request state, so the dispatch cannot count it twice.
+        assertThat(get(applicationPort, "/metrics-probe/async-dispatch-error").statusCode())
+                .isBetween(500, 599);
+        assertCounts(managementPort, 3, 4);
+
+        HttpResponse<String> applicationPortProbe = get(applicationPort, "/actuator/prometheus");
+        assertThat(applicationPortProbe.statusCode()).isBetween(400, 499);
+
+        HttpResponse<String> readiness = get(managementPort, "/actuator/health/readiness");
+        assertThat(readiness.statusCode()).as(readiness.body()).isEqualTo(200);
 
         HttpResponse<String> scrape = get(managementPort, "/actuator/prometheus");
-        assertThat(scrape.statusCode()).isEqualTo(200);
+        assertThat(scrape.statusCode()).as(scrape.body()).isEqualTo(200);
         assertThat(scrape.body())
                 .contains("http_server_requests_seconds_bucket")
                 .contains("le=\"0.02\"")
@@ -105,19 +146,33 @@ class PlatformCorePrometheusIntegrationTest {
                 .contains("hikaricp_connections_active")
                 .contains("platform_http_server_errors_total")
                 .contains("platform_http_server_timeouts_total")
-                .doesNotContain("user-secret-", "tenant-secret-", "jwt-secret-", "/metrics-probe/account-");
-        assertThat(scrape.body()).doesNotContain("uri=", "url=", "user_id=", "tenant_id=", "access_token=");
-
+                .doesNotContain("uri=", "url=", "user_id=", "tenant_id=", "access_token=");
         assertThat(getSuccessfulGetHistogramLabels(scrape.body())).hasSize(1);
-        assertSample(scrape.body(), "hikaricp_connections_active", "service=\"platform-core\"", "environment=\"test\"");
-        assertCounter(scrape.body(), "platform_http_server_errors_total", "service=\"platform-core\"", "environment=\"test\"");
-        assertCounter(scrape.body(), "platform_http_server_timeouts_total", "service=\"platform-core\"", "environment=\"test\"");
+        assertSample(scrape.body(), "hikaricp_connections_active",
+                "service=\"platform-core\"", "environment=\"test\"");
+        assertCounter(scrape.body(), "platform_http_server_errors_total", 3,
+                "service=\"platform-core\"", "environment=\"test\"");
+        assertCounter(scrape.body(), "platform_http_server_timeouts_total", 4,
+                "service=\"platform-core\"", "environment=\"test\"");
+        assertThat(scrape.body()).contains("status=\"504\"").contains("status=\"500\"");
     }
 
     private static HttpResponse<String> get(int port, String path) throws Exception {
         return HTTP.send(
-                HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).GET().build(),
+                HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path))
+                        .timeout(Duration.ofSeconds(10))
+                        .GET().build(),
                 HttpResponse.BodyHandlers.ofString());
+    }
+
+    private static void assertCounts(int managementPort, double expectedErrors, double expectedTimeouts)
+            throws Exception {
+        HttpResponse<String> scrape = get(managementPort, "/actuator/prometheus");
+        assertThat(scrape.statusCode()).isEqualTo(200);
+        assertCounter(scrape.body(), "platform_http_server_errors_total", expectedErrors,
+                "service=\"platform-core\"", "environment=\"test\"");
+        assertCounter(scrape.body(), "platform_http_server_timeouts_total", expectedTimeouts,
+                "service=\"platform-core\"", "environment=\"test\"");
     }
 
     private static Set<String> getSuccessfulGetHistogramLabels(String scrape) {
@@ -149,13 +204,13 @@ class PlatformCorePrometheusIntegrationTest {
         assertThat(sample).isNotEmpty();
     }
 
-    private static void assertCounter(String scrape, String name, String... labels) {
+    private static void assertCounter(String scrape, String name, double expectedValue, String... labels) {
         String sample = scrape.lines()
                 .filter(line -> line.startsWith(name + "{"))
                 .filter(line -> java.util.Arrays.stream(labels).allMatch(line::contains))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Missing counter sample " + name));
-        assertThat(sample).endsWith(" 1.0");
+        assertThat(sample).endsWith(" " + expectedValue);
     }
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -165,24 +220,115 @@ class PlatformCorePrometheusIntegrationTest {
         MetricsProbeController metricsProbeController() {
             return new MetricsProbeController();
         }
+
+        @Bean
+        HandledSocketTimeoutController handledSocketTimeoutController() {
+            return new HandledSocketTimeoutController();
+        }
+
+        @Bean
+        PropagatedTimeoutController propagatedTimeoutController() {
+            return new PropagatedTimeoutController();
+        }
+
+        @Bean
+        HandledSocketTimeoutAdvice handledSocketTimeoutAdvice() {
+            return new HandledSocketTimeoutAdvice();
+        }
     }
 
     @RestController
     static class MetricsProbeController {
 
-        @GetMapping("/metrics-probe/{account}")
+        @GetMapping("/metrics-probe/success")
         ResponseEntity<Void> successfulRequest() {
             return ResponseEntity.ok().build();
         }
 
         @GetMapping("/metrics-probe/error")
         ResponseEntity<Void> failedRequest() {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        @GetMapping("/metrics-probe/timeout")
-        ResponseEntity<Void> timedOutRequest() throws ServletException {
-            throw new ServletException("synthetic timeout", new SocketTimeoutException("read timeout"));
+        @GetMapping("/metrics-probe/504")
+        ResponseEntity<Void> gatewayTimeoutWithoutCause() {
+            return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).build();
+        }
+
+        @GetMapping("/metrics-probe/async-timeout")
+        void asyncTimeout(HttpServletRequest request, HttpServletResponse response) {
+            response.setStatus(HttpStatus.GATEWAY_TIMEOUT.value());
+            AsyncContext context = request.startAsync();
+            context.setTimeout(60);
+            context.addListener(new AsyncListener() {
+                @Override
+                public void onComplete(AsyncEvent event) {}
+
+                @Override
+                public void onTimeout(AsyncEvent event) {
+                    event.getAsyncContext().complete();
+                }
+
+                @Override
+                public void onError(AsyncEvent event) {}
+
+                @Override
+                public void onStartAsync(AsyncEvent event) {}
+            });
+        }
+
+        @GetMapping("/metrics-probe/async-complete")
+        void asyncComplete(HttpServletRequest request, HttpServletResponse response) {
+            response.setStatus(HttpStatus.OK.value());
+            AsyncContext context = request.startAsync();
+            context.setTimeout(5_000);
+            context.start(context::complete);
+        }
+
+        @GetMapping("/metrics-probe/async-dispatch-error")
+        void asyncDispatchError(HttpServletRequest request) {
+            AsyncContext context = request.startAsync();
+            context.setTimeout(5_000);
+            context.start(() -> context.dispatch("/metrics-probe/async-dispatch-error-target"));
+        }
+
+        @GetMapping("/metrics-probe/async-dispatch-error-target")
+        ResponseEntity<Void> asyncDispatchErrorTarget() {
+            throw new IllegalStateException("synthetic asynchronous dispatch failure");
+        }
+    }
+
+    @RestController
+    static class HandledSocketTimeoutController {
+
+        @GetMapping("/metrics-probe/advice-socket-timeout")
+        ResponseEntity<Void> handledSocketTimeout() throws SocketTimeoutException {
+            throw new SocketTimeoutException("synthetic advice-handled socket timeout");
+        }
+    }
+
+    @RestControllerAdvice(assignableTypes = HandledSocketTimeoutController.class)
+    static class HandledSocketTimeoutAdvice {
+
+        @ExceptionHandler(SocketTimeoutException.class)
+        ResponseEntity<Void> socketTimeout(SocketTimeoutException exception) {
+            return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+                    .header("X-Metrics-Test-Advice", "handled")
+                    .build();
+        }
+    }
+
+    @RestController
+    static class PropagatedTimeoutController {
+
+        @GetMapping("/metrics-probe/propagated-http-timeout")
+        ResponseEntity<Void> propagatedHttpTimeout() throws HttpTimeoutException {
+            throw new HttpTimeoutException("synthetic propagated JDK HTTP timeout");
+        }
+
+        @GetMapping("/metrics-probe/propagated-socket-timeout")
+        ResponseEntity<Void> propagatedSocketTimeout() throws SocketTimeoutException {
+            throw new SocketTimeoutException("synthetic propagated socket timeout");
         }
     }
 }

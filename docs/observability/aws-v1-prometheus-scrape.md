@@ -10,7 +10,7 @@ Do not publish either management port on a public or VPC-facing host interface, 
 
 Run one Alloy agent on each EC2 host. On the Gateway host, discover only the local `gateway-app` container; on the Core host, discover only `platform-core-app`. Resolve the container's private bridge address from local Docker metadata and scrape `http://<container-address>:9091/actuator/prometheus` for Gateway or `http://<container-address>:9092/actuator/prometheus` for Core. Do not scrape a peer EC2's management port. Attach the EC2 host identity as the bounded Prometheus `instance` target label; the application supplies `service` and `environment`.
 
-Compose/Docker wiring is intentionally unchanged here because the Valkey PR is still open. The local Docker Compose health checks currently call readiness on the application ports; after these separate management listeners are enabled, the Compose health-check command must target the container-local management port. Keep that health-check request inside the container and do not publish the management port to make it work.
+Docker Compose passes the same `PLATFORM_GATEWAY_MANAGEMENT_PORT` and `PLATFORM_CORE_MANAGEMENT_PORT` values used by each application, defaulting to `9091` and `9092`. Its container health checks call readiness on those internal management listeners. The Compose `ports` entries publish only the application ports; do not publish management ports to the host. PR #27's Valkey service and persistence changes remain independent of this health-check wiring.
 
 ## Labels and HTTP latency
 
@@ -18,7 +18,15 @@ The application adds fixed `service` values (`gateway`, `platform-core`) and res
 
 The Boot-managed `http.server.requests` timer keeps request count and duration. Its Prometheus histogram includes configured boundaries at 20 ms, 50 ms, 100 ms, 250 ms, 500 ms, 1 s, 2 s, 5 s, 10 s, 30 s, 60 s, 120 s, and 300 s. Derive p50/p95/p99 from these bucket samples with Prometheus `histogram_quantile`; they are not precomputed per-process quantiles.
 
-`platform_http_server_errors_total` counts HTTP 5xx responses and non-timeout request failures. `platform_http_server_timeouts_total` counts a failure only when its exception-cause chain contains a typed timeout (Java timeout/socket timeout or the supported Netty timeout types). A 504 status alone is not evidence of an actual timeout. Both counters use only the fixed service/environment tags.
+`platform_http_server_errors_total` counts non-timeout request failures observed by the service filter and 5xx responses that are not classified as an actual timeout. `platform_http_server_timeouts_total` counts a request when its exception-cause chain contains a typed timeout (Java `TimeoutException`, `SocketTimeoutException`, `HttpTimeoutException`, or the supported Netty timeout types), or when the Servlet async lifecycle reports a timeout. A 504 status alone is not evidence of an actual timeout. A real timeout 5xx can therefore be absent from `platform_http_server_errors_total`; use the Boot HTTP status meter for the overall 5xx rate:
+
+```promql
+sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+/
+sum(rate(http_server_requests_seconds_count[5m]))
+```
+
+Both platform counters use only the fixed service/environment tags and count each request once.
 
 ## JVM, Hikari, and JDBC scope
 
