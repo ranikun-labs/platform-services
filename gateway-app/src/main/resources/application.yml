@@ -76,12 +76,16 @@ platform:
       exchange:
         replenish-rate: 3
         burst-capacity: 6
+  metrics:
+    environment: ${PLATFORM_ENVIRONMENT:local}
 
 management:
+  server:
+    port: ${PLATFORM_GATEWAY_MANAGEMENT_PORT:9091}
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
       probes:
@@ -96,3 +100,13 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        "http.server.requests": true
+      slo:
+        "http.server.requests": 20ms,50ms,100ms,250ms,500ms,1s,2s,5s,10s,30s,60s,120s,300s
