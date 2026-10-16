@@ -11,6 +11,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.net.SocketTimeoutException;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -80,11 +83,71 @@ class PlatformCorePrometheusIntegrationTest {
     @Test
     void classifiesSyncAsyncAndTypedTimeoutFailuresExactlyOnce() throws Exception {
         assertThat(dataSource.getClass().getName()).contains("HikariDataSource");
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet result = statement.executeQuery("SELECT 1")) {
-            assertThat(result.next()).isTrue();
-            assertThat(result.getInt(1)).isEqualTo(1);
+        assertThat(dataSource.getClass().getName())
+                .isEqualTo("com.ranikunlabs.platform.identity.adapter.persistence.InstrumentedHikariDataSource");
+        Connection connection = dataSource.getConnection();
+        assertThat(connection.isWrapperFor(Connection.class)).isTrue();
+        assertThat(connection.unwrap(Connection.class)).isSameAs(connection);
+        assertThat(connection.isWrapperFor(String.class)).isFalse();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> connection.unwrap(String.class))
+                .isInstanceOf(SQLException.class);
+        assertThat(connection.equals(connection)).isTrue();
+        assertThat(connection.hashCode()).isEqualTo(connection.hashCode());
+
+        DatabaseMetaData metadata = connection.getMetaData();
+        assertThat(metadata.isWrapperFor(DatabaseMetaData.class)).isTrue();
+        assertThat(metadata.unwrap(DatabaseMetaData.class)).isSameAs(metadata);
+        assertThat(metadata.getConnection()).isSameAs(connection);
+        try (ResultSet tables = metadata.getTables(null, null, "PLATFORM_%", null)) {
+            assertThat(tables.isClosed()).isFalse();
+        }
+
+        PreparedStatement prepared = connection.prepareStatement("SELECT ?");
+        assertThat(prepared.isWrapperFor(Statement.class)).isTrue();
+        assertThat(prepared.unwrap(Statement.class)).isSameAs(prepared);
+        prepared.setInt(1, 1);
+        assertThat(prepared.getConnection()).isSameAs(connection);
+        ResultSet result = prepared.executeQuery();
+        assertThat(result.isWrapperFor(ResultSet.class)).isTrue();
+        assertThat(result.unwrap(ResultSet.class)).isSameAs(result);
+        assertThat(result.getStatement()).isSameAs(prepared);
+        assertThat(result.next()).isTrue();
+        assertThat(result.getInt(1)).isEqualTo(1);
+        result.close();
+        assertThat(result.isClosed()).isTrue();
+        prepared.close();
+        assertThat(prepared.isClosed()).isTrue();
+
+        Statement closeOnCompletion = connection.createStatement();
+        closeOnCompletion.closeOnCompletion();
+        ResultSet completionResult = closeOnCompletion.executeQuery("SELECT 1");
+        completionResult.close();
+        assertThat(closeOnCompletion.isClosed()).isTrue();
+
+        try (PreparedStatement failed = connection.prepareStatement("SELECT 1 / ?")) {
+            failed.setInt(1, 0);
+            SQLException sqlFailure = org.assertj.core.api.Assertions.catchThrowableOfType(
+                    failed::executeQuery, SQLException.class);
+            assertThat(sqlFailure).isNotNull();
+            assertThat(sqlFailure.getSQLState()).isEqualTo("22012");
+        }
+        connection.close();
+        assertThat(connection.isClosed()).isTrue();
+
+        // Hikari eviction still closes and replenishes physical connections under the observing subtype.
+        try {
+            Object pool = dataSource.getClass().getMethod("getHikariPoolMXBean").invoke(dataSource);
+            Class.forName("com.zaxxer.hikari.HikariPoolMXBean")
+                    .getMethod("softEvictConnections")
+                    .invoke(pool);
+        } catch (ReflectiveOperationException failure) {
+            throw new AssertionError("Hikari soft eviction contract was unavailable", failure);
+        }
+        try (Connection replacement = dataSource.getConnection();
+             Statement statement = replacement.createStatement();
+             ResultSet selected = statement.executeQuery("SELECT 1")) {
+            assertThat(selected.next()).isTrue();
+            assertThat(selected.getInt(1)).isEqualTo(1);
         }
 
         int applicationPort = environment.getRequiredProperty("local.server.port", Integer.class);
@@ -141,12 +204,25 @@ class PlatformCorePrometheusIntegrationTest {
                 .contains("jvm_gc_pause_seconds_count")
                 .contains("jvm_threads_live_threads")
                 .contains("process_cpu_usage")
+                .contains("ranikun_db_query_duration_seconds_bucket")
+                .contains("ranikun_db_query_duration_seconds_count")
+                .contains("ranikun_db_query_duration_seconds_sum")
                 .contains("service=\"platform-core\"")
                 .contains("environment=\"test\"")
                 .contains("hikaricp_connections_active")
                 .contains("platform_http_server_errors_total")
                 .contains("platform_http_server_timeouts_total")
-                .doesNotContain("uri=", "url=", "user_id=", "tenant_id=", "access_token=");
+                .doesNotContain("uri=", "url=", "user_id=", "tenant_id=", "access_token=", "SELECT");
+        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_bucket",
+                "operation=\"query\"", "outcome=\"success\"");
+        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_bucket",
+                "operation=\"metadata\"", "outcome=\"success\"");
+        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_count",
+                "operation=\"query\"", "outcome=\"error\"");
+        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_sum",
+                "operation=\"query\"", "outcome=\"success\"");
+        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_count",
+                "operation=\"query\"", "outcome=\"success\"");
         assertThat(getSuccessfulGetHistogramLabels(scrape.body())).hasSize(1);
         assertSample(scrape.body(), "hikaricp_connections_active",
                 "service=\"platform-core\"", "environment=\"test\"");
