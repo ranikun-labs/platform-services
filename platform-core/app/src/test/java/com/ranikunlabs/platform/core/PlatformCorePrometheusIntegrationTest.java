@@ -5,6 +5,7 @@ import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -18,6 +19,7 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.sql.DataSource;
@@ -67,9 +69,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PlatformCorePrometheusIntegrationTest {
 
     private static final HttpClient HTTP = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(3))
+            .connectTimeout(Duration.ofSeconds(1))
             .build();
     private static final Pattern LABEL = Pattern.compile("([^,=]+)=\"([^\"]*)\"");
+    private static final Duration HTTP_REQUEST_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration GC_OBSERVATION_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration GC_POLL_INTERVAL = Duration.ofMillis(100);
+    private static final Duration GC_REQUEST_SAFETY_MARGIN = Duration.ofMillis(25);
 
     @Autowired
     private Environment environment;
@@ -126,6 +132,8 @@ class PlatformCorePrometheusIntegrationTest {
                 .isBetween(500, 599);
         assertCounts(managementPort, 3, 4);
 
+        awaitObservedGcMetric(managementPort);
+
         HttpResponse<String> applicationPortProbe = get(applicationPort, "/actuator/prometheus");
         assertThat(applicationPortProbe.statusCode()).isBetween(400, 499);
 
@@ -147,6 +155,7 @@ class PlatformCorePrometheusIntegrationTest {
                 .contains("platform_http_server_errors_total")
                 .contains("platform_http_server_timeouts_total")
                 .doesNotContain("uri=", "url=", "user_id=", "tenant_id=", "access_token=");
+        assertThat(hasPositiveGcPauseCount(scrape.body())).isTrue();
         assertThat(getSuccessfulGetHistogramLabels(scrape.body())).hasSize(1);
         assertSample(scrape.body(), "hikaricp_connections_active",
                 "service=\"platform-core\"", "environment=\"test\"");
@@ -160,7 +169,7 @@ class PlatformCorePrometheusIntegrationTest {
     private static HttpResponse<String> get(int port, String path) throws Exception {
         return HTTP.send(
                 HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path))
-                        .timeout(Duration.ofSeconds(10))
+                        .timeout(HTTP_REQUEST_TIMEOUT)
                         .GET().build(),
                 HttpResponse.BodyHandlers.ofString());
     }
@@ -173,6 +182,56 @@ class PlatformCorePrometheusIntegrationTest {
                 "service=\"platform-core\"", "environment=\"test\"");
         assertCounter(scrape.body(), "platform_http_server_timeouts_total", expectedTimeouts,
                 "service=\"platform-core\"", "environment=\"test\"");
+    }
+
+    private static void awaitObservedGcMetric(int managementPort) throws Exception {
+        long initialCollectionCount = totalGcCollectionCount();
+        long deadline = System.nanoTime() + GC_OBSERVATION_TIMEOUT.toNanos();
+        System.gc();
+
+        while (true) {
+            long remainingNanos = deadline - System.nanoTime();
+            long requestTimeoutNanos = remainingNanos - GC_REQUEST_SAFETY_MARGIN.toNanos();
+            if (requestTimeoutNanos <= 0) {
+                break;
+            }
+
+            HttpResponse<String> scrape = HTTP.send(
+                    HttpRequest.newBuilder(URI.create(
+                                    "http://127.0.0.1:" + managementPort + "/actuator/prometheus"))
+                            .timeout(Duration.ofNanos(requestTimeoutNanos))
+                            .GET().build(),
+                    HttpResponse.BodyHandlers.ofString());
+            if (scrape.statusCode() != 200) {
+                throw new AssertionError("Prometheus scrape returned HTTP " + scrape.statusCode());
+            }
+            if (totalGcCollectionCount() > initialCollectionCount && hasPositiveGcPauseCount(scrape.body())) {
+                return;
+            }
+
+            remainingNanos = deadline - System.nanoTime();
+            if (remainingNanos <= 0) {
+                break;
+            }
+            TimeUnit.NANOSECONDS.sleep(Math.min(GC_POLL_INTERVAL.toNanos(), remainingNanos));
+        }
+
+        throw new AssertionError("A JVM GC event and its Prometheus pause metric were not observed within "
+                + GC_OBSERVATION_TIMEOUT.toMillis() + " ms");
+    }
+
+    private static long totalGcCollectionCount() {
+        return ManagementFactory.getGarbageCollectorMXBeans().stream()
+                .mapToLong(bean -> Math.max(0, bean.getCollectionCount()))
+                .sum();
+    }
+
+    private static boolean hasPositiveGcPauseCount(String scrape) {
+        return scrape.lines()
+                .filter(line -> line.startsWith("jvm_gc_pause_seconds_count{"))
+                .map(line -> line.substring(line.lastIndexOf(' ') + 1))
+                .mapToDouble(Double::parseDouble)
+                .anyMatch(value -> value > 0);
     }
 
     private static Set<String> getSuccessfulGetHistogramLabels(String scrape) {

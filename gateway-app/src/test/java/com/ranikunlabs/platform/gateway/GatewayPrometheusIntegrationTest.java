@@ -1,7 +1,10 @@
 package com.ranikunlabs.platform.gateway;
 
 import io.netty.handler.timeout.ReadTimeoutException;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -11,6 +14,7 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(
         classes = GatewayApplication.class,
@@ -48,8 +53,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(GatewayPrometheusIntegrationTest.MetricsProbeConfiguration.class)
 class GatewayPrometheusIntegrationTest {
 
-    private static final HttpClient HTTP = HttpClient.newHttpClient();
+    private static final HttpClient HTTP = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(1))
+            .build();
     private static final Pattern LABEL = Pattern.compile("([^,=]+)=\"([^\"]*)\"");
+    private static final Duration HTTP_REQUEST_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration GC_OBSERVATION_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration GC_POLL_INTERVAL = Duration.ofMillis(100);
+    private static final Duration GC_REQUEST_SAFETY_MARGIN = Duration.ofMillis(25);
+    // Allow 750 ms for JVM scheduling and test-thread wake-up around the 5 second deadline.
+    private static final Duration GC_DEADLINE_SCHEDULING_TOLERANCE = Duration.ofMillis(750);
 
     @Autowired
     private Environment environment;
@@ -117,8 +130,12 @@ class GatewayPrometheusIntegrationTest {
     }
 
     private static HttpResponse<String> get(int port, String path) throws Exception {
+        return get(URI.create("http://127.0.0.1:" + port + path), HTTP_REQUEST_TIMEOUT);
+    }
+
+    private static HttpResponse<String> get(URI uri, Duration timeout) throws Exception {
         return HTTP.send(
-                HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).GET().build(),
+                HttpRequest.newBuilder(uri).timeout(timeout).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
     }
 
@@ -153,19 +170,82 @@ class GatewayPrometheusIntegrationTest {
     }
 
     private static void awaitObservedGcMetric(int managementPort) throws Exception {
+        awaitObservedGcMetric(
+                URI.create("http://127.0.0.1:" + managementPort + "/actuator/prometheus"),
+                GC_OBSERVATION_TIMEOUT,
+                System::gc);
+    }
+
+    private static void awaitObservedGcMetric(
+            URI scrapeUri, Duration observationTimeout, Runnable gcRequest) throws Exception {
         long initialCollectionCount = totalGcCollectionCount();
-        System.gc();
-        long deadline = System.nanoTime() + Duration.ofSeconds(5).toNanos();
-        while (System.nanoTime() < deadline) {
-            HttpResponse<String> scrape = get(managementPort, "/actuator/prometheus");
-            if (scrape.statusCode() == 200
-                    && totalGcCollectionCount() > initialCollectionCount
+        long deadline = System.nanoTime() + observationTimeout.toNanos();
+        gcRequest.run();
+        while (true) {
+            long remainingNanos = deadline - System.nanoTime();
+            long requestTimeoutNanos = remainingNanos - GC_REQUEST_SAFETY_MARGIN.toNanos();
+            if (requestTimeoutNanos <= 0) {
+                break;
+            }
+
+            // Each scrape is bounded by the same absolute deadline. Network and timeout failures
+            // propagate to JUnit instead of being treated as an unobserved-metric retry.
+            HttpResponse<String> scrape = get(scrapeUri, Duration.ofNanos(requestTimeoutNanos));
+            if (scrape.statusCode() != 200) {
+                throw new AssertionError("Prometheus scrape returned HTTP " + scrape.statusCode());
+            }
+            if (totalGcCollectionCount() > initialCollectionCount
                     && hasPositiveGcPauseCount(scrape.body())) {
                 return;
             }
-            TimeUnit.MILLISECONDS.sleep(100);
+
+            remainingNanos = deadline - System.nanoTime();
+            if (remainingNanos <= 0) {
+                break;
+            }
+            TimeUnit.NANOSECONDS.sleep(Math.min(GC_POLL_INTERVAL.toNanos(), remainingNanos));
         }
-        throw new AssertionError("A JVM GC event and its Prometheus pause metric were not observed within 5 seconds");
+        throw new AssertionError("A JVM GC event and its Prometheus pause metric were not observed within "
+                + observationTimeout.toMillis() + " ms");
+    }
+
+    @Test
+    void nonResponsivePrometheusServerFailsWithinGcDeadlineAndSchedulingTolerance() throws Exception {
+        try (ServerSocket server = new ServerSocket(0)) {
+            AtomicReference<Socket> acceptedSocket = new AtomicReference<>();
+            Thread nonResponsiveServer = new Thread(() -> {
+                try (Socket connection = server.accept()) {
+                    acceptedSocket.set(connection);
+                    while (connection.getInputStream().read() != -1) {
+                        // Keep the connection open without sending an HTTP response.
+                    }
+                } catch (IOException ignored) {
+                    // Closing the test server/socket is the expected way to stop this helper thread.
+                }
+            }, "non-responsive-prometheus-test-server");
+            nonResponsiveServer.setDaemon(true);
+            nonResponsiveServer.start();
+
+            try {
+                long started = System.nanoTime();
+                assertThatThrownBy(() -> awaitObservedGcMetric(
+                        URI.create("http://127.0.0.1:" + server.getLocalPort() + "/actuator/prometheus"),
+                        GC_OBSERVATION_TIMEOUT,
+                        () -> {}))
+                        .isInstanceOf(HttpTimeoutException.class);
+                long elapsed = System.nanoTime() - started;
+                long allowedNanos = GC_OBSERVATION_TIMEOUT.plus(GC_DEADLINE_SCHEDULING_TOLERANCE).toNanos();
+                assertThat(elapsed).as("bounded GC observation with scheduling tolerance")
+                        .isLessThanOrEqualTo(allowedNanos);
+            } finally {
+                Socket connection = acceptedSocket.get();
+                if (connection != null) {
+                    connection.close();
+                }
+                server.close();
+            }
+            nonResponsiveServer.join(1_000);
+        }
     }
 
     private static long totalGcCollectionCount() {
