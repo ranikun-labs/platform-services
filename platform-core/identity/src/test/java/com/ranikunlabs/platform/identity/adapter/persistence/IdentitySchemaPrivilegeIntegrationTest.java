@@ -47,12 +47,6 @@ class IdentitySchemaPrivilegeIntegrationTest {
             statement.execute("INSERT INTO carelog.privilege_probe VALUES (1, 'owner-data')");
             statement.execute("RESET ROLE");
             statement.execute("GRANT USAGE ON SCHEMA identity TO " + RUNTIME_ROLE);
-            statement.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA identity TO " + RUNTIME_ROLE);
-            statement.execute("GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA identity TO " + RUNTIME_ROLE);
-            statement.execute("ALTER DEFAULT PRIVILEGES FOR ROLE " + MIGRATOR_ROLE
-                    + " IN SCHEMA identity GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO " + RUNTIME_ROLE);
-            statement.execute("ALTER DEFAULT PRIVILEGES FOR ROLE " + MIGRATOR_ROLE
-                    + " IN SCHEMA identity GRANT USAGE, SELECT ON SEQUENCES TO " + RUNTIME_ROLE);
         }
     }
 
@@ -84,9 +78,11 @@ class IdentitySchemaPrivilegeIntegrationTest {
         identityFlyway.validate();
         assertThat(flywayHistoryOwner()).isEqualTo(MIGRATOR_ROLE);
         try (Connection admin = adminConnection(); Statement statement = admin.createStatement()) {
-            statement.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA identity TO " + RUNTIME_ROLE);
-            statement.execute("GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA identity TO " + RUNTIME_ROLE);
-            statement.execute("REVOKE ALL ON TABLE identity.flyway_schema_history FROM " + RUNTIME_ROLE);
+            statement.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "
+                    + "identity.platform_accounts, identity.external_identities, identity.password_credentials, "
+                    + "identity.refresh_token, identity.product_clients TO " + RUNTIME_ROLE);
+            statement.execute("GRANT USAGE ON SEQUENCE identity.external_identities_id_seq, "
+                    + "identity.refresh_token_refresh_token_id_seq, identity.product_clients_id_seq TO " + RUNTIME_ROLE);
         }
 
         DataSource runtimeDataSource = new IdentityPersistenceConfiguration().dataSource(properties);
@@ -121,6 +117,8 @@ class IdentitySchemaPrivilegeIntegrationTest {
             assertThat(schemaCreatePrivilege("carelog")).isFalse();
             assertThat(schemaUsagePrivilege(IdentityDatabaseSchema.NAME)).isTrue();
             assertThat(flywayHistorySelectPrivilege()).isFalse();
+            assertThat(sequencePrivilege("identity.external_identities_id_seq", "USAGE")).isTrue();
+            assertThat(sequencePrivilege("identity.external_identities_id_seq", "SELECT")).isFalse();
 
             try (Connection admin = adminConnection(); Statement statement = admin.createStatement();
                  ResultSet result = statement.executeQuery(
@@ -212,6 +210,15 @@ class IdentitySchemaPrivilegeIntegrationTest {
              ResultSet result = statement.executeQuery(
                      "SELECT has_table_privilege('" + RUNTIME_ROLE
                              + "', 'identity.flyway_schema_history', 'SELECT')")) {
+            result.next();
+            return result.getBoolean(1);
+        }
+    }
+
+    private boolean sequencePrivilege(String sequence, String privilege) throws SQLException {
+        try (Connection admin = adminConnection(); Statement statement = admin.createStatement();
+             ResultSet result = statement.executeQuery(
+                     "SELECT has_sequence_privilege('" + RUNTIME_ROLE + "', '" + sequence + "', '" + privilege + "')")) {
             result.next();
             return result.getBoolean(1);
         }
