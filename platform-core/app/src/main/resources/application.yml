@@ -98,4 +98,4 @@ management:
         "ranikun.db.query.duration": true
       slo:
         "http.server.requests": 20ms,50ms,100ms,250ms,500ms,1s,2s,5s,10s,30s,60s,120s,300s
-        "ranikun.db.query.duration": 1ms,5ms,10ms,25ms,50ms,100ms,250ms,500ms,1s,2.5s,5s,10s,30s,60s
+        "ranikun.db.query.duration": 1ms,5ms,10ms,25ms,50ms,100ms,250ms,500ms,1s,2500ms,5s,10s,30s,60s

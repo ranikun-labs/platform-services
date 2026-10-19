@@ -5,6 +5,7 @@ import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -31,6 +32,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -78,21 +80,39 @@ class PlatformCorePrometheusIntegrationTest {
     private Environment environment;
 
     @Autowired
+    private MeterRegistry meterRegistry;
+
+    @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Test
     void classifiesSyncAsyncAndTypedTimeoutFailuresExactlyOnce() throws Exception {
         assertThat(dataSource.getClass().getName()).contains("HikariDataSource");
         assertThat(dataSource.getClass().getName())
                 .isEqualTo("com.ranikunlabs.platform.identity.adapter.persistence.InstrumentedHikariDataSource");
+        long jpaQueryCountBefore = timerCount("query", "success");
+        assertThat(entityManager.createNativeQuery("SELECT 1").getSingleResult().toString()).isEqualTo("1");
+        assertThat(timerCount("query", "success")).isGreaterThan(jpaQueryCountBefore);
+
         Connection connection = dataSource.getConnection();
         assertThat(connection.isWrapperFor(Connection.class)).isTrue();
         assertThat(connection.unwrap(Connection.class)).isSameAs(connection);
         assertThat(connection.isWrapperFor(String.class)).isFalse();
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> connection.unwrap(String.class))
                 .isInstanceOf(SQLException.class);
+        Class<?> h2VendorConnection = Class.forName("org.h2.jdbc.JdbcConnection");
+        assertThat(connection.isWrapperFor(h2VendorConnection)).isFalse();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> connection.unwrap(h2VendorConnection))
+                .isInstanceOf(SQLException.class);
         assertThat(connection.equals(connection)).isTrue();
         assertThat(connection.hashCode()).isEqualTo(connection.hashCode());
+        try (Connection peer = dataSource.getConnection()) {
+            assertThat(connection.equals(peer)).isFalse();
+            assertThat(peer.equals(connection)).isFalse();
+        }
 
         DatabaseMetaData metadata = connection.getMetaData();
         assertThat(metadata.isWrapperFor(DatabaseMetaData.class)).isTrue();
@@ -128,11 +148,16 @@ class PlatformCorePrometheusIntegrationTest {
             failed.setInt(1, 0);
             SQLException sqlFailure = org.assertj.core.api.Assertions.catchThrowableOfType(
                     failed::executeQuery, SQLException.class);
-            assertThat(sqlFailure).isNotNull();
+            assertThat(sqlFailure != null).isTrue();
             assertThat(sqlFailure.getSQLState()).isEqualTo("22012");
         }
+        connection.setAutoCommit(false);
+        connection.rollback();
         connection.close();
         assertThat(connection.isClosed()).isTrue();
+        try (Connection pooled = dataSource.getConnection()) {
+            assertThat(pooled.getAutoCommit()).isTrue();
+        }
 
         // Hikari eviction still closes and replenishes physical connections under the observing subtype.
         try {
@@ -213,15 +238,15 @@ class PlatformCorePrometheusIntegrationTest {
                 .contains("platform_http_server_errors_total")
                 .contains("platform_http_server_timeouts_total")
                 .doesNotContain("uri=", "url=", "user_id=", "tenant_id=", "access_token=", "SELECT");
-        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_bucket",
-                "operation=\"query\"", "outcome=\"success\"");
-        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_bucket",
-                "operation=\"metadata\"", "outcome=\"success\"");
-        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_count",
+        assertPositiveSample(scrape.body(), "ranikun_db_query_duration_seconds_bucket",
+                "operation=\"query\"", "outcome=\"success\"", "le=\"+Inf\"");
+        assertPositiveSample(scrape.body(), "ranikun_db_query_duration_seconds_bucket",
+                "operation=\"metadata\"", "outcome=\"success\"", "le=\"+Inf\"");
+        assertPositiveSample(scrape.body(), "ranikun_db_query_duration_seconds_count",
                 "operation=\"query\"", "outcome=\"error\"");
-        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_sum",
+        assertPositiveSample(scrape.body(), "ranikun_db_query_duration_seconds_sum",
                 "operation=\"query\"", "outcome=\"success\"");
-        assertSample(scrape.body(), "ranikun_db_query_duration_seconds_count",
+        assertPositiveSample(scrape.body(), "ranikun_db_query_duration_seconds_count",
                 "operation=\"query\"", "outcome=\"success\"");
         assertThat(getSuccessfulGetHistogramLabels(scrape.body())).hasSize(1);
         assertSample(scrape.body(), "hikaricp_connections_active",
@@ -251,6 +276,13 @@ class PlatformCorePrometheusIntegrationTest {
                 "service=\"platform-core\"", "environment=\"test\"");
     }
 
+    private long timerCount(String operation, String outcome) {
+        var timer = meterRegistry.find("ranikun.db.query.duration")
+                .tags("operation", operation, "outcome", outcome)
+                .timer();
+        return timer == null ? 0 : timer.count();
+    }
+
     private static Set<String> getSuccessfulGetHistogramLabels(String scrape) {
         Set<String> labelSets = new TreeSet<>();
         for (String line : scrape.lines().toList()) {
@@ -278,6 +310,15 @@ class PlatformCorePrometheusIntegrationTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Missing metric sample " + name));
         assertThat(sample).isNotEmpty();
+    }
+
+    private static void assertPositiveSample(String scrape, String name, String... labels) {
+        String sample = scrape.lines()
+                .filter(line -> line.startsWith(name + "{"))
+                .filter(line -> java.util.Arrays.stream(labels).allMatch(line::contains))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Missing metric sample " + name));
+        assertThat(Double.parseDouble(sample.substring(sample.lastIndexOf(' ') + 1))).isPositive();
     }
 
     private static void assertCounter(String scrape, String name, double expectedValue, String... labels) {

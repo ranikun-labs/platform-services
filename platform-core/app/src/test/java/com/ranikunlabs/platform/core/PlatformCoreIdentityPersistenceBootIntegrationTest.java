@@ -286,7 +286,7 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
             originalFailure = org.assertj.core.api.Assertions.catchThrowableOfType(
                     divisionByZero::executeQuery, SQLException.class);
         }
-        assertThat(originalFailure).isNotNull();
+        assertThat(originalFailure != null).isTrue();
         assertThat(originalFailure.getClass().getName()).isEqualTo("org.postgresql.util.PSQLException");
         assertThat(originalFailure.getSQLState()).isEqualTo("22012");
 
