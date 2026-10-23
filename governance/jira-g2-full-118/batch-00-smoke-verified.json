@@ -1,0 +1,12 @@
+{
+  "key": "RPL-8",
+  "requested": {
+    "customfield_10108": "10021",
+    "customfield_10109": "10029"
+  },
+  "verified": true,
+  "after_updated": "2026-10-23T10:51:14.397+0900",
+  "pre_updated": "2026-08-10T17:10:27.583+0900",
+  "before_source": "prewrite-snapshot-20261023.json",
+  "edit_result_received": true
+}
