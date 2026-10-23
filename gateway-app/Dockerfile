@@ -1,9 +1,44 @@
+# syntax=docker/dockerfile:1
 FROM gradle:8.13-jdk17 AS build
 
 WORKDIR /workspace
 COPY settings.gradle.kts build.gradle.kts ./
 COPY src ./src
-RUN gradle --no-daemon bootJar
+RUN --mount=type=secret,id=proxy_ca,required=false \
+    set -eu; \
+    config_dir="$(mktemp -d)"; \
+    truststore="$config_dir/cacerts"; \
+    gradle_properties=/workspace/gradle.properties; \
+    trap 'rm -f "$gradle_properties"; rm -rf "$config_dir"' EXIT; \
+    proxy_url="${HTTPS_PROXY:-${https_proxy:-${HTTP_PROXY:-${http_proxy:-}}}}"; \
+    if [ -n "$proxy_url" ] || [ -f /run/secrets/proxy_ca ]; then \
+        umask 077; \
+        : > "$gradle_properties"; \
+    fi; \
+    if [ -n "$proxy_url" ]; then \
+        proxy_authority="${proxy_url#*://}"; \
+        proxy_authority="${proxy_authority##*@}"; \
+        proxy_authority="${proxy_authority%%/*}"; \
+        case "$proxy_authority" in \
+            *:*) proxy_host="${proxy_authority%:*}"; proxy_port="${proxy_authority##*:}" ;; \
+            *) proxy_host="$proxy_authority"; \
+                case "$proxy_url" in \
+                    https://*) proxy_port=443 ;; \
+                    *) proxy_port=80 ;; \
+                esac ;; \
+        esac; \
+        printf 'systemProp.http.proxyHost=%s\nsystemProp.http.proxyPort=%s\nsystemProp.https.proxyHost=%s\nsystemProp.https.proxyPort=%s\n' \
+            "$proxy_host" "$proxy_port" "$proxy_host" "$proxy_port" >> "$gradle_properties"; \
+    fi; \
+    if [ -f /run/secrets/proxy_ca ]; then \
+        cp "$JAVA_HOME/lib/security/cacerts" "$truststore"; \
+        chmod 600 "$truststore"; \
+        keytool -importcert -noprompt -trustcacerts -alias codex-session-proxy \
+            -file /run/secrets/proxy_ca -keystore "$truststore" -storepass changeit; \
+        printf 'systemProp.javax.net.ssl.trustStore=%s\nsystemProp.javax.net.ssl.trustStorePassword=changeit\n' \
+            "$truststore" >> "$gradle_properties"; \
+    fi; \
+    gradle --no-daemon bootJar
 
 FROM eclipse-temurin:17-jre
 

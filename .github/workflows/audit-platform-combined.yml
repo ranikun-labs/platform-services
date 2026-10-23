@@ -1,0 +1,44 @@
+name: Disposable Platform 30-33-32 combination validation
+on:
+  push:
+    branches:
+      - 'audit/product-platform-30-33-32-20261023'
+permissions:
+  contents: read
+jobs:
+  gradle:
+    name: Gateway and Platform Core combined regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Pinned synthetic combined-tree evidence
+        run: |
+          git rev-parse HEAD
+          echo 'Base main: 9f04f44e5dfc88272fcf380f96524f5bfdc92b75'
+          echo 'PR 30: cde284d6da40a7c1c4942ad9051afa2e80df5233'
+          echo 'PR 33: cbe4e3634874a9223ce15608e1c3435909540e4b'
+          echo 'PR 32: 9ed60be4345da221ae228e77d7f3988ec0dce282'
+      - name: Full Gradle regression (composite build)
+        run: ./gradlew test --no-daemon --stacktrace
+  e2e:
+    name: Gateway to Identity disposable Docker E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compose config
+        run: docker compose -f docker-compose.identity-e2e.yml config --quiet
+      - name: Disposable E2E
+        run: bash scripts/test-gateway-identity-e2e.sh
+      - name: Container diagnostic on failure
+        if: failure()
+        run: docker compose -f docker-compose.identity-e2e.yml ps --all || true

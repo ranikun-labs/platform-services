@@ -75,6 +75,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -138,6 +139,13 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
 
     static {
         POSTGRES.start();
+        try (Connection connection = DriverManager.getConnection(
+                POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
+             Statement statement = connection.createStatement()) {
+            statement.execute("CREATE SCHEMA " + IdentityDatabaseSchema.NAME + " AUTHORIZATION CURRENT_USER");
+        } catch (SQLException exception) {
+            throw new ExceptionInInitializerError(exception);
+        }
         REDIS.start();
     }
 

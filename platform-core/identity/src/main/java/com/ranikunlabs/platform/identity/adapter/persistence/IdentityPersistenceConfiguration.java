@@ -60,12 +60,28 @@ public class IdentityPersistenceConfiguration {
     }
 
     @Bean
-    FlywayConfigurationCustomizer identityFlywayLocation() {
-        return configuration -> configuration
-                .locations("classpath:db/migration")
-                .schemas(IdentityDatabaseSchema.NAME)
-                .defaultSchema(IdentityDatabaseSchema.NAME)
-                .createSchemas(true);
+    FlywayConfigurationCustomizer identityFlywayLocation(IdentityRuntimeProperties properties) {
+        return configuration -> {
+            configuration
+                    .locations("classpath:db/migration")
+                    .schemas(IdentityDatabaseSchema.NAME)
+                    .defaultSchema(IdentityDatabaseSchema.NAME)
+                    // Schema provisioning belongs to the database owner. Flyway must not need
+                    // CREATE privilege on the application database or create service schemas.
+                    .createSchemas(false);
+
+            IdentityRuntimeProperties.FlywayDatasource migrationDatasource = properties.flywayDatasource();
+            if (migrationDatasource != null && migrationDatasource.hasAnyValue()) {
+                if (!migrationDatasource.isComplete()) {
+                    throw new IllegalStateException(
+                            "Identity Flyway datasource requires URL, username, and password together");
+                }
+                configuration.dataSource(
+                        migrationDatasource.url(),
+                        migrationDatasource.username(),
+                        migrationDatasource.password());
+            }
+        };
     }
 
     @Bean

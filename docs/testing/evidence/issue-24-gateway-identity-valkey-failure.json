@@ -1,0 +1,45 @@
+{
+  "issue": 24,
+  "baseCommit": "9f04f44e5dfc88272fcf380f96524f5bfdc92b75",
+  "phase": "valkey-failure",
+  "result": "PASS",
+  "recordedAtUtc": "2026-10-16T11:21:51.604507+00:00",
+  "checks": [
+    {
+      "name": "gateway.rate_limit.valkey_failure_closed",
+      "result": "PASS",
+      "httpStatus": 503,
+      "expected": 503
+    },
+    {
+      "name": "identity.oauth.valkey_failure.http",
+      "result": "PASS",
+      "httpStatus": 503,
+      "expected": 503
+    },
+    {
+      "name": "identity.oauth.valkey_failure.envelope_status",
+      "result": "PASS",
+      "httpStatus": 503
+    },
+    {
+      "name": "identity.oauth.valkey_failure.message",
+      "result": "PASS",
+      "httpStatus": 503
+    },
+    {
+      "name": "identity.oauth.valkey_failure.no_data",
+      "result": "PASS",
+      "httpStatus": 503
+    },
+    {
+      "name": "identity.oauth.valkey_failure.content_type",
+      "result": "PASS",
+      "httpStatus": 503
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0
+  }
+}
