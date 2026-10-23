@@ -38,6 +38,8 @@ jobs:
       - name: Compose config
         run: docker compose -f docker-compose.identity-e2e.yml config --quiet
       - name: Disposable E2E
+        env:
+          CODEX_PROXY_CERT: ./docs/testing/evidence/.gitkeep
         run: bash scripts/test-gateway-identity-e2e.sh
       - name: Container diagnostic on failure
         if: failure()
