@@ -1,0 +1,25 @@
+{
+  "batch": 5,
+  "outcomes": [
+    {
+      "key": "RPL-26",
+      "verified": true,
+      "after_updated": "2026-10-23T11:08:20.214+0900"
+    },
+    {
+      "key": "RPL-29",
+      "verified": true,
+      "after_updated": "2026-10-23T11:08:23.934+0900"
+    },
+    {
+      "key": "RPL-30",
+      "verified": true,
+      "after_updated": "2026-10-23T11:08:27.418+0900"
+    },
+    {
+      "key": "RPL-31",
+      "verified": true,
+      "after_updated": "2026-10-23T11:08:30.745+0900"
+    }
+  ]
+}
