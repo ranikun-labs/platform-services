@@ -1,0 +1,376 @@
+{
+  "record_type": "JIRA_G2_118_READ_ONLY_FULL_RECONCILIATION",
+  "date": "2026-10-23",
+  "scope_owner_approved": true,
+  "first_backup_ref": "governance/jira-g2-full-118/prewrite-snapshot-20261023.json",
+  "live_jira_counts": {
+    "both": 58,
+    "none": 60,
+    "partial": 0
+  },
+  "changes_vs_prewrite": 31,
+  "preserved_fields": [
+    "customfield_10042",
+    "customfield_10043",
+    "customfield_10044",
+    "summary",
+    "status"
+  ],
+  "preserved_violation_keys": [],
+  "remaining_classification": {
+    "single_value": 24,
+    "multiple_or_exceptions": 24,
+    "issue_types_without_target_fields": 12
+  },
+  "concern": {
+    "existing_count": 12,
+    "blank_count": 106,
+    "existing_legacy_exact_match_candidates": 40,
+    "optional": true,
+    "proposed_non_authoritative": [
+      {
+        "key": "RPL-5",
+        "stored_target": true,
+        "proposed_add": [
+          "auth"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-6",
+        "stored_target": true,
+        "proposed_add": [
+          "auth",
+          "integration"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-14",
+        "stored_target": true,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-20",
+        "stored_target": true,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-26",
+        "stored_target": true,
+        "proposed_add": [
+          "concurrency"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-27",
+        "stored_target": true,
+        "proposed_add": [
+          "security"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-31",
+        "stored_target": true,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-33",
+        "stored_target": true,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-34",
+        "stored_target": true,
+        "proposed_add": [
+          "integration"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-36",
+        "stored_target": true,
+        "proposed_add": [
+          "concurrency"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-37",
+        "stored_target": true,
+        "proposed_add": [
+          "concurrency"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-42",
+        "stored_target": true,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-51",
+        "stored_target": true,
+        "proposed_add": [
+          "migration"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-52",
+        "stored_target": true,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-55",
+        "stored_target": true,
+        "proposed_add": [
+          "cutover",
+          "integration",
+          "migration",
+          "regression"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-107",
+        "stored_target": true,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-1",
+        "stored_target": false,
+        "proposed_add": [
+          "security"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-4",
+        "stored_target": false,
+        "proposed_add": [
+          "auth",
+          "security"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-7",
+        "stored_target": false,
+        "proposed_add": [
+          "auth"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-10",
+        "stored_target": false,
+        "proposed_add": [
+          "auth",
+          "contract"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-11",
+        "stored_target": false,
+        "proposed_add": [
+          "auth",
+          "contract"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-16",
+        "stored_target": false,
+        "proposed_add": [
+          "auth"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-22",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture",
+          "contract"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-24",
+        "stored_target": false,
+        "proposed_add": [
+          "auth",
+          "security"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-25",
+        "stored_target": false,
+        "proposed_add": [
+          "auth"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-28",
+        "stored_target": false,
+        "proposed_add": [
+          "auth",
+          "contract"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-53",
+        "stored_target": false,
+        "proposed_add": [
+          "migration",
+          "security"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-54",
+        "stored_target": false,
+        "proposed_add": [
+          "migration",
+          "security"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-74",
+        "stored_target": false,
+        "proposed_add": [
+          "auth"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-92",
+        "stored_target": false,
+        "proposed_add": [
+          "auth",
+          "reliability"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-96",
+        "stored_target": false,
+        "proposed_add": [
+          "idempotency",
+          "reliability"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-97",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-99",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-100",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-101",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-102",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-103",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-104",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-108",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture"
+        ],
+        "existing_target": []
+      },
+      {
+        "key": "RPL-109",
+        "stored_target": false,
+        "proposed_add": [
+          "architecture",
+          "contract"
+        ],
+        "existing_target": []
+      }
+    ]
+  },
+  "origin_unknown_keys": [
+    "RPL-112",
+    "RPL-113",
+    "RPL-114"
+  ],
+  "classification_read_authority": "legacy",
+  "scope_production_g3": "NOT_ACTIVATED",
+  "write_tool_status": "PREVIOUS_SAFETY_BLOCK_REQUIRES_RESOLUTION"
+}
