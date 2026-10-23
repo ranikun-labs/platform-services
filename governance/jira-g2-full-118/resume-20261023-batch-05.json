@@ -1,0 +1,20 @@
+{
+  "batch": "resume-05",
+  "rows": [
+    {
+      "key": "RPL-86",
+      "verified": true,
+      "post_updated": "2026-10-23T11:55:36.382+0900"
+    },
+    {
+      "key": "RPL-79",
+      "verified": true,
+      "post_updated": "2026-10-23T11:55:30.569+0900"
+    },
+    {
+      "key": "RPL-76",
+      "verified": true,
+      "post_updated": "2026-10-23T11:55:25.924+0900"
+    }
+  ]
+}
