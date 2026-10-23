@@ -41,6 +41,14 @@ services:
       CARELOG_INTERNAL_IDENTITY_CLAIMS_ENABLED: "true"
       CARELOG_INTERNAL_IDENTITY_CLAIMS_SERVICE_SECRET: g4-synthetic-product-claims-secret-at-least-32
       SPRING_FLYWAY_ENABLED: "true"
+    # Test-only liveness: production Dockerfile probes separate mgmt 8081,
+    # but this non-prod profile serves on 8080 without a separate mgmt listener.
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/8080'"]
+      interval: 3s
+      timeout: 3s
+      retries: 35
+      start_period: 30s
     depends_on:
       carelog-postgres:
         condition: service_healthy
