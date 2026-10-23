@@ -1,0 +1,21 @@
+{
+  "batch": "resume-15",
+  "group": "discarded historic tickets; preserve original disposition",
+  "rows": [
+    {
+      "key": "RPL-40",
+      "verified": true,
+      "post_updated": "2026-10-23T12:08:56.481+0900"
+    },
+    {
+      "key": "RPL-39",
+      "verified": true,
+      "post_updated": "2026-10-23T12:08:52.009+0900"
+    },
+    {
+      "key": "RPL-38",
+      "verified": true,
+      "post_updated": "2026-10-23T12:08:47.472+0900"
+    }
+  ]
+}
