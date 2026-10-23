@@ -1,0 +1,35 @@
+{
+  "batch": 6,
+  "checks": [
+    {
+      "key": "RPL-32",
+      "verified": true,
+      "after_updated": "2026-10-23T11:11:12.331+0900"
+    },
+    {
+      "key": "RPL-33",
+      "verified": true,
+      "after_updated": "2026-10-23T11:11:15.639+0900"
+    },
+    {
+      "key": "RPL-35",
+      "verified": true,
+      "after_updated": "2026-10-23T11:11:19.181+0900"
+    },
+    {
+      "key": "RPL-36",
+      "verified": true,
+      "after_updated": "2026-10-23T11:11:22.807+0900"
+    },
+    {
+      "key": "RPL-37",
+      "verified": true,
+      "after_updated": "2026-10-23T11:11:25.769+0900"
+    },
+    {
+      "key": "RPL-41",
+      "verified": true,
+      "after_updated": "2026-10-23T11:11:29.630+0900"
+    }
+  ]
+}
