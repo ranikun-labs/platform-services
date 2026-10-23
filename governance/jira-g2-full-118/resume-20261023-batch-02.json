@@ -1,0 +1,26 @@
+{
+  "batch": "resume-02",
+  "verified_rows": [
+    {
+      "key": "RPL-61",
+      "verified": true,
+      "post_updated": "2026-10-23T11:53:29.543+0900",
+      "status": "완료"
+    },
+    {
+      "key": "RPL-60",
+      "verified": true,
+      "post_updated": "2026-10-23T11:53:24.316+0900",
+      "status": "완료"
+    },
+    {
+      "key": "RPL-59",
+      "verified": true,
+      "post_updated": "2026-10-23T11:53:19.759+0900",
+      "status": "완료"
+    }
+  ],
+  "original_snap": "prewrite-snapshot-20261023.json",
+  "scope": "Target Product+Component only; preserve original",
+  "cutover": false
+}
