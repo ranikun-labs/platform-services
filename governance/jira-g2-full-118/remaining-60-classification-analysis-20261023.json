@@ -1,0 +1,599 @@
+{
+  "title": "RPL G2 Full 118 / Last 60 Migration Decision Package",
+  "updated_at": "2026-10-23",
+  "status": "READ_ONLY_PLAN_ONLY",
+  "target_fields": {
+    "product": "customfield_10108",
+    "component": "customfield_10109",
+    "concern": "customfield_10110"
+  },
+  "counts": {
+    "total": 118,
+    "target_saved": 58,
+    "pending": 60,
+    "pending_single_owner_and_component": 24,
+    "pending_multivalue_or_exceptions": 24,
+    "pending_unsupported_type": 12,
+    "partial_target": 0
+  },
+  "safety": "Jira edit bulk path stopped after safety check rejection; DO NOT retry or use alternative tool to bypass it. Resume only when provider write path legitimately permits it.",
+  "evidence": "Current Jira live JQL; 118-issue Git prewrite snapshot; issue descriptions/parents; Foundation taxonomy v1.0",
+  "pending_single_value": [
+    {
+      "key": "RPL-58",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-11T20:20:26.312+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-59",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-11T21:36:09.876+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-60",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-11T23:39:14.907+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-61",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-12T01:14:24.078+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-65",
+      "product": "carelog",
+      "component": "backend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10028"
+      },
+      "expected_updated": "2026-08-15T00:30:48.342+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-66",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-10T17:56:43.768+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-67",
+      "product": "dev-harness",
+      "component": "infra",
+      "option_ids": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "expected_updated": "2026-08-11T18:37:49.689+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-72",
+      "product": "platform-foundation",
+      "component": "documentation",
+      "option_ids": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "expected_updated": "2026-08-12T12:13:25.809+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-73",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-12T16:31:07.534+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-74",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-13T01:30:28.674+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-76",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-13T16:57:27.419+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-79",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-12T17:31:59.036+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-86",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-14T17:55:09.482+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-87",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-20T15:25:39.461+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-90",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-15T03:39:22.553+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-92",
+      "product": "carelog",
+      "component": "frontend",
+      "option_ids": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "expected_updated": "2026-08-15T00:48:13.805+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-97",
+      "product": "ai",
+      "component": "documentation",
+      "option_ids": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "expected_updated": "2026-08-16T00:20:31.308+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-99",
+      "product": "ai",
+      "component": "documentation",
+      "option_ids": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "expected_updated": "2026-08-16T01:12:04.121+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-100",
+      "product": "ai",
+      "component": "documentation",
+      "option_ids": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "expected_updated": "2026-08-16T02:27:32.037+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-101",
+      "product": "ai",
+      "component": "documentation",
+      "option_ids": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "expected_updated": "2026-08-16T16:01:46.942+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-102",
+      "product": "ai",
+      "component": "documentation",
+      "option_ids": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "expected_updated": "2026-08-25T23:28:24.440+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-103",
+      "product": "ai",
+      "component": "documentation",
+      "option_ids": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "expected_updated": "2026-09-08T15:13:40.091+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-104",
+      "product": "ai",
+      "component": "backend",
+      "option_ids": {
+        "product": "10024",
+        "component": "10028"
+      },
+      "expected_updated": "2026-08-26T17:09:56.506+0900",
+      "write_status": "NOT_SENT"
+    },
+    {
+      "key": "RPL-108",
+      "product": "platform-foundation",
+      "component": "documentation",
+      "option_ids": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "expected_updated": "2026-09-08T18:06:40.635+0900",
+      "write_status": "NOT_SENT"
+    }
+  ],
+  "pending_multivalue_and_exceptions": [
+    {
+      "key": "RPL-16",
+      "proposed_product": "identity",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "공용 Product Client Registry의 인증 책임; 코드는 Carelog에 있어도 기능 소유권은 Identity 후보",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-22",
+      "proposed_product": "dev-harness",
+      "proposed_component": "documentation",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Pending Handoff 구현 계약·문서 정본",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-24",
+      "proposed_product": "identity",
+      "proposed_component": "documentation",
+      "disposition": "READY_PROPOSAL",
+      "reason": "공통 Product Client Redirect 보안 계약 Research",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-25",
+      "proposed_product": "identity",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "제품별 OAuth Provider Callback resolver",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-28",
+      "proposed_product": "identity",
+      "proposed_component": "documentation",
+      "disposition": "READY_PROPOSAL",
+      "reason": "OAuth State Client Binding 문서 계약",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-53",
+      "proposed_product": "gateway",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Shared Gateway 기능 추출; gateway는 Product, backend는 구현 영역",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-54",
+      "proposed_product": "identity",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Shared Identity 기능 추출; identity는 Product, backend는 구현 영역",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-71",
+      "proposed_product": "platform-foundation",
+      "proposed_component": "infra",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Gateway·Identity 공통 실행 인프라 기반",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-84",
+      "proposed_product": "finance",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Finance Journal Detail/List API",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-96",
+      "proposed_product": "finance",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Finance Journal Create 멱등성",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-105",
+      "proposed_product": "platform-foundation",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Platform Core 실행 Host·Build 기반",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-106",
+      "proposed_product": "ai",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Shared AI Kotlin/Spring AI 실행 모듈",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-109",
+      "proposed_product": "audit",
+      "proposed_component": "documentation",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Audit Event Catalog 및 계약 정본",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-110",
+      "proposed_product": "audit",
+      "proposed_component": "backend",
+      "disposition": "READY_PROPOSAL",
+      "reason": "Audit Publisher Boundary API/구현",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-111",
+      "proposed_product": "audit",
+      "proposed_component": "backend",
+      "disposition": "CONTRACT_CHECK",
+      "reason": "Target 분류는 audit/backend 후보이지만 기존 JetStream 본문과 SQS 정책 불일치. 분류 변경과 설명 변경 분리",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-1",
+      "proposed_product": "carelog",
+      "proposed_component": "backend",
+      "disposition": "OWNER_REVIEW",
+      "reason": "Carelog 로그인 Epic, Gateway·Identity 영향 책임 기록 필요",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-4",
+      "proposed_product": "gateway",
+      "proposed_component": "backend",
+      "disposition": "OWNER_REVIEW",
+      "reason": "Security permitAll + Gateway Route 두 경계 혼재: gateway/backend 후보 또는 작업 분리",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-7",
+      "proposed_product": "carelog",
+      "proposed_component": "backend",
+      "disposition": "OWNER_REVIEW",
+      "reason": "회귀 테스트·계약 문서 동시 범위: 대표 Component 확인",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-10",
+      "proposed_product": "finance",
+      "proposed_component": "documentation",
+      "disposition": "OWNER_REVIEW",
+      "reason": "Finance FE를 통한 Shared Identity 공통 계약 연구. identity/documentation과 단일 책임 논의, RPL-11 중복",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-11",
+      "proposed_product": "finance",
+      "proposed_component": "documentation",
+      "disposition": "OWNER_REVIEW",
+      "reason": "완료 RPL-10의 Duplicate 관계. finance vs identity 소유권 + 중복 종료 정책 분리",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-38",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "disposition": "HISTORICAL_EXCEPTION",
+      "reason": "RPL-37 생성 오류로 발생한 폐기 티켓; 이력 유지하며 분류 포함할지 결정",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-39",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "disposition": "HISTORICAL_EXCEPTION",
+      "reason": "RPL-37 생성 오류로 발생한 폐기 티켓; 이력 유지하며 분류 포함할지 결정",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-40",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "disposition": "HISTORICAL_EXCEPTION",
+      "reason": "RPL-37 생성 오류로 발생한 폐기 티켓; 이력 유지하며 분류 포함할지 결정",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    },
+    {
+      "key": "RPL-45",
+      "proposed_product": "finance",
+      "proposed_component": "frontend",
+      "disposition": "HISTORICAL_EXCEPTION",
+      "reason": "RPL-44의 중복 생성 이슈; 이력 유지하며 분류 포함할지 결정",
+      "write_status": "UNAPPROVED_CANDIDATE"
+    }
+  ],
+  "unsupported_type": [
+    {
+      "key": "RPL-70",
+      "parent": "RPL-26",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "reason": "하위 작업: Delivery/Consumption Core",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-77",
+      "parent": "RPL-26",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "reason": "하위 작업: Session Resolution Port",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-80",
+      "parent": "RPL-26",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "reason": "하위 작업: Manual Resume Orchestration",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-82",
+      "parent": "RPL-26",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "reason": "하위 작업: Codex Runtime Adapter",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-83",
+      "parent": "RPL-26",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "reason": "하위 작업: Codex Runtime Adapter 중복 가능; 완료 RPL-82 관계 확인 필요",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-85",
+      "parent": "RPL-26",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "reason": "하위 작업: Async Session Resolution",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-89",
+      "parent": "RPL-26",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "reason": "하위 작업: Claude Runtime Adapter",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-94",
+      "parent": "RPL-93",
+      "proposed_product": "dev-harness",
+      "proposed_component": "backend",
+      "reason": "하위 작업: Task↔Session Persistence",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-115",
+      "parent": "RPL-112",
+      "proposed_product": "dev-harness",
+      "proposed_component": "ai",
+      "reason": "스토리: Trigger→Skill→Subagent E2E",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-116",
+      "parent": "RPL-112",
+      "proposed_product": "dev-harness",
+      "proposed_component": "ai",
+      "reason": "스토리: Subagent 모델·실행 Policy",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-117",
+      "parent": "RPL-112",
+      "proposed_product": "dev-harness",
+      "proposed_component": "ai",
+      "reason": "스토리: Cross-Runtime 결과 전달",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    },
+    {
+      "key": "RPL-118",
+      "parent": "RPL-112",
+      "proposed_product": "dev-harness",
+      "proposed_component": "ai",
+      "reason": "스토리: Skill·Cost-aware Router",
+      "metadata_status": "TARGET_3_NOT_AVAILABLE_FOR_STORY_OR_SUBTASK",
+      "parent_inference_is_not_owner_approval": true
+    }
+  ],
+  "unchanged": "Legacy Product/Component/Labels, Description, Status, parent, links and attachments are not migration write targets",
+  "g3_create_automation": "ON_HOLD",
+  "read_authority": "legacy_until_separately_approved_cutover",
+  "origin_exception": [
+    "RPL-112",
+    "RPL-113",
+    "RPL-114"
+  ]
+}
