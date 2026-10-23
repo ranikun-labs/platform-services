@@ -1,0 +1,108 @@
+{
+  "part": "B",
+  "target_saved_in_part": 6,
+  "without_target": 12,
+  "change_since_prewrite": 3,
+  "legacy_title_status_drifts": [],
+  "partial": [],
+  "remaining": [
+    {
+      "key": "RPL-70",
+      "type": "하위 작업",
+      "summary": "Pending Handoff — Delivery / Consumption Core"
+    },
+    {
+      "key": "RPL-77",
+      "type": "하위 작업",
+      "summary": "Pending Handoff — Runtime-neutral Session Resolution Port"
+    },
+    {
+      "key": "RPL-80",
+      "type": "하위 작업",
+      "summary": "Pending Handoff — Manual Resume Orchestration"
+    },
+    {
+      "key": "RPL-82",
+      "type": "하위 작업",
+      "summary": "Pending Handoff — Codex Runtime Adapter"
+    },
+    {
+      "key": "RPL-83",
+      "type": "하위 작업",
+      "summary": "Pending Handoff — Codex Runtime Adapter"
+    },
+    {
+      "key": "RPL-85",
+      "type": "하위 작업",
+      "summary": "Pending Handoff — Async Session Resolution Compatibility"
+    },
+    {
+      "key": "RPL-89",
+      "type": "하위 작업",
+      "summary": "Pending Handoff — Claude Runtime Adapter"
+    },
+    {
+      "key": "RPL-94",
+      "type": "하위 작업",
+      "summary": "Task↔Session Association Runtime-neutral Core·Persistence"
+    },
+    {
+      "key": "RPL-115",
+      "type": "스토리",
+      "summary": "Personal AI — 자연어 Trigger→Skill→Subagent 실행·검수 E2E"
+    },
+    {
+      "key": "RPL-116",
+      "type": "스토리",
+      "summary": "Personal AI — Subagent 모델·Fast 실행 모드 Guard 및 안전한 Reviewer 위임"
+    },
+    {
+      "key": "RPL-117",
+      "type": "스토리",
+      "summary": "Personal AI — Cross-Runtime 단계적 결과 전달·후속 작업 알림"
+    },
+    {
+      "key": "RPL-118",
+      "type": "스토리",
+      "summary": "Personal AI — Cross-Runtime Skill 연동·Capability/Cost-Aware 작업 라우팅"
+    }
+  ],
+  "changes": [
+    {
+      "key": "RPL-111",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10025",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:11:55.817+0900"
+    },
+    {
+      "key": "RPL-110",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10025",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:07:48.735+0900"
+    },
+    {
+      "key": "RPL-109",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10025",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:07:43.198+0900"
+    }
+  ]
+}
