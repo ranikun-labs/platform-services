@@ -1,0 +1,21 @@
+{
+  "batch": "resume-17",
+  "rows": [
+    {
+      "key": "RPL-7",
+      "verified": true,
+      "post_updated": "2026-10-23T12:11:12.660+0900"
+    },
+    {
+      "key": "RPL-4",
+      "verified": true,
+      "post_updated": "2026-10-23T12:11:07.859+0900"
+    },
+    {
+      "key": "RPL-1",
+      "verified": true,
+      "post_updated": "2026-10-23T12:11:03.199+0900"
+    }
+  ],
+  "decision_note": "Target-only proposed values; original multi-product context in Legacy fields preserved; RPL-4 cross-boundary review still separate"
+}
