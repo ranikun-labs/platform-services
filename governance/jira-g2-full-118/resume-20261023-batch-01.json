@@ -1,0 +1,32 @@
+{
+  "batch": "resume-01",
+  "scope": "Jira G2 full 118",
+  "keys": [
+    "RPL-58"
+  ],
+  "updates": [
+    {
+      "key": "RPL-58",
+      "target_product": {
+        "id": "10020",
+        "value": "carelog"
+      },
+      "target_component": {
+        "id": "10029",
+        "value": "frontend"
+      },
+      "postread_updated": "2026-10-23T11:52:11.432+0900",
+      "verified": true,
+      "legacy_product": [
+        "carelog"
+      ],
+      "legacy_component": [
+        "frontend"
+      ],
+      "status": "완료"
+    }
+  ],
+  "backup_ref": "prewrite-snapshot-20261023.json",
+  "guard": "Target-only writes; original Jira fields and status unchanged",
+  "cutover": false
+}
