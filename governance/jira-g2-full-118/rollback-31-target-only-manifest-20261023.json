@@ -1,0 +1,599 @@
+{
+  "record_type": "JIRA_G2_TARGET_ONLY_ROLLBACK_PLAN_NOT_EXECUTED",
+  "date": "2026-10-23",
+  "scope": "The 31 Target Product/Component writes since prewrite snapshot only",
+  "original_backup_ref": "governance/jira-g2-full-118/prewrite-snapshot-20261023.json",
+  "warning": "This restores only the two Target fields if approved. It cannot erase Jira audit/changelog entries, trigger side effects, or guarantee full Issue restoration. Never execute without current-state/updated preflight.",
+  "count": 31,
+  "changes": [
+    {
+      "issue_key": "RPL-8",
+      "initial_updated": "2026-08-10T17:10:27.583+0900",
+      "verified_after_updated": "2026-10-23T10:51:14.397+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-9",
+      "initial_updated": "2026-08-10T17:10:48.662+0900",
+      "verified_after_updated": "2026-10-23T10:52:09.117+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-12",
+      "initial_updated": "2026-08-10T17:10:23.000+0900",
+      "verified_after_updated": "2026-10-23T10:52:14.300+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-13",
+      "initial_updated": "2026-08-10T17:11:46.577+0900",
+      "verified_after_updated": "2026-10-23T10:52:19.642+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10027",
+        "customfield_10109": "10030"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-14",
+      "initial_updated": "2026-08-10T17:11:59.001+0900",
+      "verified_after_updated": "2026-10-23T10:52:24.103+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10031"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-15",
+      "initial_updated": "2026-08-10T17:12:10.908+0900",
+      "verified_after_updated": "2026-10-23T10:52:28.789+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-17",
+      "initial_updated": "2026-08-10T17:12:34.111+0900",
+      "verified_after_updated": "2026-10-23T10:52:33.669+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10027",
+        "customfield_10109": "10030"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-18",
+      "initial_updated": "2026-08-10T17:11:18.555+0900",
+      "verified_after_updated": "2026-10-23T10:54:02.969+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-19",
+      "initial_updated": "2026-08-10T17:12:59.212+0900",
+      "verified_after_updated": "2026-10-23T10:54:06.512+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-20",
+      "initial_updated": "2026-09-08T15:13:21.098+0900",
+      "verified_after_updated": "2026-10-23T11:06:36.476+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10031"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-21",
+      "initial_updated": "2026-08-10T17:13:23.213+0900",
+      "verified_after_updated": "2026-10-23T11:07:25.670+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10027",
+        "customfield_10109": "10030"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-23",
+      "initial_updated": "2026-08-10T17:13:47.090+0900",
+      "verified_after_updated": "2026-10-23T11:07:29.356+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10031"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-26",
+      "initial_updated": "2026-08-15T00:31:10.394+0900",
+      "verified_after_updated": "2026-10-23T11:08:20.214+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10027",
+        "customfield_10109": "10030"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-29",
+      "initial_updated": "2026-08-10T17:14:48.156+0900",
+      "verified_after_updated": "2026-10-23T11:08:23.934+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-30",
+      "initial_updated": "2026-08-10T17:14:58.893+0900",
+      "verified_after_updated": "2026-10-23T11:08:27.418+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10031"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-31",
+      "initial_updated": "2026-08-10T17:15:10.910+0900",
+      "verified_after_updated": "2026-10-23T11:08:30.745+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10031"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-32",
+      "initial_updated": "2026-08-10T17:15:20.297+0900",
+      "verified_after_updated": "2026-10-23T11:11:12.331+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-33",
+      "initial_updated": "2026-08-10T17:15:32.560+0900",
+      "verified_after_updated": "2026-10-23T11:11:15.639+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10031"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-35",
+      "initial_updated": "2026-08-10T17:15:22.470+0900",
+      "verified_after_updated": "2026-10-23T11:11:19.181+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-36",
+      "initial_updated": "2026-08-10T18:12:35.980+0900",
+      "verified_after_updated": "2026-10-23T11:11:22.807+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10027",
+        "customfield_10109": "10030"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-37",
+      "initial_updated": "2026-08-10T17:16:04.232+0900",
+      "verified_after_updated": "2026-10-23T11:11:25.769+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10027",
+        "customfield_10109": "10030"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-41",
+      "initial_updated": "2026-08-10T18:12:43.034+0900",
+      "verified_after_updated": "2026-10-23T11:11:29.630+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10027",
+        "customfield_10109": "10030"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-42",
+      "initial_updated": "2026-08-10T17:16:48.657+0900",
+      "verified_after_updated": "2026-10-23T11:12:22.876+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10031"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-43",
+      "initial_updated": "2026-08-10T17:16:59.265+0900",
+      "verified_after_updated": "2026-10-23T11:12:26.750+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-44",
+      "initial_updated": "2026-08-10T17:17:10.116+0900",
+      "verified_after_updated": "2026-10-23T11:12:30.901+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-48",
+      "initial_updated": "2026-08-10T17:18:05.618+0900",
+      "verified_after_updated": "2026-10-23T11:12:34.721+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-49",
+      "initial_updated": "2026-08-10T17:18:17.797+0900",
+      "verified_after_updated": "2026-10-23T11:12:38.878+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10020",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-50",
+      "initial_updated": "2026-08-13T00:18:57.830+0900",
+      "verified_after_updated": "2026-10-23T11:12:42.353+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10021",
+        "customfield_10109": "10028"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-52",
+      "initial_updated": "2026-09-08T15:13:28.991+0900",
+      "verified_after_updated": "2026-10-23T11:13:16.909+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10026",
+        "customfield_10109": "10031"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-56",
+      "initial_updated": "2026-08-11T20:20:08.191+0900",
+      "verified_after_updated": "2026-10-23T11:13:20.557+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10020",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    },
+    {
+      "issue_key": "RPL-57",
+      "initial_updated": "2026-08-11T20:20:17.111+0900",
+      "verified_after_updated": "2026-10-23T11:13:23.470+0900",
+      "before": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "after": {
+        "customfield_10108": "10020",
+        "customfield_10109": "10029"
+      },
+      "rollback_action": {
+        "customfield_10108": null,
+        "customfield_10109": null
+      },
+      "guard": "Verify current values and updated timestamp match verified_after_updated before applying; otherwise STOP",
+      "non_target_change_verified": true
+    }
+  ]
+}
