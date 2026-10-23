@@ -1,0 +1,44 @@
+{
+  "reason": "TIMEOUT_RECONCILIATION",
+  "verified_count": 9,
+  "verified": [
+    {
+      "key": "RPL-8",
+      "after_updated": "2026-10-23T10:51:14.397+0900"
+    },
+    {
+      "key": "RPL-9",
+      "after_updated": "2026-10-23T10:52:09.117+0900"
+    },
+    {
+      "key": "RPL-12",
+      "after_updated": "2026-10-23T10:52:14.300+0900"
+    },
+    {
+      "key": "RPL-13",
+      "after_updated": "2026-10-23T10:52:19.642+0900"
+    },
+    {
+      "key": "RPL-14",
+      "after_updated": "2026-10-23T10:52:24.103+0900"
+    },
+    {
+      "key": "RPL-15",
+      "after_updated": "2026-10-23T10:52:28.789+0900"
+    },
+    {
+      "key": "RPL-17",
+      "after_updated": "2026-10-23T10:52:33.669+0900"
+    },
+    {
+      "key": "RPL-18",
+      "after_updated": "2026-10-23T10:54:02.969+0900"
+    },
+    {
+      "key": "RPL-19",
+      "after_updated": "2026-10-23T10:54:06.512+0900"
+    }
+  ],
+  "unexpected": [],
+  "remaining_count": 46
+}
