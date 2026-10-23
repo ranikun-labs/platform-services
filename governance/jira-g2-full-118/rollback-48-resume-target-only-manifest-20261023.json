@@ -1,0 +1,638 @@
+{
+  "record": "JIRA_G2_ROLLBACK_MANIFEST_48",
+  "status": "PREPARED_NOT_EXECUTED",
+  "count": 48,
+  "scope": "Only new Target Product/Component changes from resumed batch",
+  "original_baseline_ref": "governance/jira-g2-full-118/prewrite-snapshot-20261023.json",
+  "invariants": [
+    "Do not change original Legacy Product/Component/Labels, summary, description, status, relationships",
+    "For each rollback re-read current Target and updated timestamp; compare against last verified values, abort on mismatch",
+    "Jira history/automation effects cannot be erased by inverse field write"
+  ],
+  "items": [
+    {
+      "issue_key": "RPL-1",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:11:03.199+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-4",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10022",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:11:07.859+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-7",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:11:12.660+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-10",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10021",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:11:46.569+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-11",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10021",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:11:51.142+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-16",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10023",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:03:09.318+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-22",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10027",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:03:13.945+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-24",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10023",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:03:18.691+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-25",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10023",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:05:49.241+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-28",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10023",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:05:54.080+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-38",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "verified_updated": "2026-10-23T12:08:47.472+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-39",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "verified_updated": "2026-10-23T12:08:52.009+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-40",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "verified_updated": "2026-10-23T12:08:56.481+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-45",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T12:09:26.370+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-53",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10022",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:05:59.119+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-54",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10023",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:06:29.294+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-58",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:52:11.432+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-59",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:53:19.759+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-60",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:53:24.316+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-61",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:53:29.543+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-65",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T11:54:01.485+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-66",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:54:05.925+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-67",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "verified_updated": "2026-10-23T11:54:10.287+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-71",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10026",
+        "component": "10030"
+      },
+      "verified_updated": "2026-10-23T12:06:33.928+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-72",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T11:54:44.699+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-73",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:54:49.295+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-74",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:54:54.170+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-76",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:55:25.924+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-79",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:55:30.569+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-84",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10021",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:06:38.202+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-86",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:55:36.382+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-87",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:57:06.166+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-90",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:59:08.576+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-92",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "verified_updated": "2026-10-23T11:59:13.984+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-96",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10021",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:07:07.112+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-97",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T11:59:43.915+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-99",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T11:59:48.374+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-100",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T11:59:53.870+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-101",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:00:22.516+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-102",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:00:27.096+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-103",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:00:31.707+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-104",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10024",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:00:59.237+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-105",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10026",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:07:12.249+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-106",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10024",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:07:16.511+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-108",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:01:03.652+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-111",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10025",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:11:55.817+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-110",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10025",
+        "component": "10028"
+      },
+      "verified_updated": "2026-10-23T12:07:48.735+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    },
+    {
+      "issue_key": "RPL-109",
+      "before": {
+        "product": null,
+        "component": null
+      },
+      "after": {
+        "product": "10025",
+        "component": "10031"
+      },
+      "verified_updated": "2026-10-23T12:07:43.198+0900",
+      "action_if_approved": "set Target fields back to before IDs only"
+    }
+  ]
+}
