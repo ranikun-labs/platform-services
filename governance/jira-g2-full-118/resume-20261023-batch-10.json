@@ -1,0 +1,21 @@
+{
+  "batch": "resume-10",
+  "classification_group": "previously presented clear ownership candidates",
+  "rows": [
+    {
+      "key": "RPL-24",
+      "verified": true,
+      "post_updated": "2026-10-23T12:03:18.691+0900"
+    },
+    {
+      "key": "RPL-22",
+      "verified": true,
+      "post_updated": "2026-10-23T12:03:13.945+0900"
+    },
+    {
+      "key": "RPL-16",
+      "verified": true,
+      "post_updated": "2026-10-23T12:03:09.318+0900"
+    }
+  ]
+}
