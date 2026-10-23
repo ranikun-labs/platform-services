@@ -53,7 +53,11 @@
 
 현재 [G4 PR #35](https://github.com/ranikun-labs/platform-services/pull/35)의 분리된 테스트 브랜치에서는:
 
-- **매 Push:** `targeted-check`만 자동 실행 (Python/Bash 구문·Seed/증거 파일 확인). 이는 **검사기 정적 체크**이지 제품 Unit/Integration Test PASS가 아님.
+- **Audit 브랜치 매 Push:** 기존 `targeted-check`(Python/Bash 구문·Seed/증거 파일) 자동 실행. **제품 기능 테스트를 대신하지 않음.**
+- **제품 소스 변경 시:** 별도 `.github/workflows/audit-g4-targeted-feature.yml`에서 실제 변경 경로를 구분. `gateway-app/src/**`만 바뀌면 Gateway JWT/Route 테스트, `platform-core/identity/src/**`만 바뀌면 Identity Auth/JWT/OAuth 테스트만 실행. Workflow 파일 자체를 수정하면 Selector 회귀를 위해 Gateway·Identity·Carelog **3레인 모두** 실행한다. `scripts/g4/**`만 변경되면 경량 검사만 실행.
+- **Carelog 원본 저장소 변경:** Platform 브랜치의 Push 이벤트에 자동 전달되지 않음. Carelog 저장소의 자체 표적 테스트 또는 고정 SHA 갱신/승인된 수동 실행으로 검증한다.
+- **실제 제품 테스트 증거:** [GitHub Actions #39931418106](https://github.com/ranikun-labs/platform-services/actions/runs/39931418106), SHA `e97cd144e5c811a0530d9b71d6ac3f9919faa9e5`: Gateway Auth/Route·Identity Auth/JWT/OAuth·Carelog Customer Controller/Service **3/3 Job SUCCESS**. 16/16 Full E2E를 이 SHA에서 재실행한 결과가 아니다.
+- **변경 경로 Selector 증거:** [Run #39931955850](https://github.com/ranikun-labs/platform-services/actions/runs/39931955850), `b04f01ca7d0e2936a25b9eb3052b36979b60226e` (Workflow 변경 Commit이라 3레인 검증하도록 설계). 최종 결과는 Actions 완료 상태를 별도 확인한다.
 - **전체 3서버 G4 E2E:** GH Actions `workflow_dispatch`로 명시 실행 (**워크플로를 기본 브랜치에 등록한 후**). 아직 Audit 브랜치에만 있다면, 승인된 검증 커밋의 메시지에 **`[full-g4-e2e]`**를 명시하여 해당 커밋에서만 실행하도록 한다. 실행하지 않으면 최종 E2E는 `NOT_RUN`이다.
 - 실제 Carelog/Platform의 기능별 소스 변경에는 위 2절의 Unit/Component/Integration 테스트를 별도로 실행한다. `targeted-check` PASS를 보안 회귀 PASS라고 주장하지 않는다.
 - 풀 테스트를 다시 실행하면 **테스트 대상 전체 SHA, Carelog 외부 SHA, Run ID, 시나리오 PASS/FAIL, 비운영/Production 경계, 미검증 목록**을 Jira RPL-55·PR·Confluence/Git Wiki에 반영한다. 문서만 바뀐 HEAD가 이전 코드 기준선을 소급 무효화하지는 않지만, **실행한 코드 SHA는 항상 명시**한다.
