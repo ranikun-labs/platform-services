@@ -82,6 +82,18 @@ def run():
         status, _ = req("GET", GATEWAY, "/api/v1/users/customers", token=provided)
         check("G4-03-"+case, status == 401, 401, status)
 
+    # Signed but malformed claims must be rejected by the real Product auth filter.
+    bad_claims = [
+        ("invalid-organization-uuid", {"sub": ACCOUNT_A, "organizationId": "not-a-uuid",
+                                      "publicId": ACCOUNT_A, "role": "MANAGER"}),
+        ("missing-public-id", {"sub": ACCOUNT_A, "organizationId": ORG_A,
+                               "role": "MANAGER"}),
+    ]
+    for label, claims in bad_claims:
+        claims.update({"iat": int(time.time())-1, "exp": int(time.time())+600})
+        code, _ = req("GET", GATEWAY, "/api/v1/users/customers", token=sign(claims))
+        check("G4-04-"+label, code == 403, 403, code)
+
     status, _ = req("GET", GATEWAY, "/api/v1/internal/identity/claims/"+ACCOUNT_A, token=token)
     check("G4-08-public-internal-route-block", status == 403, 403, status)
 
@@ -111,6 +123,15 @@ def run():
     status, body = req("GET", GATEWAY, "/api/v1/users/customers/"+foreign_id, token=token_b)
     check("G4-05-B-owner-can-read", status == 200 and json_data((status, body))["publicId"] == foreign_id,
           "200 exact Customer ID", status)
+    # Strong spoof proof: B now has a real Customer; A's bearer + B's forged
+    # trusted headers must still produce only A's list (not B's new Customer).
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token, headers={
+        "X-User-Id": ACCOUNT_B, "X-Organization-Id": ORG_B, "X-Role": "MANAGER",
+        "X-Public-Id": ACCOUNT_B, "X-Gateway-Secret": "spoofed",
+        "X-Service-Id": "spoofed", "X-Service-Secret": "spoofed"})
+    check("G4-02-existing-foreign-customer-spoof-proof",
+          status == 200 and json_data((status, body)) == customers_a,
+          "A remains isolated after B seeded a real Customer", status)
     status, _ = req("GET", GATEWAY, "/api/v1/users/customers/"+foreign_id, token=token)
     check("G4-05-A-cannot-read-B", status == 404, 404, status)
 
