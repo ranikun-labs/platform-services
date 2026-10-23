@@ -1,11 +1,30 @@
-name: Disposable G4 real three-service checks
+name: RPL-55 selective checks and opt-in three-service E2E
 on:
   push:
     branches: ['audit/g4-real-three-service-20261023']
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  targeted-check:
+    name: Fast G4 runner syntax and evidence checks (every push)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Runner-only targeted checks (no Docker, no product E2E)
+        run: |
+          python3 -m py_compile scripts/g4/verify_three_services.py
+          bash -n scripts/g4/run_three_services.sh
+          test -s scripts/g4/seed-carelog.sql
+          test -s docs/testing/evidence/rpl-55-g4-e2e-baseline-and-test-selection-20261023.md
   g4-real-process:
+    # Full three-server build ONLY when explicitly requested. This workflow is
+    # currently on an audit branch; dispatch may require registration on default.
+    # Until then, a consciously reviewed [full-g4-e2e] commit triggers the full run.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[full-g4-e2e]')
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
