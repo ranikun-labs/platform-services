@@ -1,0 +1,80 @@
+{
+  "report_type": "G2_118_LIVE_VERIFIED_MIGRATION_STATUS",
+  "date": "2026-10-23",
+  "summary": "106 of 118 Jira RPL issues hold both Target Product and Target Component. Existing 27 + two resumed waves 31 and 48. Twelve Story/Subtask issues remain without Target fields.",
+  "source": "Live Atlassian Rovo Jira JQL full 118 audit, paginated 100+6 stored and 12 empty, compared with prewrite Git snapshot",
+  "numbers": {
+    "total": 118,
+    "preexisting_target_both": 27,
+    "new_earlier": 31,
+    "new_latest": 48,
+    "target_both": 106,
+    "missing_both": 12,
+    "partial": 0
+  },
+  "unmodified_origins_status": "Legacy Product/Component/Labels, summary and status compared across 118; no differences detected.",
+  "rollback": {
+    "prior": "governance/jira-g2-full-118/rollback-31-target-only-manifest-20261023.json",
+    "prior_count": 31,
+    "later": "governance/jira-g2-full-118/rollback-48-resume-target-only-manifest-20261023.json",
+    "later_count": 48,
+    "overlap": 0,
+    "total_covered": 79,
+    "executed": false,
+    "warning": "Field-only restoration; Jira changelog and external automation effects cannot be erased."
+  },
+  "remaining": [
+    {
+      "key": "RPL-70",
+      "type": "Subtask"
+    },
+    {
+      "key": "RPL-77",
+      "type": "Subtask"
+    },
+    {
+      "key": "RPL-80",
+      "type": "Subtask"
+    },
+    {
+      "key": "RPL-82",
+      "type": "Subtask"
+    },
+    {
+      "key": "RPL-83",
+      "type": "Subtask"
+    },
+    {
+      "key": "RPL-85",
+      "type": "Subtask"
+    },
+    {
+      "key": "RPL-89",
+      "type": "Subtask"
+    },
+    {
+      "key": "RPL-94",
+      "type": "Subtask"
+    },
+    {
+      "key": "RPL-115",
+      "type": "Story"
+    },
+    {
+      "key": "RPL-116",
+      "type": "Story"
+    },
+    {
+      "key": "RPL-117",
+      "type": "Story"
+    },
+    {
+      "key": "RPL-118",
+      "type": "Story"
+    }
+  ],
+  "remaining_issue_type_gate": "All Target fields customfield_10108/10109/10110 absent from edit metadata of representative Story and Subtask; RPL admin UI needs to associate existing fields with both types before further Jira writes.",
+  "approval_and_authority": "Owner approved scope 118 in chat; G3 read-authority cutover NOT approved; RPL-112/113/114 remain Origin-unknown quarantined. No G3 issue creation or G4 legacy removal.",
+  "outstanding_separate_work": "RPL-111 JetStream/SQS documentation alignment; RPL-10/11 duplicate relation; RPL-4 boundary; these were not changed beyond Target fields.",
+  "connection_check": "Atlassian Rovo JQL read calls returned success following reported UI disconnection; this is evidence of current read access, not uninterrupted session connectivity."
+}
