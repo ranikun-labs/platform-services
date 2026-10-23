@@ -1,0 +1,2177 @@
+{
+  "record_type": "G2_STORY_SUBTASK_ADMIN_ASSOCIATION_EVIDENCE",
+  "date": "2026-10-23",
+  "project": "RPL",
+  "admin_surface": "Authenticated Jira Team-managed Project Settings > Work Types",
+  "changed_types": [
+    {
+      "id": "10011",
+      "name": "Story"
+    },
+    {
+      "id": "10008",
+      "name": "Subtask"
+    }
+  ],
+  "action": "Reuse existing Product (Target), Component (Target), Concern (Target); no new fields or options; UI Save success notices observed",
+  "fields": {
+    "customfield_10108": "Product (Target)",
+    "customfield_10109": "Component (Target)",
+    "customfield_10110": "Concern (Target)"
+  },
+  "before_create_metadata": {
+    "subtask": {
+      "startAt": 0,
+      "maxResults": 100,
+      "total": 16,
+      "fields": [
+        {
+          "required": false,
+          "schema": {
+            "type": "user",
+            "system": "assignee"
+          },
+          "name": "담당자",
+          "key": "assignee",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/user/assignable/search?project=RPL&query=",
+          "hasDefaultValue": true,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "assignee"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "attachment",
+            "system": "attachment"
+          },
+          "name": "첨부 파일",
+          "key": "attachment",
+          "hasDefaultValue": false,
+          "operations": [
+            "set",
+            "copy"
+          ],
+          "fieldId": "attachment"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:devsummarycf",
+            "customId": 10000
+          },
+          "name": "development",
+          "key": "customfield_10000",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10000"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "team",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team",
+            "customId": 10001,
+            "configuration": {
+              "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team": true
+            }
+          },
+          "name": "Team",
+          "key": "customfield_10001",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/gateway/api/v1/recommendations",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10001"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.pyxis.greenhopper.jira:gh-lexo-rank",
+            "customId": 10019
+          },
+          "name": "순위",
+          "key": "customfield_10019",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10019"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+            "customId": 10021
+          },
+          "name": "Flagged",
+          "key": "customfield_10021",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10019",
+              "value": "Impediment",
+              "id": "10019"
+            }
+          ],
+          "fieldId": "customfield_10021"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:vulnerabilitycf",
+            "customId": 10037
+          },
+          "name": "취약성",
+          "key": "customfield_10037",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10037"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "string",
+            "system": "description"
+          },
+          "name": "설명",
+          "key": "description",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "description"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "version",
+            "system": "fixVersions"
+          },
+          "name": "수정 버전",
+          "key": "fixVersions",
+          "hasDefaultValue": false,
+          "operations": [
+            "set",
+            "add",
+            "remove"
+          ],
+          "allowedValues": [],
+          "fieldId": "fixVersions"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "issuelinks",
+            "system": "issuelinks"
+          },
+          "name": "연결된 이슈",
+          "key": "issuelinks",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "copy"
+          ],
+          "fieldId": "issuelinks"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "issuetype",
+            "system": "issuetype"
+          },
+          "name": "이슈 유형",
+          "key": "issuetype",
+          "hasDefaultValue": false,
+          "operations": [],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issuetype/10008",
+              "id": "10008",
+              "description": "하위 작업은 대량 작업 일부인 소규모 업무를 추적합니다.",
+              "iconUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+              "name": "하위 작업",
+              "subtask": true,
+              "avatarId": 10316,
+              "entityId": "bd4b3c0d-eefa-4e53-a7b0-942ce243fcd2",
+              "hierarchyLevel": -1
+            }
+          ],
+          "fieldId": "issuetype"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "string",
+            "system": "labels"
+          },
+          "name": "레이블",
+          "key": "labels",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/1.0/labels/suggest?query=",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "fieldId": "labels"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "issuelink",
+            "system": "parent"
+          },
+          "name": "상위 항목",
+          "key": "parent",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "parent"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "project",
+            "system": "project"
+          },
+          "name": "프로젝트",
+          "key": "project",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/project/10001",
+              "id": "10001",
+              "key": "RPL",
+              "name": "Ranikun Platform",
+              "projectTypeKey": "software",
+              "simplified": true,
+              "avatarUrls": {
+                "48x48": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423",
+                "24x24": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=small",
+                "16x16": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=xsmall",
+                "32x32": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=medium"
+              }
+            }
+          ],
+          "fieldId": "project"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "user",
+            "system": "reporter"
+          },
+          "name": "보고자",
+          "key": "reporter",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/user/recommend?context=Reporter&issueKey=",
+          "hasDefaultValue": true,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "reporter"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "string",
+            "system": "summary"
+          },
+          "name": "요약",
+          "key": "summary",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "summary"
+        }
+      ]
+    },
+    "story": {
+      "startAt": 0,
+      "maxResults": 100,
+      "total": 18,
+      "fields": [
+        {
+          "required": false,
+          "schema": {
+            "type": "user",
+            "system": "assignee"
+          },
+          "name": "담당자",
+          "key": "assignee",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/user/assignable/search?project=RPL&query=",
+          "hasDefaultValue": true,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "assignee"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "attachment",
+            "system": "attachment"
+          },
+          "name": "첨부 파일",
+          "key": "attachment",
+          "hasDefaultValue": false,
+          "operations": [
+            "set",
+            "copy"
+          ],
+          "fieldId": "attachment"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:devsummarycf",
+            "customId": 10000
+          },
+          "name": "development",
+          "key": "customfield_10000",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10000"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "team",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team",
+            "customId": 10001,
+            "configuration": {
+              "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team": true
+            }
+          },
+          "name": "Team",
+          "key": "customfield_10001",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/gateway/api/v1/recommendations",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10001"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "date",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:datepicker",
+            "customId": 10015
+          },
+          "name": "시작 날짜",
+          "key": "customfield_10015",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10015"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.pyxis.greenhopper.jira:gh-lexo-rank",
+            "customId": 10019
+          },
+          "name": "순위",
+          "key": "customfield_10019",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10019"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+            "customId": 10021
+          },
+          "name": "Flagged",
+          "key": "customfield_10021",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10019",
+              "value": "Impediment",
+              "id": "10019"
+            }
+          ],
+          "fieldId": "customfield_10021"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:vulnerabilitycf",
+            "customId": 10037
+          },
+          "name": "취약성",
+          "key": "customfield_10037",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10037"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "string",
+            "system": "description"
+          },
+          "name": "설명",
+          "key": "description",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "description"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "date",
+            "system": "duedate"
+          },
+          "name": "기한",
+          "key": "duedate",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "duedate"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "version",
+            "system": "fixVersions"
+          },
+          "name": "수정 버전",
+          "key": "fixVersions",
+          "hasDefaultValue": false,
+          "operations": [
+            "set",
+            "add",
+            "remove"
+          ],
+          "allowedValues": [],
+          "fieldId": "fixVersions"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "issuelinks",
+            "system": "issuelinks"
+          },
+          "name": "연결된 이슈",
+          "key": "issuelinks",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "copy"
+          ],
+          "fieldId": "issuelinks"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "issuetype",
+            "system": "issuetype"
+          },
+          "name": "이슈 유형",
+          "key": "issuetype",
+          "hasDefaultValue": false,
+          "operations": [],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issuetype/10011",
+              "id": "10011",
+              "description": "",
+              "iconUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium",
+              "name": "스토리",
+              "subtask": false,
+              "avatarId": 10315,
+              "entityId": "14184e92-c0fa-4cd0-bd00-0cf142d53731",
+              "hierarchyLevel": 0
+            }
+          ],
+          "fieldId": "issuetype"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "string",
+            "system": "labels"
+          },
+          "name": "레이블",
+          "key": "labels",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/1.0/labels/suggest?query=",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "fieldId": "labels"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "issuelink",
+            "system": "parent"
+          },
+          "name": "상위 항목",
+          "key": "parent",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "parent"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "project",
+            "system": "project"
+          },
+          "name": "프로젝트",
+          "key": "project",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/project/10001",
+              "id": "10001",
+              "key": "RPL",
+              "name": "Ranikun Platform",
+              "projectTypeKey": "software",
+              "simplified": true,
+              "avatarUrls": {
+                "48x48": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423",
+                "24x24": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=small",
+                "16x16": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=xsmall",
+                "32x32": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=medium"
+              }
+            }
+          ],
+          "fieldId": "project"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "user",
+            "system": "reporter"
+          },
+          "name": "보고자",
+          "key": "reporter",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/user/recommend?context=Reporter&issueKey=",
+          "hasDefaultValue": true,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "reporter"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "string",
+            "system": "summary"
+          },
+          "name": "요약",
+          "key": "summary",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "summary"
+        }
+      ]
+    }
+  },
+  "after_create_metadata": {
+    "subtask": {
+      "startAt": 0,
+      "maxResults": 100,
+      "total": 19,
+      "fields": [
+        {
+          "required": false,
+          "schema": {
+            "type": "user",
+            "system": "assignee"
+          },
+          "name": "담당자",
+          "key": "assignee",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/user/assignable/search?project=RPL&query=",
+          "hasDefaultValue": true,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "assignee"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "attachment",
+            "system": "attachment"
+          },
+          "name": "첨부 파일",
+          "key": "attachment",
+          "hasDefaultValue": false,
+          "operations": [
+            "set",
+            "copy"
+          ],
+          "fieldId": "attachment"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:devsummarycf",
+            "customId": 10000
+          },
+          "name": "development",
+          "key": "customfield_10000",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10000"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "team",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team",
+            "customId": 10001,
+            "configuration": {
+              "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team": true
+            }
+          },
+          "name": "Team",
+          "key": "customfield_10001",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/gateway/api/v1/recommendations",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10001"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.pyxis.greenhopper.jira:gh-lexo-rank",
+            "customId": 10019
+          },
+          "name": "순위",
+          "key": "customfield_10019",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10019"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+            "customId": 10021
+          },
+          "name": "Flagged",
+          "key": "customfield_10021",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10019",
+              "value": "Impediment",
+              "id": "10019"
+            }
+          ],
+          "fieldId": "customfield_10021"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:vulnerabilitycf",
+            "customId": 10037
+          },
+          "name": "취약성",
+          "key": "customfield_10037",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10037"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 10108
+          },
+          "name": "Product (Target)",
+          "key": "customfield_10108",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10020",
+              "value": "carelog",
+              "id": "10020"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10021",
+              "value": "finance",
+              "id": "10021",
+              "color": "YELLOW"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10022",
+              "value": "gateway",
+              "id": "10022",
+              "color": "GREY"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10023",
+              "value": "identity",
+              "id": "10023",
+              "color": "GREEN"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10024",
+              "value": "ai",
+              "id": "10024",
+              "color": "YELLOW"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10025",
+              "value": "audit",
+              "id": "10025",
+              "color": "ORANGE"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10026",
+              "value": "platform-foundation",
+              "id": "10026",
+              "color": "TEAL"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10027",
+              "value": "dev-harness",
+              "id": "10027",
+              "color": "TEAL"
+            }
+          ],
+          "fieldId": "customfield_10108"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 10109
+          },
+          "name": "Component (Target)",
+          "key": "customfield_10109",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10028",
+              "value": "backend",
+              "id": "10028"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10029",
+              "value": "frontend",
+              "id": "10029",
+              "color": "RED"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10030",
+              "value": "infra",
+              "id": "10030",
+              "color": "GREY_DARKER"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10031",
+              "value": "documentation",
+              "id": "10031",
+              "color": "ORANGE"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10032",
+              "value": "ai",
+              "id": "10032",
+              "color": "MAGENTA"
+            }
+          ],
+          "fieldId": "customfield_10109"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+            "customId": 10110
+          },
+          "name": "Concern (Target)",
+          "key": "customfield_10110",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10033",
+              "value": "auth",
+              "id": "10033"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10034",
+              "value": "security",
+              "id": "10034"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10035",
+              "value": "idempotency",
+              "id": "10035"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10036",
+              "value": "concurrency",
+              "id": "10036"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10037",
+              "value": "consistency",
+              "id": "10037"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10038",
+              "value": "integration",
+              "id": "10038"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10039",
+              "value": "migration",
+              "id": "10039"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10040",
+              "value": "cutover",
+              "id": "10040"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10041",
+              "value": "observability",
+              "id": "10041"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10042",
+              "value": "reliability",
+              "id": "10042"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10043",
+              "value": "performance",
+              "id": "10043"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10044",
+              "value": "architecture",
+              "id": "10044"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10045",
+              "value": "contract",
+              "id": "10045"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10046",
+              "value": "regression",
+              "id": "10046"
+            }
+          ],
+          "fieldId": "customfield_10110"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "string",
+            "system": "description"
+          },
+          "name": "설명",
+          "key": "description",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "description"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "version",
+            "system": "fixVersions"
+          },
+          "name": "수정 버전",
+          "key": "fixVersions",
+          "hasDefaultValue": false,
+          "operations": [
+            "set",
+            "add",
+            "remove"
+          ],
+          "allowedValues": [],
+          "fieldId": "fixVersions"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "issuelinks",
+            "system": "issuelinks"
+          },
+          "name": "연결된 이슈",
+          "key": "issuelinks",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "copy"
+          ],
+          "fieldId": "issuelinks"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "issuetype",
+            "system": "issuetype"
+          },
+          "name": "이슈 유형",
+          "key": "issuetype",
+          "hasDefaultValue": false,
+          "operations": [],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issuetype/10008",
+              "id": "10008",
+              "description": "하위 작업은 대량 작업 일부인 소규모 업무를 추적합니다.",
+              "iconUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+              "name": "하위 작업",
+              "subtask": true,
+              "avatarId": 10316,
+              "entityId": "bd4b3c0d-eefa-4e53-a7b0-942ce243fcd2",
+              "hierarchyLevel": -1
+            }
+          ],
+          "fieldId": "issuetype"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "string",
+            "system": "labels"
+          },
+          "name": "레이블",
+          "key": "labels",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/1.0/labels/suggest?query=",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "fieldId": "labels"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "issuelink",
+            "system": "parent"
+          },
+          "name": "상위 항목",
+          "key": "parent",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "parent"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "project",
+            "system": "project"
+          },
+          "name": "프로젝트",
+          "key": "project",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/project/10001",
+              "id": "10001",
+              "key": "RPL",
+              "name": "Ranikun Platform",
+              "projectTypeKey": "software",
+              "simplified": true,
+              "avatarUrls": {
+                "48x48": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423",
+                "24x24": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=small",
+                "16x16": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=xsmall",
+                "32x32": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=medium"
+              }
+            }
+          ],
+          "fieldId": "project"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "user",
+            "system": "reporter"
+          },
+          "name": "보고자",
+          "key": "reporter",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/user/recommend?context=Reporter&issueKey=",
+          "hasDefaultValue": true,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "reporter"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "string",
+            "system": "summary"
+          },
+          "name": "요약",
+          "key": "summary",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "summary"
+        }
+      ]
+    },
+    "story": {
+      "startAt": 0,
+      "maxResults": 100,
+      "total": 21,
+      "fields": [
+        {
+          "required": false,
+          "schema": {
+            "type": "user",
+            "system": "assignee"
+          },
+          "name": "담당자",
+          "key": "assignee",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/user/assignable/search?project=RPL&query=",
+          "hasDefaultValue": true,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "assignee"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "attachment",
+            "system": "attachment"
+          },
+          "name": "첨부 파일",
+          "key": "attachment",
+          "hasDefaultValue": false,
+          "operations": [
+            "set",
+            "copy"
+          ],
+          "fieldId": "attachment"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:devsummarycf",
+            "customId": 10000
+          },
+          "name": "development",
+          "key": "customfield_10000",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10000"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "team",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team",
+            "customId": 10001,
+            "configuration": {
+              "com.atlassian.jira.plugin.system.customfieldtypes:atlassian-team": true
+            }
+          },
+          "name": "Team",
+          "key": "customfield_10001",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/gateway/api/v1/recommendations",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10001"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "date",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:datepicker",
+            "customId": 10015
+          },
+          "name": "시작 날짜",
+          "key": "customfield_10015",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10015"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.pyxis.greenhopper.jira:gh-lexo-rank",
+            "customId": 10019
+          },
+          "name": "순위",
+          "key": "customfield_10019",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10019"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+            "customId": 10021
+          },
+          "name": "Flagged",
+          "key": "customfield_10021",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10019",
+              "value": "Impediment",
+              "id": "10019"
+            }
+          ],
+          "fieldId": "customfield_10021"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "any",
+            "custom": "com.atlassian.jira.plugins.jira-development-integration-plugin:vulnerabilitycf",
+            "customId": 10037
+          },
+          "name": "취약성",
+          "key": "customfield_10037",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "customfield_10037"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 10108
+          },
+          "name": "Product (Target)",
+          "key": "customfield_10108",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10020",
+              "value": "carelog",
+              "id": "10020"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10021",
+              "value": "finance",
+              "id": "10021",
+              "color": "YELLOW"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10022",
+              "value": "gateway",
+              "id": "10022",
+              "color": "GREY"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10023",
+              "value": "identity",
+              "id": "10023",
+              "color": "GREEN"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10024",
+              "value": "ai",
+              "id": "10024",
+              "color": "YELLOW"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10025",
+              "value": "audit",
+              "id": "10025",
+              "color": "ORANGE"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10026",
+              "value": "platform-foundation",
+              "id": "10026",
+              "color": "TEAL"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10027",
+              "value": "dev-harness",
+              "id": "10027",
+              "color": "TEAL"
+            }
+          ],
+          "fieldId": "customfield_10108"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 10109
+          },
+          "name": "Component (Target)",
+          "key": "customfield_10109",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10028",
+              "value": "backend",
+              "id": "10028"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10029",
+              "value": "frontend",
+              "id": "10029",
+              "color": "RED"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10030",
+              "value": "infra",
+              "id": "10030",
+              "color": "GREY_DARKER"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10031",
+              "value": "documentation",
+              "id": "10031",
+              "color": "ORANGE"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10032",
+              "value": "ai",
+              "id": "10032",
+              "color": "MAGENTA"
+            }
+          ],
+          "fieldId": "customfield_10109"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+            "customId": 10110
+          },
+          "name": "Concern (Target)",
+          "key": "customfield_10110",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10033",
+              "value": "auth",
+              "id": "10033"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10034",
+              "value": "security",
+              "id": "10034"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10035",
+              "value": "idempotency",
+              "id": "10035"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10036",
+              "value": "concurrency",
+              "id": "10036"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10037",
+              "value": "consistency",
+              "id": "10037"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10038",
+              "value": "integration",
+              "id": "10038"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10039",
+              "value": "migration",
+              "id": "10039"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10040",
+              "value": "cutover",
+              "id": "10040"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10041",
+              "value": "observability",
+              "id": "10041"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10042",
+              "value": "reliability",
+              "id": "10042"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10043",
+              "value": "performance",
+              "id": "10043"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10044",
+              "value": "architecture",
+              "id": "10044"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10045",
+              "value": "contract",
+              "id": "10045"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10046",
+              "value": "regression",
+              "id": "10046"
+            }
+          ],
+          "fieldId": "customfield_10110"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "string",
+            "system": "description"
+          },
+          "name": "설명",
+          "key": "description",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "description"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "date",
+            "system": "duedate"
+          },
+          "name": "기한",
+          "key": "duedate",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "duedate"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "version",
+            "system": "fixVersions"
+          },
+          "name": "수정 버전",
+          "key": "fixVersions",
+          "hasDefaultValue": false,
+          "operations": [
+            "set",
+            "add",
+            "remove"
+          ],
+          "allowedValues": [],
+          "fieldId": "fixVersions"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "issuelinks",
+            "system": "issuelinks"
+          },
+          "name": "연결된 이슈",
+          "key": "issuelinks",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "copy"
+          ],
+          "fieldId": "issuelinks"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "issuetype",
+            "system": "issuetype"
+          },
+          "name": "이슈 유형",
+          "key": "issuetype",
+          "hasDefaultValue": false,
+          "operations": [],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issuetype/10011",
+              "id": "10011",
+              "description": "",
+              "iconUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium",
+              "name": "스토리",
+              "subtask": false,
+              "avatarId": 10315,
+              "entityId": "14184e92-c0fa-4cd0-bd00-0cf142d53731",
+              "hierarchyLevel": 0
+            }
+          ],
+          "fieldId": "issuetype"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "string",
+            "system": "labels"
+          },
+          "name": "레이블",
+          "key": "labels",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/1.0/labels/suggest?query=",
+          "hasDefaultValue": false,
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "fieldId": "labels"
+        },
+        {
+          "required": false,
+          "schema": {
+            "type": "issuelink",
+            "system": "parent"
+          },
+          "name": "상위 항목",
+          "key": "parent",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "parent"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "project",
+            "system": "project"
+          },
+          "name": "프로젝트",
+          "key": "project",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/project/10001",
+              "id": "10001",
+              "key": "RPL",
+              "name": "Ranikun Platform",
+              "projectTypeKey": "software",
+              "simplified": true,
+              "avatarUrls": {
+                "48x48": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423",
+                "24x24": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=small",
+                "16x16": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=xsmall",
+                "32x32": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/universal_avatar/view/type/project/avatar/10423?size=medium"
+              }
+            }
+          ],
+          "fieldId": "project"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "user",
+            "system": "reporter"
+          },
+          "name": "보고자",
+          "key": "reporter",
+          "autoCompleteUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/user/recommend?context=Reporter&issueKey=",
+          "hasDefaultValue": true,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "reporter"
+        },
+        {
+          "required": true,
+          "schema": {
+            "type": "string",
+            "system": "summary"
+          },
+          "name": "요약",
+          "key": "summary",
+          "hasDefaultValue": false,
+          "operations": [
+            "set"
+          ],
+          "fieldId": "summary"
+        }
+      ]
+    }
+  },
+  "after_editmeta": {
+    "subtask": {
+      "fields": {
+        "summary": {
+          "required": true,
+          "schema": {
+            "type": "string",
+            "system": "summary"
+          },
+          "name": "요약",
+          "key": "summary",
+          "operations": [
+            "set"
+          ]
+        },
+        "issuetype": {
+          "required": false,
+          "schema": {
+            "type": "issuetype",
+            "system": "issuetype"
+          },
+          "name": "이슈 유형",
+          "key": "issuetype",
+          "operations": [],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issuetype/10011",
+              "id": "10011",
+              "description": "",
+              "iconUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium",
+              "name": "스토리",
+              "subtask": false,
+              "avatarId": 10315,
+              "entityId": "14184e92-c0fa-4cd0-bd00-0cf142d53731",
+              "hierarchyLevel": 0
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issuetype/10014",
+              "id": "10014",
+              "description": "",
+              "iconUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/2/universal_avatar/view/type/issuetype/avatar/10318?size=medium",
+              "name": "Tech Debt",
+              "subtask": false,
+              "avatarId": 10318,
+              "entityId": "b452f815-854a-43ad-9326-5a30e162cdff",
+              "hierarchyLevel": 0
+            }
+          ]
+        },
+        "customfield_10108": {
+          "required": false,
+          "schema": {
+            "type": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 10108
+          },
+          "name": "Product (Target)",
+          "key": "customfield_10108",
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10020",
+              "value": "carelog",
+              "id": "10020"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10021",
+              "value": "finance",
+              "id": "10021",
+              "color": "YELLOW"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10022",
+              "value": "gateway",
+              "id": "10022",
+              "color": "GREY"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10023",
+              "value": "identity",
+              "id": "10023",
+              "color": "GREEN"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10024",
+              "value": "ai",
+              "id": "10024",
+              "color": "YELLOW"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10025",
+              "value": "audit",
+              "id": "10025",
+              "color": "ORANGE"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10026",
+              "value": "platform-foundation",
+              "id": "10026",
+              "color": "TEAL"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10027",
+              "value": "dev-harness",
+              "id": "10027",
+              "color": "TEAL"
+            }
+          ]
+        },
+        "customfield_10109": {
+          "required": false,
+          "schema": {
+            "type": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 10109
+          },
+          "name": "Component (Target)",
+          "key": "customfield_10109",
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10028",
+              "value": "backend",
+              "id": "10028"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10029",
+              "value": "frontend",
+              "id": "10029",
+              "color": "RED"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10030",
+              "value": "infra",
+              "id": "10030",
+              "color": "GREY_DARKER"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10031",
+              "value": "documentation",
+              "id": "10031",
+              "color": "ORANGE"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10032",
+              "value": "ai",
+              "id": "10032",
+              "color": "MAGENTA"
+            }
+          ]
+        },
+        "customfield_10110": {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+            "customId": 10110
+          },
+          "name": "Concern (Target)",
+          "key": "customfield_10110",
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10033",
+              "value": "auth",
+              "id": "10033"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10034",
+              "value": "security",
+              "id": "10034"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10035",
+              "value": "idempotency",
+              "id": "10035"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10036",
+              "value": "concurrency",
+              "id": "10036"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10037",
+              "value": "consistency",
+              "id": "10037"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10038",
+              "value": "integration",
+              "id": "10038"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10039",
+              "value": "migration",
+              "id": "10039"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10040",
+              "value": "cutover",
+              "id": "10040"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10041",
+              "value": "observability",
+              "id": "10041"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10042",
+              "value": "reliability",
+              "id": "10042"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10043",
+              "value": "performance",
+              "id": "10043"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10044",
+              "value": "architecture",
+              "id": "10044"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10045",
+              "value": "contract",
+              "id": "10045"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10046",
+              "value": "regression",
+              "id": "10046"
+            }
+          ]
+        }
+      }
+    },
+    "story": {
+      "fields": {
+        "summary": {
+          "required": true,
+          "schema": {
+            "type": "string",
+            "system": "summary"
+          },
+          "name": "요약",
+          "key": "summary",
+          "operations": [
+            "set"
+          ]
+        },
+        "issuetype": {
+          "required": false,
+          "schema": {
+            "type": "issuetype",
+            "system": "issuetype"
+          },
+          "name": "이슈 유형",
+          "key": "issuetype",
+          "operations": [],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issuetype/10011",
+              "id": "10011",
+              "description": "",
+              "iconUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium",
+              "name": "스토리",
+              "subtask": false,
+              "avatarId": 10315,
+              "entityId": "14184e92-c0fa-4cd0-bd00-0cf142d53731",
+              "hierarchyLevel": 0
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/issuetype/10014",
+              "id": "10014",
+              "description": "",
+              "iconUrl": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/2/universal_avatar/view/type/issuetype/avatar/10318?size=medium",
+              "name": "Tech Debt",
+              "subtask": false,
+              "avatarId": 10318,
+              "entityId": "b452f815-854a-43ad-9326-5a30e162cdff",
+              "hierarchyLevel": 0
+            }
+          ]
+        },
+        "customfield_10108": {
+          "required": false,
+          "schema": {
+            "type": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 10108
+          },
+          "name": "Product (Target)",
+          "key": "customfield_10108",
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10020",
+              "value": "carelog",
+              "id": "10020"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10021",
+              "value": "finance",
+              "id": "10021",
+              "color": "YELLOW"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10022",
+              "value": "gateway",
+              "id": "10022",
+              "color": "GREY"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10023",
+              "value": "identity",
+              "id": "10023",
+              "color": "GREEN"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10024",
+              "value": "ai",
+              "id": "10024",
+              "color": "YELLOW"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10025",
+              "value": "audit",
+              "id": "10025",
+              "color": "ORANGE"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10026",
+              "value": "platform-foundation",
+              "id": "10026",
+              "color": "TEAL"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10027",
+              "value": "dev-harness",
+              "id": "10027",
+              "color": "TEAL"
+            }
+          ]
+        },
+        "customfield_10109": {
+          "required": false,
+          "schema": {
+            "type": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+            "customId": 10109
+          },
+          "name": "Component (Target)",
+          "key": "customfield_10109",
+          "operations": [
+            "set"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10028",
+              "value": "backend",
+              "id": "10028"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10029",
+              "value": "frontend",
+              "id": "10029",
+              "color": "RED"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10030",
+              "value": "infra",
+              "id": "10030",
+              "color": "GREY_DARKER"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10031",
+              "value": "documentation",
+              "id": "10031",
+              "color": "ORANGE"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10032",
+              "value": "ai",
+              "id": "10032",
+              "color": "MAGENTA"
+            }
+          ]
+        },
+        "customfield_10110": {
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": "option",
+            "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+            "customId": 10110
+          },
+          "name": "Concern (Target)",
+          "key": "customfield_10110",
+          "operations": [
+            "add",
+            "set",
+            "remove"
+          ],
+          "allowedValues": [
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10033",
+              "value": "auth",
+              "id": "10033"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10034",
+              "value": "security",
+              "id": "10034"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10035",
+              "value": "idempotency",
+              "id": "10035"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10036",
+              "value": "concurrency",
+              "id": "10036"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10037",
+              "value": "consistency",
+              "id": "10037"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10038",
+              "value": "integration",
+              "id": "10038"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10039",
+              "value": "migration",
+              "id": "10039"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10040",
+              "value": "cutover",
+              "id": "10040"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10041",
+              "value": "observability",
+              "id": "10041"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10042",
+              "value": "reliability",
+              "id": "10042"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10043",
+              "value": "performance",
+              "id": "10043"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10044",
+              "value": "architecture",
+              "id": "10044"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10045",
+              "value": "contract",
+              "id": "10045"
+            },
+            {
+              "self": "https://api.atlassian.com/ex/jira/4d35e8b0-e0be-450b-97b0-6ad156f7f936/rest/api/3/customFieldOption/10046",
+              "value": "regression",
+              "id": "10046"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "required_default_validation": "All three Target fields required=false and hasDefaultValue=false for both types. No Required or Default control was changed.",
+  "observed_metadata_delta": {
+    "field": "issuetype.required",
+    "before": true,
+    "after": false,
+    "types": [
+      "10008",
+      "10011"
+    ],
+    "classification": "ADMIN_METADATA_REVIEW_PENDING",
+    "cause": "NOT_VERIFIED",
+    "note": "Observed in Create metadata after saving field association. No issue type, workflow, Required or Default setting was directly edited. Do not claim all settings are identical; verify before any G3 Create activation."
+  },
+  "other_preexisting_field_metadata": "All other existing field properties equal by key, excluding the observed issuetype.required delta",
+  "excluded": [
+    "Legacy fields",
+    "Workflow",
+    "Board",
+    "issue type identity",
+    "G3 Create activation",
+    "ReadAuthority cutover"
+  ],
+  "screenshots": {
+    "status": "NOT_CAPTURED",
+    "reason": "Two documented browser screenshot attempts timed out at Page.captureScreenshot; no screenshot evidence claimed"
+  },
+  "policy": {
+    "repository": "ranikun-labs/harness-foundation-docs",
+    "ref": "main",
+    "observed_head": "8d3ad283402e3a6d42b90ae457557b5751a041e4",
+    "portfolio_blob": "838151511990fc38463200fc2cd12a6c9b0591b8",
+    "session_blob": "d923ddcc77fc39348760d5934c88a971e7f72833",
+    "taxonomy_blob": "0c3bc9d7a7b71ff072696c33d21e372d20d76b29"
+  },
+  "execution": "Single Writer, serial Jira edits, read-back after each issue. No subagent or independent review executed; do not claim requested model/speed settings were applied."
+}
