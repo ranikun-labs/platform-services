@@ -1,0 +1,199 @@
+{
+  "as_of": "2026-10-23",
+  "owner_approved_scope": "all 118 Jira RPL issues",
+  "current_state": {
+    "target_stored": 58,
+    "added_verified": 31,
+    "unpopulated": 60,
+    "unambiguous_pending": 24,
+    "ownership_review": 24,
+    "unsupported_types": 12
+  },
+  "notes": "These are proposals, not IssueKey-specific Owner approvals. No Jira write authorized solely by this file. All original Legacy data remains authoritative pending G3 Cutover.",
+  "proposals": [
+    {
+      "key": "RPL-1",
+      "proposed_product": "carelog",
+      "proposed_component": "backend",
+      "decision": "OWNER",
+      "reason": "Carelog OAuth 로그인 Epic; Gateway·Identity 영향 보존 근거 필요"
+    },
+    {
+      "key": "RPL-4",
+      "proposed_product": "gateway",
+      "proposed_component": "backend",
+      "decision": "OWNER",
+      "reason": "Gateway 라우팅·Security 두 책임 혼재; 대표 Owner/분리 판단"
+    },
+    {
+      "key": "RPL-7",
+      "proposed_product": "carelog",
+      "proposed_component": "backend",
+      "decision": "OWNER",
+      "reason": "OAuth 회귀 검증 vs 문서 대표 Component 판단"
+    },
+    {
+      "key": "RPL-10",
+      "proposed_product": "finance",
+      "proposed_component": "documentation",
+      "decision": "REVIEW",
+      "reason": "완료 Research, RPL-11 중복 연결; 원본 이력 보존"
+    },
+    {
+      "key": "RPL-11",
+      "proposed_product": "finance",
+      "proposed_component": "documentation",
+      "decision": "OWNER",
+      "reason": "RPL-10 Duplicate 연결; 티켓 유지·종결 권한 별도"
+    },
+    {
+      "key": "RPL-16",
+      "proposed_product": "identity",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "Product Client Registry 공용 인증 주체"
+    },
+    {
+      "key": "RPL-22",
+      "proposed_product": "dev-harness",
+      "proposed_component": "documentation",
+      "decision": "REVIEW",
+      "reason": "Pending Handoff 정본 계약"
+    },
+    {
+      "key": "RPL-24",
+      "proposed_product": "identity",
+      "proposed_component": "documentation",
+      "decision": "REVIEW",
+      "reason": "Product Client Redirect allowlist 계약 주체"
+    },
+    {
+      "key": "RPL-25",
+      "proposed_product": "identity",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "OAuth Provider Callback 공용 제품 클라이언트"
+    },
+    {
+      "key": "RPL-28",
+      "proposed_product": "identity",
+      "proposed_component": "documentation",
+      "decision": "REVIEW",
+      "reason": "OAuth State Client Binding 계약 문서"
+    },
+    {
+      "key": "RPL-38",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "decision": "EXCEPTION",
+      "reason": "폐기된 임시 티켓: 전체 포함 여부 별도 결정"
+    },
+    {
+      "key": "RPL-39",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "decision": "EXCEPTION",
+      "reason": "폐기된 임시 티켓: 전체 포함 여부 별도 결정"
+    },
+    {
+      "key": "RPL-40",
+      "proposed_product": "dev-harness",
+      "proposed_component": "infra",
+      "decision": "EXCEPTION",
+      "reason": "폐기된 임시 티켓: 전체 포함 여부 별도 결정"
+    },
+    {
+      "key": "RPL-45",
+      "proposed_product": "finance",
+      "proposed_component": "frontend",
+      "decision": "EXCEPTION",
+      "reason": "중복 생성되어 RPL-44 사용: 이력 보존"
+    },
+    {
+      "key": "RPL-53",
+      "proposed_product": "gateway",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "Shared Gateway 추출 작업"
+    },
+    {
+      "key": "RPL-54",
+      "proposed_product": "identity",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "Shared Identity 추출 작업"
+    },
+    {
+      "key": "RPL-71",
+      "proposed_product": "platform-foundation",
+      "proposed_component": "infra",
+      "decision": "OWNER",
+      "reason": "Gateway·Identity Runtime 공용 Foundation; 대표 소유권 확인"
+    },
+    {
+      "key": "RPL-84",
+      "proposed_product": "finance",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "Finance BE Raw Journal Detail/List API"
+    },
+    {
+      "key": "RPL-96",
+      "proposed_product": "finance",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "Finance BE Journal Reliability"
+    },
+    {
+      "key": "RPL-105",
+      "proposed_product": "platform-foundation",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "Platform Core 공용 Host 기반"
+    },
+    {
+      "key": "RPL-106",
+      "proposed_product": "ai",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "Shared AI Kotlin/Spring 실행 모듈"
+    },
+    {
+      "key": "RPL-109",
+      "proposed_product": "audit",
+      "proposed_component": "documentation",
+      "decision": "OWNER",
+      "reason": "Shared Audit Event Catalog/Contract 정본 영역"
+    },
+    {
+      "key": "RPL-110",
+      "proposed_product": "audit",
+      "proposed_component": "backend",
+      "decision": "REVIEW",
+      "reason": "Audit Publisher Boundary"
+    },
+    {
+      "key": "RPL-111",
+      "proposed_product": "audit",
+      "proposed_component": "backend",
+      "decision": "OWNER",
+      "reason": "기존 JetStream 명세 vs 현행 SQS ADR 충돌; 별도 Description 승인"
+    }
+  ],
+  "unsupported_type_issues": [
+    "RPL-70",
+    "RPL-77",
+    "RPL-80",
+    "RPL-82",
+    "RPL-83",
+    "RPL-85",
+    "RPL-89",
+    "RPL-94",
+    "RPL-115",
+    "RPL-116",
+    "RPL-117",
+    "RPL-118"
+  ],
+  "gate": "G2 continued migration only; G3 PR #83/#84 remain on hold",
+  "safety_halt": true
+}
