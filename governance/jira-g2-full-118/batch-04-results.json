@@ -1,0 +1,20 @@
+{
+  "batch": 4,
+  "results": [
+    {
+      "key": "RPL-20",
+      "verified": true,
+      "after_updated": "2026-10-23T11:06:36.476+0900"
+    },
+    {
+      "key": "RPL-21",
+      "verified": true,
+      "after_updated": "2026-10-23T11:07:25.670+0900"
+    },
+    {
+      "key": "RPL-23",
+      "verified": true,
+      "after_updated": "2026-10-23T11:07:29.356+0900"
+    }
+  ]
+}
