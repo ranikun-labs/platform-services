@@ -1,0 +1,25 @@
+{
+  "batch": "resume-18",
+  "rows": [
+    {
+      "key": "RPL-111",
+      "verified": true,
+      "post_updated": "2026-10-23T12:11:55.817+0900"
+    },
+    {
+      "key": "RPL-11",
+      "verified": true,
+      "post_updated": "2026-10-23T12:11:51.142+0900"
+    },
+    {
+      "key": "RPL-10",
+      "verified": true,
+      "post_updated": "2026-10-23T12:11:46.569+0900"
+    }
+  ],
+  "limitations": [
+    "RPL-10/11 duplicate relationship not changed",
+    "RPL-111 description still mentions JetStream, later SQS ADR reconciliation required",
+    "Legacy fields maintained as primary read authority until G3"
+  ]
+}
