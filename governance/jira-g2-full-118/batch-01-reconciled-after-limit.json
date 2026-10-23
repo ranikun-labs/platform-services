@@ -1,0 +1,37 @@
+{
+  "status": "RECONCILED_AFTER_TOOL_LIMIT",
+  "verified_count": 7,
+  "verified": [
+    {
+      "key": "RPL-8",
+      "post_updated": "2026-10-23T10:51:14.397+0900"
+    },
+    {
+      "key": "RPL-9",
+      "post_updated": "2026-10-23T10:52:09.117+0900"
+    },
+    {
+      "key": "RPL-12",
+      "post_updated": "2026-10-23T10:52:14.300+0900"
+    },
+    {
+      "key": "RPL-13",
+      "post_updated": "2026-10-23T10:52:19.642+0900"
+    },
+    {
+      "key": "RPL-14",
+      "post_updated": "2026-10-23T10:52:24.103+0900"
+    },
+    {
+      "key": "RPL-15",
+      "post_updated": "2026-10-23T10:52:28.789+0900"
+    },
+    {
+      "key": "RPL-17",
+      "post_updated": "2026-10-23T10:52:33.669+0900"
+    }
+  ],
+  "unexpected": [],
+  "remaining_count": 48,
+  "recheck_source": "live Jira full Target-scoped Search"
+}
