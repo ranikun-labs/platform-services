@@ -1,0 +1,30 @@
+name: Disposable G4 real three-service checks
+on:
+  push:
+    branches: ['audit/g4-real-three-service-20261023']
+permissions:
+  contents: read
+jobs:
+  g4-real-process:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout Platform combined candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Checkout public Carelog 52+53 combined candidate
+        uses: actions/checkout@v4
+        with:
+          repository: ranikun-labs/carelog-be
+          ref: e730e34db9b245ca4aafabe37b5ca71f459b70b8
+          path: carelog-source
+          persist-credentials: false
+      - name: Verify exact source pins
+        run: |
+          test "$(git -C carelog-source rev-parse HEAD)" = e730e34db9b245ca4aafabe37b5ca71f459b70b8
+          git rev-parse HEAD
+      - name: Disposable Gateway + Core + real Carelog E2E
+        env:
+          CODEX_PROXY_CERT: ./docs/testing/evidence/.gitkeep
+        run: bash scripts/g4/run_three_services.sh
