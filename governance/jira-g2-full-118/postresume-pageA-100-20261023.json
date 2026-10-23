@@ -1,0 +1,921 @@
+{
+  "part": "A",
+  "target_saved_in_part": 100,
+  "change_since_prewrite": 76,
+  "legacy_title_status_drifts": [],
+  "pagination_has_more": true,
+  "changes": [
+    {
+      "key": "RPL-1",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:11:03.199+0900"
+    },
+    {
+      "key": "RPL-4",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10022",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:11:07.859+0900"
+    },
+    {
+      "key": "RPL-7",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:11:12.660+0900"
+    },
+    {
+      "key": "RPL-8",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T10:51:14.397+0900"
+    },
+    {
+      "key": "RPL-9",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T10:52:09.117+0900"
+    },
+    {
+      "key": "RPL-10",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:11:46.569+0900"
+    },
+    {
+      "key": "RPL-11",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:11:51.142+0900"
+    },
+    {
+      "key": "RPL-12",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T10:52:14.300+0900"
+    },
+    {
+      "key": "RPL-13",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T10:52:19.642+0900"
+    },
+    {
+      "key": "RPL-14",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T10:52:24.103+0900"
+    },
+    {
+      "key": "RPL-15",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T10:52:28.789+0900"
+    },
+    {
+      "key": "RPL-16",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10023",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:03:09.318+0900"
+    },
+    {
+      "key": "RPL-17",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T10:52:33.669+0900"
+    },
+    {
+      "key": "RPL-18",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T10:54:02.969+0900"
+    },
+    {
+      "key": "RPL-19",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T10:54:06.512+0900"
+    },
+    {
+      "key": "RPL-20",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:06:36.476+0900"
+    },
+    {
+      "key": "RPL-21",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T11:07:25.670+0900"
+    },
+    {
+      "key": "RPL-22",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:03:13.945+0900"
+    },
+    {
+      "key": "RPL-23",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:07:29.356+0900"
+    },
+    {
+      "key": "RPL-24",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10023",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:03:18.691+0900"
+    },
+    {
+      "key": "RPL-25",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10023",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:05:49.241+0900"
+    },
+    {
+      "key": "RPL-26",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T11:08:20.214+0900"
+    },
+    {
+      "key": "RPL-28",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10023",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:05:54.080+0900"
+    },
+    {
+      "key": "RPL-29",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:08:23.934+0900"
+    },
+    {
+      "key": "RPL-30",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:08:27.418+0900"
+    },
+    {
+      "key": "RPL-31",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:08:30.745+0900"
+    },
+    {
+      "key": "RPL-32",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:11:12.331+0900"
+    },
+    {
+      "key": "RPL-33",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:11:15.639+0900"
+    },
+    {
+      "key": "RPL-35",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:11:19.181+0900"
+    },
+    {
+      "key": "RPL-36",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T11:11:22.807+0900"
+    },
+    {
+      "key": "RPL-37",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T11:11:25.769+0900"
+    },
+    {
+      "key": "RPL-38",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T12:08:47.472+0900"
+    },
+    {
+      "key": "RPL-39",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T12:08:52.009+0900"
+    },
+    {
+      "key": "RPL-40",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T12:08:56.481+0900"
+    },
+    {
+      "key": "RPL-41",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T11:11:29.630+0900"
+    },
+    {
+      "key": "RPL-42",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:12:22.876+0900"
+    },
+    {
+      "key": "RPL-43",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:12:26.750+0900"
+    },
+    {
+      "key": "RPL-44",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:12:30.901+0900"
+    },
+    {
+      "key": "RPL-45",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T12:09:26.370+0900"
+    },
+    {
+      "key": "RPL-48",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:12:34.721+0900"
+    },
+    {
+      "key": "RPL-49",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:12:38.878+0900"
+    },
+    {
+      "key": "RPL-50",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T11:12:42.353+0900"
+    },
+    {
+      "key": "RPL-52",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:13:16.909+0900"
+    },
+    {
+      "key": "RPL-53",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10022",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:05:59.119+0900"
+    },
+    {
+      "key": "RPL-54",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10023",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:06:29.294+0900"
+    },
+    {
+      "key": "RPL-56",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:13:20.557+0900"
+    },
+    {
+      "key": "RPL-57",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:13:23.470+0900"
+    },
+    {
+      "key": "RPL-58",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:52:11.432+0900"
+    },
+    {
+      "key": "RPL-59",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:53:19.759+0900"
+    },
+    {
+      "key": "RPL-60",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:53:24.316+0900"
+    },
+    {
+      "key": "RPL-61",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:53:29.543+0900"
+    },
+    {
+      "key": "RPL-65",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T11:54:01.485+0900"
+    },
+    {
+      "key": "RPL-66",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:54:05.925+0900"
+    },
+    {
+      "key": "RPL-67",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10027",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T11:54:10.287+0900"
+    },
+    {
+      "key": "RPL-71",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10030"
+      },
+      "updated": "2026-10-23T12:06:33.928+0900"
+    },
+    {
+      "key": "RPL-72",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:54:44.699+0900"
+    },
+    {
+      "key": "RPL-73",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:54:49.295+0900"
+    },
+    {
+      "key": "RPL-74",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:54:54.170+0900"
+    },
+    {
+      "key": "RPL-76",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:55:25.924+0900"
+    },
+    {
+      "key": "RPL-79",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:55:30.569+0900"
+    },
+    {
+      "key": "RPL-84",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:06:38.202+0900"
+    },
+    {
+      "key": "RPL-86",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:55:36.382+0900"
+    },
+    {
+      "key": "RPL-87",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:57:06.166+0900"
+    },
+    {
+      "key": "RPL-90",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:59:08.576+0900"
+    },
+    {
+      "key": "RPL-92",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10020",
+        "component": "10029"
+      },
+      "updated": "2026-10-23T11:59:13.984+0900"
+    },
+    {
+      "key": "RPL-96",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10021",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:07:07.112+0900"
+    },
+    {
+      "key": "RPL-97",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:59:43.915+0900"
+    },
+    {
+      "key": "RPL-99",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:59:48.374+0900"
+    },
+    {
+      "key": "RPL-100",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T11:59:53.870+0900"
+    },
+    {
+      "key": "RPL-101",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:00:22.516+0900"
+    },
+    {
+      "key": "RPL-102",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:00:27.096+0900"
+    },
+    {
+      "key": "RPL-103",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10024",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:00:31.707+0900"
+    },
+    {
+      "key": "RPL-104",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10024",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:00:59.237+0900"
+    },
+    {
+      "key": "RPL-105",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:07:12.249+0900"
+    },
+    {
+      "key": "RPL-106",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10024",
+        "component": "10028"
+      },
+      "updated": "2026-10-23T12:07:16.511+0900"
+    },
+    {
+      "key": "RPL-108",
+      "old": {
+        "product": null,
+        "component": null
+      },
+      "now": {
+        "product": "10026",
+        "component": "10031"
+      },
+      "updated": "2026-10-23T12:01:03.652+0900"
+    }
+  ]
+}
