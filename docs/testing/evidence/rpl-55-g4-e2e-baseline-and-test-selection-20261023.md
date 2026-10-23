@@ -29,9 +29,9 @@
 
 | 변경 범위 | 우선 실행할 Targeted Test | 전체 E2E |
 | --- | --- | --- |
-| Gateway JWT·허용 경로·헤더 | `cd gateway-app && ./gradlew test --tests 'com.ranikunlabs.platform.gateway.filter.JwtGlobalFilterCharacterizationTest' --tests 'com.ranikunlabs.platform.gateway.route.GatewayRoutingHttpIntegrationTest' --no-daemon` | 인증·신뢰 경계/라우팅 계약 변경이면 통합 후보 승인 시 실행 |
-| Platform Identity 로그인·JWT | `cd platform-core && ./gradlew :identity:test --tests 'com.ranikunlabs.platform.identity.AuthServiceImplTest' --tests 'com.ranikunlabs.platform.identity.JwtTokenProviderTest' --no-daemon` | 토큰 Claim·인증 계약 변경이면 실행 |
-| 카카오 OAuth | `cd platform-core && ./gradlew :identity:test --tests 'com.ranikunlabs.platform.identity.KakaoOAuthAdapterTest' --tests 'com.ranikunlabs.platform.identity.OAuthApplicationServiceTest' --no-daemon` | 실제 Gateway/OAuth 경계 변경이면 가짜 Provider 결합 검증 추가 |
+| Gateway JWT·허용 경로·헤더 | `./gradlew -p gateway-app test --tests 'com.ranikunlabs.platform.gateway.filter.JwtGlobalFilterCharacterizationTest' --tests 'com.ranikunlabs.platform.gateway.route.GatewayRoutingHttpIntegrationTest' --no-daemon` | 인증·신뢰 경계/라우팅 계약 변경이면 통합 후보 승인 시 실행 |
+| Platform Identity 로그인·JWT | `./gradlew -p platform-core :identity:test --tests 'com.ranikunlabs.platform.identity.AuthServiceImplTest' --tests 'com.ranikunlabs.platform.identity.JwtTokenProviderTest' --no-daemon` | 토큰 Claim·인증 계약 변경이면 실행 |
+| 카카오 OAuth | `./gradlew -p platform-core :identity:test --tests 'com.ranikunlabs.platform.identity.KakaoOAuthAdapterTest' --tests 'com.ranikunlabs.platform.identity.OAuthApplicationServiceTest' --no-daemon` | 실제 Gateway/OAuth 경계 변경이면 가짜 Provider 결합 검증 추가 |
 | Carelog Customer·조직 격리 | Carelog 저장소에서 `./gradlew :carelog-be:test --tests 'carelog.carelog.customer.web.CustomerControllerTest' --tests 'carelog.carelog.customer.app.CustomerServiceImplTest' --no-daemon` | Product Claims/Principal의 계약이 변하지 않으면 생략 |
 | G4 비운영 검사 도구만 변경 | `python3 -m py_compile scripts/g4/verify_three_services.py && bash -n scripts/g4/run_three_services.sh`; Carelog `python -m unittest discover -s scripts/tests -p 'test_rpl55_g4_nonprod_smoke.py'` | 검사 추가/수정이 진짜 서버 동작을 검증해야 할 때만 실행 |
 | Finance Journal Owner·멱등성 | Finance BE에서 `./gradlew test --tests 'labs.ranikun.finance.journal.web.JournalIdempotencyOwnerIntegrationTests' --no-daemon` | G4와 무관하면 G4 전체 실행 금지 |

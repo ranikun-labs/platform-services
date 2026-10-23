@@ -1,0 +1,54 @@
+name: RPL-55 targeted real product tests
+on:
+  push:
+    branches: ['audit/g4-real-three-service-20261023']
+    paths:
+      - '.github/workflows/audit-g4-targeted-feature.yml'
+      - 'gateway-app/src/**'
+      - 'platform-core/identity/src/**'
+      - 'scripts/g4/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gateway-auth:
+    name: Gateway JWT and route unit-integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: ./gradlew -p gateway-app test --tests 'com.ranikunlabs.platform.gateway.filter.JwtGlobalFilterCharacterizationTest' --tests 'com.ranikunlabs.platform.gateway.route.GatewayRoutingHttpIntegrationTest' --no-daemon --stacktrace
+  core-identity:
+    name: Identity login JWT and OAuth unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: ./gradlew -p platform-core :identity:test --tests 'com.ranikunlabs.platform.identity.AuthServiceImplTest' --tests 'com.ranikunlabs.platform.identity.JwtTokenProviderTest' --tests 'com.ranikunlabs.platform.identity.KakaoOAuthAdapterTest' --tests 'com.ranikunlabs.platform.identity.OAuthApplicationServiceTest' --no-daemon --stacktrace
+  carelog-api:
+    name: Carelog customer scope and auth failures
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ranikun-labs/carelog-be
+          ref: e730e34db9b245ca4aafabe37b5ca71f459b70b8
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: ./gradlew :carelog-be:test --tests 'carelog.carelog.customer.web.CustomerControllerTest' --tests 'carelog.carelog.customer.app.CustomerServiceImplTest' --no-daemon --stacktrace
