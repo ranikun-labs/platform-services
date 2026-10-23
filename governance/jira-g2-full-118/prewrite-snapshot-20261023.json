@@ -1,0 +1,3642 @@
+{
+  "record_type": "G2_FULL_118_PREWRITE",
+  "scope_approved_in_chat": true,
+  "as_of": "2026-10-23",
+  "source": "live Jira RPL read-only, 118 issues",
+  "cloud_id": "4d35e8b0-e0be-450b-97b0-6ad156f7f936",
+  "original_head": "9f04f44e5dfc88272fcf380f96524f5bfdc92b75",
+  "policy": "Target-only edits; Legacy/Status/Description preserved; no Cutover",
+  "counts": {
+    "total": 118,
+    "existing": 27,
+    "planned": 55,
+    "owner_decisions": 24,
+    "unsupported_issue_types": 12
+  },
+  "issues": [
+    {
+      "key": "RPL-1",
+      "issue_id": "10000",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "할 일",
+      "updated": "2026-08-10T17:08:28.970+0900",
+      "summary": "Carelog 카카오 OAuth 로그인 완성",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "shared-platform"
+        ],
+        "legacy_component": [
+          "shared-identity"
+        ],
+        "legacy_labels": [
+          "kakao",
+          "login",
+          "oauth",
+          "security"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-4",
+      "issue_id": "10003",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-08-10T17:09:40.662+0900",
+      "summary": "Security 공개 경로와 Gateway Route 적용",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "auth",
+          "gateway",
+          "oauth",
+          "rate-limit",
+          "security"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-7",
+      "issue_id": "10006",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-08-10T17:10:14.110+0900",
+      "summary": "OAuth 전체 회귀 검증과 인증 문서 반영",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation"
+        ],
+        "legacy_labels": [
+          "auth",
+          "documentation",
+          "oauth",
+          "testing"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-8",
+      "issue_id": "10007",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "완료",
+      "updated": "2026-08-10T17:10:27.583+0900",
+      "summary": "Finance Harness FE — STEP 9 핵심 화면 UI",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "design",
+          "responsive",
+          "step-9",
+          "ui"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-9",
+      "issue_id": "10008",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:10:48.662+0900",
+      "summary": "STEP 9 Ask 결과·빈 상태 UI 구현",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "empty-state",
+          "review",
+          "step-9",
+          "ui"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-10",
+      "issue_id": "10009",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "완료",
+      "updated": "2026-08-10T17:11:04.903+0900",
+      "summary": "Finance Harness Frontend와 Shared Identity 인증 계약 확정",
+      "before": {
+        "legacy_product": [
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "auth",
+          "contract",
+          "research",
+          "shared-identity"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-11",
+      "issue_id": "10010",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "할 일",
+      "updated": "2026-08-10T17:11:21.621+0900",
+      "summary": "Finance Harness Frontend와 Shared Identity 인증 계약 확정",
+      "before": {
+        "legacy_product": [
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "auth",
+          "contract",
+          "duplicate-candidate",
+          "research",
+          "shared-identity"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-12",
+      "issue_id": "10011",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:10:23.000+0900",
+      "summary": "STEP 9 기록 상세 UI 구현",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "detail",
+          "journal",
+          "step-9",
+          "ui"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-13",
+      "issue_id": "10012",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:11:46.577+0900",
+      "summary": "Shared Git Work Preflight 구현 및 fail-closed 검수 보정",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "git",
+          "preflight",
+          "runtime",
+          "safety"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-14",
+      "issue_id": "10013",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "완료",
+      "updated": "2026-08-10T17:11:59.001+0900",
+      "summary": "공통 MSA 통신·메시징·확장 기준 정합화",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "messaging",
+          "msa",
+          "research"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-15",
+      "issue_id": "10014",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:12:10.908+0900",
+      "summary": "STEP 9 기록 복기 UI 구현",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "retrospective",
+          "review",
+          "step-9",
+          "ui"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-16",
+      "issue_id": "10015",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:12:22.586+0900",
+      "summary": "Product Client Registry Foundation 구현",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "auth",
+          "oauth",
+          "product-client",
+          "shared-identity"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-17",
+      "issue_id": "10016",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:12:34.111+0900",
+      "summary": "Codex Context Checkpoint Guard 최신 master 통합 및 독립 검수",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "codex",
+          "context-checkpoint",
+          "guard",
+          "runtime"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-18",
+      "issue_id": "10017",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:11:18.555+0900",
+      "summary": "투자·학습 기록의 타입 안전 Form과 제출 경계 구현",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "form",
+          "journal",
+          "step-10",
+          "validation"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-19",
+      "issue_id": "10018",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:12:59.212+0900",
+      "summary": "STEP 9 홈 UI 구현",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "historical",
+          "home",
+          "step-9",
+          "ui"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-20",
+      "issue_id": "10019",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "완료",
+      "updated": "2026-09-08T15:13:21.098+0900",
+      "summary": "공통 플랫폼 통신·메시징·확장 Foundation ADR 확정",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "adr",
+          "architecture",
+          "foundation",
+          "messaging"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-21",
+      "issue_id": "10020",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:13:23.213+0900",
+      "summary": "jira-ticket MCP-backed Jira 생성 Workflow 구현",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "jira",
+          "mcp",
+          "runtime",
+          "workflow"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-22",
+      "issue_id": "10021",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:13:34.665+0900",
+      "summary": "DEC-062 Pending Handoff Rehydration 구현 계약 및 Fixture Gate 확정",
+      "before": {
+        "legacy_product": [
+          "dev-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "contract",
+          "handoff",
+          "rehydration"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-23",
+      "issue_id": "10022",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "완료",
+      "updated": "2026-08-10T17:13:47.090+0900",
+      "summary": "Jira·Git·Confluence·AI 세션 통합 운영 Governance 확정",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "ai-sessions",
+          "confluence",
+          "governance",
+          "jira"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-24",
+      "issue_id": "10023",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "완료",
+      "updated": "2026-08-10T17:13:58.557+0900",
+      "summary": "Product Client Redirect URI exact allowlist 계약 확정",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "auth",
+          "oauth",
+          "research",
+          "security",
+          "shared-identity"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-25",
+      "issue_id": "10024",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:14:10.568+0900",
+      "summary": "Product Client별 OAuth Provider Callback 설정 기반 구현",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "auth",
+          "callback",
+          "oauth",
+          "shared-identity"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-26",
+      "issue_id": "10025",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-15T00:31:10.394+0900",
+      "summary": "Pending Handoff Rehydration Runtime-neutral Core 구현",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "concurrency",
+          "handoff",
+          "rehydration",
+          "runtime"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-28",
+      "issue_id": "10027",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:14:37.850+0900",
+      "summary": "OAuth State Product Client Binding 구현 계약 문서화",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "auth",
+          "contract",
+          "documentation",
+          "oauth",
+          "shared-identity"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-29",
+      "issue_id": "10028",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:14:48.156+0900",
+      "summary": "STEP 9 전체 통합 Final Gate 및 완료 기준 확정",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "release-gate",
+          "responsive",
+          "step-9",
+          "testing"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-30",
+      "issue_id": "10029",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:14:58.893+0900",
+      "summary": "Jira 완료 상태 Category와 운영 Metadata를 정합화",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "administration",
+          "governance",
+          "jira",
+          "metadata"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-31",
+      "issue_id": "10030",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:15:10.910+0900",
+      "summary": "Ranikun Labs System Landscape를 작성",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "confluence",
+          "projection",
+          "system-landscape"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-32",
+      "issue_id": "10031",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:15:20.297+0900",
+      "summary": "React 제품 공통 Frontend Foundation Template 추출",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "foundation",
+          "frontend",
+          "react",
+          "template"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-33",
+      "issue_id": "10032",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:15:32.560+0900",
+      "summary": "Ranikun Labs System Catalog를 machine-readable Projection으로 작성",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "catalog",
+          "projection",
+          "yaml"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-35",
+      "issue_id": "10034",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "완료",
+      "updated": "2026-08-10T17:15:22.470+0900",
+      "summary": "Finance Harness FE — STEP 10 Journal 작성 계약과 검증 가능한 클라이언트 제출 흐름",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "form",
+          "journal",
+          "step-10",
+          "submit"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-36",
+      "issue_id": "10035",
+      "type_id": "10012",
+      "type": "버그",
+      "status": "할 일",
+      "updated": "2026-08-10T18:12:35.980+0900",
+      "summary": "Context Checkpoint fail-open 계약과 동시 Activity Fixture Oracle 정합화",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "concurrency",
+          "context-checkpoint",
+          "fail-open",
+          "fixture-oracle"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-37",
+      "issue_id": "10036",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-08-10T17:16:04.232+0900",
+      "summary": "Context Checkpoint fail-open 계약과 동시 Activity Fixture Oracle 정합화",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "concurrency",
+          "context-checkpoint",
+          "fail-open",
+          "testing"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-38",
+      "issue_id": "10037",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:16:15.688+0900",
+      "summary": "[폐기] 도구 호출 오류로 생성된 임시 티켓",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "discarded",
+          "duplicate",
+          "jira",
+          "tool-error"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-39",
+      "issue_id": "10038",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:16:28.873+0900",
+      "summary": "[폐기] 도구 호출 오류로 생성된 임시 티켓",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "discarded",
+          "duplicate",
+          "jira",
+          "tool-error"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-40",
+      "issue_id": "10039",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-08-10T17:16:38.896+0900",
+      "summary": "[폐기] 도구 호출 오류로 생성된 임시 티켓",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "discarded",
+          "duplicate",
+          "jira",
+          "tool-error"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-41",
+      "issue_id": "10040",
+      "type_id": "10012",
+      "type": "버그",
+      "status": "할 일",
+      "updated": "2026-08-10T18:12:43.034+0900",
+      "summary": "Context Checkpoint fail-open 계약과 동시 Activity Fixture Oracle 정합화",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "context-checkpoint",
+          "fail-open",
+          "fixture-flake",
+          "testing"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-42",
+      "issue_id": "10041",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:16:48.657+0900",
+      "summary": "Mac mini Primary와 AWS DR 기반 배포·재해복구 아키텍처를 결정",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "adr",
+          "architecture",
+          "aws",
+          "deployment",
+          "dr"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-43",
+      "issue_id": "10042",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:16:59.265+0900",
+      "summary": "투자·학습 기록 작성 화면과 입력 검증 구현",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "a11y",
+          "form",
+          "journal",
+          "step-10",
+          "validation"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-44",
+      "issue_id": "10043",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:17:10.116+0900",
+      "summary": "Journal 제출 중복과 가짜 저장 노출을 막는 Create Port·Submit State 구현",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "journal",
+          "port-adapter",
+          "step-10",
+          "submit",
+          "testing"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-45",
+      "issue_id": "10044",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:17:23.056+0900",
+      "summary": "중복 생성 — RPL-44 사용",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "discarded",
+          "duplicate",
+          "journal",
+          "step-10"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-48",
+      "issue_id": "10047",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-10T17:18:05.618+0900",
+      "summary": "Finance FE — STEP 11 Production Journal Create HTTP Adapter",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "api",
+          "http-adapter",
+          "journal",
+          "step-11"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-49",
+      "issue_id": "10048",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-10T17:18:17.797+0900",
+      "summary": "Carelog FE — Customer List·Detail·Timeline 첫 Vertical Slice",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "customer",
+          "historical",
+          "timeline",
+          "vertical-slice"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-50",
+      "issue_id": "10049",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-13T00:18:57.830+0900",
+      "summary": "Finance BE — STEP 11 Backend Foundation·Journal Create API",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "api",
+          "foundation",
+          "journal",
+          "persistence"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-52",
+      "issue_id": "10051",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-09-08T15:13:28.991+0900",
+      "summary": "Platform — Shared Platform Physicalization·Repository Foundation",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "physicalization"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-53",
+      "issue_id": "10052",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-14T17:57:38.647+0900",
+      "summary": "Gateway — Carelog Gateway → Shared gateway-app Behavior-preserving Extraction",
+      "before": {
+        "legacy_product": [
+          "shared-platform"
+        ],
+        "legacy_component": [
+          "gateway"
+        ],
+        "legacy_labels": [
+          "extraction",
+          "migration",
+          "security"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-54",
+      "issue_id": "10053",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-09-08T15:13:51.562+0900",
+      "summary": "Identity — Carelog Auth/OAuth/Identity → Shared platform-core Extraction",
+      "before": {
+        "legacy_product": [
+          "shared-platform"
+        ],
+        "legacy_component": [
+          "identity"
+        ],
+        "legacy_labels": [
+          "extraction",
+          "migration",
+          "oauth",
+          "security"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-56",
+      "issue_id": "10055",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-11T20:20:08.191+0900",
+      "summary": "Carelog FE — Design Contract·Tokens·A11Y Foundation",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "a11y",
+          "design-system",
+          "responsive",
+          "tokens"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-57",
+      "issue_id": "10056",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-11T20:20:17.111+0900",
+      "summary": "Carelog FE — CustomerEvent Canonical Model·Legacy Adapter",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "adapter",
+          "customer-event",
+          "domain-model",
+          "legacy"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-58",
+      "issue_id": "10057",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-11T20:20:26.312+0900",
+      "summary": "Carelog FE — Schedule·Agenda + Event Detail Vertical Slice",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "agenda",
+          "customer-event",
+          "schedule",
+          "vertical-slice"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-59",
+      "issue_id": "10058",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-11T21:36:09.876+0900",
+      "summary": "Carelog FE — Customer Detail Canonical Refactor",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "customer",
+          "customer-event",
+          "detail",
+          "refactor"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-60",
+      "issue_id": "10059",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-11T23:39:14.907+0900",
+      "summary": "Carelog FE — Event Create·Transition·Edit Flow",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "customer-event",
+          "edit",
+          "form",
+          "state-transition"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-61",
+      "issue_id": "10060",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-12T01:14:24.078+0900",
+      "summary": "Carelog FE — Adaptive Host·2-pane·Rotation Preservation",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "adaptive",
+          "layout",
+          "responsive",
+          "rotation",
+          "two-pane"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-65",
+      "issue_id": "10064",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-15T00:30:48.342+0900",
+      "summary": "Carelog BE — CustomerEvent Canonical API·Persistence Foundation",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "adapter",
+          "api",
+          "customer-event",
+          "persistence"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-66",
+      "issue_id": "10065",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "준비",
+      "updated": "2026-08-10T17:56:43.768+0900",
+      "summary": "지라 티켓 테스트 ",
+      "before": {
+        "legacy_product": [
+          "Carelog"
+        ],
+        "legacy_component": [
+          "Frontend"
+        ],
+        "legacy_labels": [
+          "기타"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-67",
+      "issue_id": "10067",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-11T18:37:49.689+0900",
+      "summary": "jira-work — Main Handoff·Repository Execution Readiness Gate 재설계",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "dogfooding",
+          "git-safety",
+          "jira-work",
+          "main-worker"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-70",
+      "issue_id": "10075",
+      "type_id": "10008",
+      "type": "하위 작업",
+      "status": "완료",
+      "updated": "2026-08-12T16:28:14.396+0900",
+      "summary": "Pending Handoff — Delivery / Consumption Core",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-71",
+      "issue_id": "10077",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-12T16:03:44.818+0900",
+      "summary": "Platform — Gateway·Identity Runtime Foundation 구현",
+      "before": {
+        "legacy_product": [
+          "shared-platform"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "runtime-foundation"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-72",
+      "issue_id": "10078",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-12T12:13:25.809+0900",
+      "summary": "Platform Foundation — G1 Runtime Foundation Canonical Authority 정합화",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "canonical-authority"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-73",
+      "issue_id": "10080",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-12T16:31:07.534+0900",
+      "summary": "Carelog FE — First-use·Customer Create·Edit Lifecycle",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "create",
+          "customer-lifecycle",
+          "edit",
+          "first-use"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-74",
+      "issue_id": "10081",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-13T01:30:28.674+0900",
+      "summary": "Carelog FE — Auth Entry·Session Bootstrap·Recovery",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "auth",
+          "bootstrap",
+          "recovery",
+          "session"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-76",
+      "issue_id": "10083",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-13T16:57:27.419+0900",
+      "summary": "Carelog FE — Schedule-origin Planned Event Entry",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "entrypoint",
+          "event-create",
+          "planned",
+          "schedule"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-77",
+      "issue_id": "10084",
+      "type_id": "10008",
+      "type": "하위 작업",
+      "status": "완료",
+      "updated": "2026-08-12T17:18:14.377+0900",
+      "summary": "Pending Handoff — Runtime-neutral Session Resolution Port",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-79",
+      "issue_id": "10087",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-12T17:31:59.036+0900",
+      "summary": "Carelog FE — Surface-aware Tablet/Desktop container·master/detail composition",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "adaptive",
+          "composition",
+          "desktop",
+          "responsive",
+          "tablet",
+          "ui-ux"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-80",
+      "issue_id": "10088",
+      "type_id": "10008",
+      "type": "하위 작업",
+      "status": "완료",
+      "updated": "2026-08-13T00:23:10.844+0900",
+      "summary": "Pending Handoff — Manual Resume Orchestration",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-82",
+      "issue_id": "10091",
+      "type_id": "10008",
+      "type": "하위 작업",
+      "status": "완료",
+      "updated": "2026-08-14T17:55:01.342+0900",
+      "summary": "Pending Handoff — Codex Runtime Adapter",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-83",
+      "issue_id": "10092",
+      "type_id": "10008",
+      "type": "하위 작업",
+      "status": "진행 중",
+      "updated": "2026-08-13T15:42:55.834+0900",
+      "summary": "Pending Handoff — Codex Runtime Adapter",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-84",
+      "issue_id": "10094",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-14T23:42:23.152+0900",
+      "summary": "Finance BE — STEP 11 Raw Journal Detail/List API",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "api",
+          "journal",
+          "pagination",
+          "read"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-85",
+      "issue_id": "10095",
+      "type_id": "10008",
+      "type": "하위 작업",
+      "status": "완료",
+      "updated": "2026-08-13T16:01:11.991+0900",
+      "summary": "Pending Handoff — Async Session Resolution Compatibility",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-86",
+      "issue_id": "10097",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-14T17:55:09.482+0900",
+      "summary": "Carelog FE — Customer Create CTA Discoverability",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "fe"
+        ],
+        "legacy_labels": [
+          "cta",
+          "customer-lifecycle",
+          "ux"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-87",
+      "issue_id": "10098",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-08-20T15:25:39.461+0900",
+      "summary": "Carelog FE — Customer/Event AI Assistant UX Prototype",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "fe"
+        ],
+        "legacy_labels": [
+          "ai",
+          "customer-event",
+          "prototype",
+          "ux"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-89",
+      "issue_id": "10100",
+      "type_id": "10008",
+      "type": "하위 작업",
+      "status": "완료",
+      "updated": "2026-08-15T00:14:11.402+0900",
+      "summary": "Pending Handoff — Claude Runtime Adapter",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-90",
+      "issue_id": "10102",
+      "type_id": "10012",
+      "type": "버그",
+      "status": "완료",
+      "updated": "2026-08-15T03:39:22.553+0900",
+      "summary": "Carelog FE — Schedule Event 생성 직후 Double-Activation Retarget Race",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "fe"
+        ],
+        "legacy_labels": [
+          "bug",
+          "event-entry",
+          "race-condition",
+          "schedule"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-92",
+      "issue_id": "10106",
+      "type_id": "10012",
+      "type": "버그",
+      "status": "완료",
+      "updated": "2026-08-15T00:48:13.805+0900",
+      "summary": "Carelog FE — Auth Recovery Test Determinism·Full-Gate Failure Evidence",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "fe"
+        ],
+        "legacy_labels": [
+          "auth",
+          "reliability",
+          "test"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-94",
+      "issue_id": "10109",
+      "type_id": "10008",
+      "type": "하위 작업",
+      "status": "진행 중",
+      "updated": "2026-08-15T02:58:18.060+0900",
+      "summary": "Task↔Session Association Runtime-neutral Core·Persistence",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-96",
+      "issue_id": "10113",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-25T21:57:28.171+0900",
+      "summary": "Finance BE — STEP 11 Journal Create Reliability·Idempotency",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "idempotency",
+          "reliability"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-97",
+      "issue_id": "10114",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-16T00:20:31.308+0900",
+      "summary": "Shared AI — Architecture Foundation·SSOT·Execution Boundary",
+      "before": {
+        "legacy_product": [
+          "shared-ai"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "cross-product",
+          "rag",
+          "shared-ai",
+          "skill-lens"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-99",
+      "issue_id": "10117",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-16T01:12:04.121+0900",
+      "summary": "Shared AI — Skill/Lens/Workflow Execution Ownership ADR",
+      "before": {
+        "legacy_product": [
+          "shared-ai"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "adr",
+          "architecture",
+          "execution-runtime",
+          "skill-lens",
+          "workflow-ownership"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-100",
+      "issue_id": "10118",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-16T02:27:32.037+0900",
+      "summary": "Shared AI — Evidence/Provenance Core Envelope·Domain Extension Contract ADR",
+      "before": {
+        "legacy_product": [
+          "shared-ai"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "evidence",
+          "provenance",
+          "shared-ai"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-101",
+      "issue_id": "10119",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-16T16:01:46.942+0900",
+      "summary": "Shared AI — Retrieval/RAG/Knowledge Runtime Ownership ADR",
+      "before": {
+        "legacy_product": [
+          "shared-ai"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "rag",
+          "retrieval",
+          "shared-ai"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-102",
+      "issue_id": "10120",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-25T23:28:24.440+0900",
+      "summary": "Shared AI — Execution Context·API·Tenant Isolation Contract ADR",
+      "before": {
+        "legacy_product": [
+          "shared-ai"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "api-contract",
+          "architecture",
+          "isolation",
+          "shared-ai",
+          "tenant"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-103",
+      "issue_id": "10121",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-09-08T15:13:40.091+0900",
+      "summary": "Shared AI — Runtime Technology·Framework·Placement Boundary ADR",
+      "before": {
+        "legacy_product": [
+          "shared-ai"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "canonical-conflict",
+          "framework",
+          "modular-monolith",
+          "runtime",
+          "shared-ai",
+          "supersession",
+          "technology",
+          "topology"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-104",
+      "issue_id": "10152",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "완료",
+      "updated": "2026-08-26T17:09:56.506+0900",
+      "summary": "Shared AI — Python/FastAPI Execution Vertical Slice PoC",
+      "before": {
+        "legacy_product": [
+          "shared-ai"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "fastapi",
+          "poc",
+          "python",
+          "shared-ai",
+          "vertical-slice"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-105",
+      "issue_id": "10154",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-27T10:07:35.181+0900",
+      "summary": "Platform Core — Modular Monolith Host·Build Isolation Foundation",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "foundation",
+          "modular-monolith",
+          "platform-core",
+          "runtime",
+          "shared-platform"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-106",
+      "issue_id": "10155",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-08-27T14:10:35.228+0900",
+      "summary": "Shared AI — Kotlin/Spring AI Module Foundation·Execution Vertical Slice",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "kotlin",
+          "platform-core",
+          "shared-ai",
+          "spring-ai",
+          "vertical-slice"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-108",
+      "issue_id": "10191",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-09-08T18:06:40.635+0900",
+      "summary": "AU-G0 — Shared Audit Foundation Architecture Freeze & Canonicalization",
+      "before": {
+        "legacy_product": [
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "au-g0",
+          "canonicalization",
+          "jetstream",
+          "shared-audit"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-109",
+      "issue_id": "10193",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-09-09T10:00:04.141+0900",
+      "summary": "AU-G1 — Shared Audit Canonical Event Contract & Event Catalog",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "au-g1",
+          "contract",
+          "event-catalog",
+          "shared-audit"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-110",
+      "issue_id": "10195",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-09-09T15:54:48.555+0900",
+      "summary": "AU-G2 — Shared Audit Publisher Boundary",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "AU-G2",
+          "shared-audit"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-111",
+      "issue_id": "10197",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-09-09T16:39:30.516+0900",
+      "summary": "AU-G3 — Shared Audit JetStream Transport & Provisioning",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "AU-G3",
+          "shared-audit"
+        ],
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-115",
+      "issue_id": "10232",
+      "type_id": "10011",
+      "type": "스토리",
+      "status": "할 일",
+      "updated": "2026-10-21T10:14:24.951+0900",
+      "summary": "Personal AI — 자연어 Trigger→Skill→Subagent 실행·검수 E2E",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-116",
+      "issue_id": "10233",
+      "type_id": "10011",
+      "type": "스토리",
+      "status": "할 일",
+      "updated": "2026-10-21T10:14:27.834+0900",
+      "summary": "Personal AI — Subagent 모델·Fast 실행 모드 Guard 및 안전한 Reviewer 위임",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-117",
+      "issue_id": "10234",
+      "type_id": "10011",
+      "type": "스토리",
+      "status": "할 일",
+      "updated": "2026-10-21T10:14:15.444+0900",
+      "summary": "Personal AI — Cross-Runtime 단계적 결과 전달·후속 작업 알림",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-118",
+      "issue_id": "10235",
+      "type_id": "10011",
+      "type": "스토리",
+      "status": "할 일",
+      "updated": "2026-10-21T10:14:27.794+0900",
+      "summary": "Personal AI — Cross-Runtime Skill 연동·Capability/Cost-Aware 작업 라우팅",
+      "before": {
+        "legacy_product": null,
+        "legacy_component": null,
+        "legacy_labels": null,
+        "target_product": null,
+        "target_component": null,
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-2",
+      "issue_id": "10001",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "할 일",
+      "updated": "2026-10-21T09:56:45.363+0900",
+      "summary": "Kakao OAuth PKCE 공식 지원 범위 확정",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "shared-platform"
+        ],
+        "legacy_component": [
+          "shared-identity"
+        ],
+        "legacy_labels": [
+          "kakao",
+          "oauth",
+          "pkce",
+          "research"
+        ],
+        "target_product": "10023",
+        "target_component": "10031",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-3",
+      "issue_id": "10002",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-10-21T10:39:37.831+0900",
+      "summary": "OAuth Controller 공개 Endpoint 구현",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "api",
+          "auth",
+          "oauth"
+        ],
+        "target_product": "10020",
+        "target_component": "10028",
+        "target_concern": [
+          "10033"
+        ]
+      }
+    },
+    {
+      "key": "RPL-5",
+      "issue_id": "10004",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-10-21T09:56:54.405+0900",
+      "summary": "기존 연결 계정 로그인과 미연결 계정 409 계약 구현",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "auth",
+          "error-contract",
+          "identity",
+          "oauth"
+        ],
+        "target_product": "10023",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-6",
+      "issue_id": "10005",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-10-21T09:57:04.381+0900",
+      "summary": "Redis·DB·Kakao Mock 통합 테스트 추가",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "auth",
+          "integration",
+          "oauth",
+          "redis",
+          "testing"
+        ],
+        "target_product": "10023",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-27",
+      "issue_id": "10026",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "진행 중",
+      "updated": "2026-10-21T11:28:31.619+0900",
+      "summary": "OAuth State에 Product Client Context와 path-only returnTo를 바인딩",
+      "before": {
+        "legacy_product": [
+          "shared-platform"
+        ],
+        "legacy_component": [
+          "identity"
+        ],
+        "legacy_labels": [
+          "oauth-state",
+          "security"
+        ],
+        "target_product": "10023",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-34",
+      "issue_id": "10033",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "진행 중",
+      "updated": "2026-10-21T12:07:51.664+0900",
+      "summary": "Finance Harness — STEP 11 Journal Persistence·API와 실데이터 통합",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "backend",
+          "frontend"
+        ],
+        "legacy_labels": [
+          "api",
+          "integration",
+          "journal",
+          "persistence"
+        ],
+        "target_product": "10021",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-46",
+      "issue_id": "10045",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "할 일",
+      "updated": "2026-10-21T12:08:24.634+0900",
+      "summary": "Carelog — Customer 관계관리 MVP",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "backend",
+          "frontend"
+        ],
+        "legacy_labels": [
+          "crm",
+          "customer-event",
+          "mvp",
+          "p0"
+        ],
+        "target_product": "10020",
+        "target_component": "10029",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-47",
+      "issue_id": "10046",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-10-21T10:39:50.723+0900",
+      "summary": "React Product Foundation 기반 Carelog FE Bootstrap",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "bootstrap",
+          "foundation",
+          "frontend",
+          "react"
+        ],
+        "target_product": "10020",
+        "target_component": "10029",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-51",
+      "issue_id": "10050",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "진행 중",
+      "updated": "2026-10-21T12:09:09.963+0900",
+      "summary": "Ranikun Shared Platform — Gateway·Identity 물리 추출과 Carelog 전환",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "gateway",
+          "identity",
+          "migration",
+          "shared-platform"
+        ],
+        "target_product": "10026",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-55",
+      "issue_id": "10054",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "진행 중",
+      "updated": "2026-10-21T11:29:16.940+0900",
+      "summary": "Carelog — Shared Gateway·Identity Cutover와 Regression",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "cutover",
+          "integration",
+          "migration",
+          "regression"
+        ],
+        "target_product": "10020",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-62",
+      "issue_id": "10061",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "할 일",
+      "updated": "2026-10-21T23:35:05.907+0900",
+      "summary": "Carelog FE — AI Preparation·Briefing·Explicit Memo Save",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "ai",
+          "customer-event",
+          "explicit-save",
+          "memo"
+        ],
+        "target_product": "10020",
+        "target_component": "10029",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-63",
+      "issue_id": "10062",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "진행 중",
+      "updated": "2026-10-19T13:41:12.173+0900",
+      "summary": "Carelog FE — Empty·Loading·Error·Responsive·A11Y Regression",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "a11y",
+          "regression",
+          "responsive",
+          "state",
+          "testing"
+        ],
+        "target_product": "10020",
+        "target_component": "10029",
+        "target_concern": [
+          "10046"
+        ]
+      }
+    },
+    {
+      "key": "RPL-64",
+      "issue_id": "10063",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "할 일",
+      "updated": "2026-10-19T13:41:49.664+0900",
+      "summary": "Carelog FE — Backend API Adapter·Integration",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "adapter",
+          "api",
+          "customer-event",
+          "integration"
+        ],
+        "target_product": "10020",
+        "target_component": "10029",
+        "target_concern": [
+          "10038"
+        ]
+      }
+    },
+    {
+      "key": "RPL-68",
+      "issue_id": "10069",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "진행 중",
+      "updated": "2026-10-19T13:41:58.589+0900",
+      "summary": "Finance FE — Adaptive P0 Design Contract Implementation",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "adaptive",
+          "design-contract",
+          "p0",
+          "responsive",
+          "ui-ux"
+        ],
+        "target_product": "10021",
+        "target_component": "10029",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-69",
+      "issue_id": "10074",
+      "type_id": "10012",
+      "type": "버그",
+      "status": "완료",
+      "updated": "2026-10-19T11:11:25.883+0900",
+      "summary": "git-work-preflight가 stale base mismatch 전에 exact merged PR terminal state를 판정하도록 ordering 수정",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "infra"
+        ],
+        "legacy_labels": [
+          "git-safety",
+          "post-merge",
+          "preflight",
+          "regression"
+        ],
+        "target_product": "10027",
+        "target_component": "10030",
+        "target_concern": [
+          "10046"
+        ]
+      }
+    },
+    {
+      "key": "RPL-75",
+      "issue_id": "10082",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "완료",
+      "updated": "2026-10-19T11:09:17.811+0900",
+      "summary": "Carelog BE — Customer Lifecycle·Workspace Ownership API Foundation",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "backend"
+        ],
+        "legacy_labels": [
+          "api",
+          "customer-lifecycle",
+          "security",
+          "workspace-ownership"
+        ],
+        "target_product": "10020",
+        "target_component": "10028",
+        "target_concern": [
+          "10034"
+        ]
+      }
+    },
+    {
+      "key": "RPL-78",
+      "issue_id": "10086",
+      "type_id": "10013",
+      "type": "Research",
+      "status": "완료",
+      "updated": "2026-10-19T11:11:02.595+0900",
+      "summary": "Carelog FE — Adaptive UX Reality Audit·Tablet/Desktop Composition",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "adaptive",
+          "desktop",
+          "responsive",
+          "tablet",
+          "ux-audit"
+        ],
+        "target_product": "10020",
+        "target_component": "10029",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-81",
+      "issue_id": "10090",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-10-19T11:11:35.341+0900",
+      "summary": "Finance Harness — Architecture ADR·Cross-repository Contract Foundation",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "adr",
+          "architecture",
+          "contract"
+        ],
+        "target_product": "10021",
+        "target_component": "10031",
+        "target_concern": [
+          "10044",
+          "10045"
+        ]
+      }
+    },
+    {
+      "key": "RPL-88",
+      "issue_id": "10099",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "할 일",
+      "updated": "2026-10-19T13:42:54.065+0900",
+      "summary": "Carelog — Architecture ADR·Cross-repository Contract Foundation",
+      "before": {
+        "legacy_product": [
+          "carelog"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "adr",
+          "architecture",
+          "contract"
+        ],
+        "target_product": "10020",
+        "target_component": "10031",
+        "target_concern": [
+          "10044",
+          "10045"
+        ]
+      }
+    },
+    {
+      "key": "RPL-91",
+      "issue_id": "10104",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "완료",
+      "updated": "2026-10-19T11:11:13.317+0900",
+      "summary": "Finance FE — STEP 11 Raw Journal Detail/List Integration",
+      "before": {
+        "legacy_product": [
+          "finance-harness"
+        ],
+        "legacy_component": [
+          "frontend"
+        ],
+        "legacy_labels": [
+          "api",
+          "integration",
+          "journal",
+          "pagination",
+          "read"
+        ],
+        "target_product": "10021",
+        "target_component": "10029",
+        "target_concern": [
+          "10038"
+        ]
+      }
+    },
+    {
+      "key": "RPL-93",
+      "issue_id": "10108",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "진행 중",
+      "updated": "2026-10-21T23:35:39.943+0900",
+      "summary": "Dev Harness — Cross-session Developer Workflow Local MVP",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "cross-session",
+          "local-mvp",
+          "multi-session",
+          "workflow"
+        ],
+        "target_product": "10027",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-95",
+      "issue_id": "10111",
+      "type_id": "10010",
+      "type": "작업",
+      "status": "진행 중",
+      "updated": "2026-10-21T23:36:15.063+0900",
+      "summary": "Dev Harness — User-local Runtime State Foundation",
+      "before": {
+        "legacy_product": [
+          "carelog",
+          "finance-harness",
+          "platform-foundation"
+        ],
+        "legacy_component": [
+          "backend",
+          "documentation",
+          "frontend",
+          "infra"
+        ],
+        "legacy_labels": [
+          "dev-harness",
+          "infra",
+          "local-runtime",
+          "state-foundation"
+        ],
+        "target_product": "10027",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-98",
+      "issue_id": "10115",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "진행 중",
+      "updated": "2026-10-19T13:43:05.796+0900",
+      "summary": "Shared AI — Multi-Product AI Platform Architecture",
+      "before": {
+        "legacy_product": [
+          "shared-ai"
+        ],
+        "legacy_component": [
+          "documentation"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "architecture-track",
+          "multi-product",
+          "shared-ai"
+        ],
+        "target_product": "10024",
+        "target_component": "10031",
+        "target_concern": [
+          "10044"
+        ]
+      }
+    },
+    {
+      "key": "RPL-107",
+      "issue_id": "10190",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "할 일",
+      "updated": "2026-10-21T09:57:13.683+0900",
+      "summary": "Shared Audit — Multi-Product Audit Foundation",
+      "before": {
+        "legacy_product": [
+          "Platform-Foundation",
+          "Shared-Platform"
+        ],
+        "legacy_component": [
+          "AI",
+          "Docs",
+          "Gateway",
+          "Identity",
+          "Infra"
+        ],
+        "legacy_labels": [
+          "architecture",
+          "audit",
+          "foundation",
+          "jetstream",
+          "shared-audit"
+        ],
+        "target_product": "10025",
+        "target_component": "10028",
+        "target_concern": null
+      }
+    },
+    {
+      "key": "RPL-112",
+      "issue_id": "10229",
+      "type_id": "10007",
+      "type": "에픽",
+      "status": "할 일",
+      "updated": "2026-10-20T17:09:59.847+0900",
+      "summary": "Personal AI System — ChatGPT·Codex·oh-my-ai 통합",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "ai"
+        ],
+        "legacy_labels": [
+          "dev-harness",
+          "personal-ai-system",
+          "skill-routing"
+        ],
+        "target_product": "10027",
+        "target_component": "10032",
+        "target_concern": [
+          "10038"
+        ]
+      }
+    },
+    {
+      "key": "RPL-113",
+      "issue_id": "10230",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "할 일",
+      "updated": "2026-10-21T10:14:18.719+0900",
+      "summary": "Personal AI — oh-my-ai Skill 자동 발견·Jira 의도 라우팅",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "ai"
+        ],
+        "legacy_labels": [
+          "jira-skills",
+          "personal-ai-system",
+          "skill-routing"
+        ],
+        "target_product": "10027",
+        "target_component": "10032",
+        "target_concern": [
+          "10038"
+        ]
+      }
+    },
+    {
+      "key": "RPL-114",
+      "issue_id": "10231",
+      "type_id": "10009",
+      "type": "기능",
+      "status": "할 일",
+      "updated": "2026-10-21T10:14:22.044+0900",
+      "summary": "Personal AI — Private 지침·ChatGPT/Codex/Claude 실행 환경 통합",
+      "before": {
+        "legacy_product": [
+          "dev-harness"
+        ],
+        "legacy_component": [
+          "ai"
+        ],
+        "legacy_labels": [
+          "personal-ai-system",
+          "private-policy",
+          "runtime-integration"
+        ],
+        "target_product": "10027",
+        "target_component": "10032",
+        "target_concern": [
+          "10034",
+          "10038"
+        ]
+      }
+    }
+  ],
+  "planned_writes": [
+    {
+      "key": "RPL-8",
+      "expected_updated": "2026-08-10T17:10:27.583+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-9",
+      "expected_updated": "2026-08-10T17:10:48.662+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-12",
+      "expected_updated": "2026-08-10T17:10:23.000+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-13",
+      "expected_updated": "2026-08-10T17:11:46.577+0900",
+      "product_value": "dev-harness",
+      "component_value": "infra",
+      "target_product_id": "10027",
+      "target_component_id": "10030",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-14",
+      "expected_updated": "2026-08-10T17:11:59.001+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-15",
+      "expected_updated": "2026-08-10T17:12:10.908+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-17",
+      "expected_updated": "2026-08-10T17:12:34.111+0900",
+      "product_value": "dev-harness",
+      "component_value": "infra",
+      "target_product_id": "10027",
+      "target_component_id": "10030",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-18",
+      "expected_updated": "2026-08-10T17:11:18.555+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-19",
+      "expected_updated": "2026-08-10T17:12:59.212+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-20",
+      "expected_updated": "2026-09-08T15:13:21.098+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-21",
+      "expected_updated": "2026-08-10T17:13:23.213+0900",
+      "product_value": "dev-harness",
+      "component_value": "infra",
+      "target_product_id": "10027",
+      "target_component_id": "10030",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-23",
+      "expected_updated": "2026-08-10T17:13:47.090+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-26",
+      "expected_updated": "2026-08-15T00:31:10.394+0900",
+      "product_value": "dev-harness",
+      "component_value": "infra",
+      "target_product_id": "10027",
+      "target_component_id": "10030",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-29",
+      "expected_updated": "2026-08-10T17:14:48.156+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-30",
+      "expected_updated": "2026-08-10T17:14:58.893+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-31",
+      "expected_updated": "2026-08-10T17:15:10.910+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-32",
+      "expected_updated": "2026-08-10T17:15:20.297+0900",
+      "product_value": "platform-foundation",
+      "component_value": "frontend",
+      "target_product_id": "10026",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-33",
+      "expected_updated": "2026-08-10T17:15:32.560+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-35",
+      "expected_updated": "2026-08-10T17:15:22.470+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-36",
+      "expected_updated": "2026-08-10T18:12:35.980+0900",
+      "product_value": "dev-harness",
+      "component_value": "infra",
+      "target_product_id": "10027",
+      "target_component_id": "10030",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-37",
+      "expected_updated": "2026-08-10T17:16:04.232+0900",
+      "product_value": "dev-harness",
+      "component_value": "infra",
+      "target_product_id": "10027",
+      "target_component_id": "10030",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-41",
+      "expected_updated": "2026-08-10T18:12:43.034+0900",
+      "product_value": "dev-harness",
+      "component_value": "infra",
+      "target_product_id": "10027",
+      "target_component_id": "10030",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-42",
+      "expected_updated": "2026-08-10T17:16:48.657+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-43",
+      "expected_updated": "2026-08-10T17:16:59.265+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-44",
+      "expected_updated": "2026-08-10T17:17:10.116+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-48",
+      "expected_updated": "2026-08-10T17:18:05.618+0900",
+      "product_value": "finance",
+      "component_value": "frontend",
+      "target_product_id": "10021",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-49",
+      "expected_updated": "2026-08-10T17:18:17.797+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-50",
+      "expected_updated": "2026-08-13T00:18:57.830+0900",
+      "product_value": "finance",
+      "component_value": "backend",
+      "target_product_id": "10021",
+      "target_component_id": "10028",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-52",
+      "expected_updated": "2026-09-08T15:13:28.991+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-56",
+      "expected_updated": "2026-08-11T20:20:08.191+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-57",
+      "expected_updated": "2026-08-11T20:20:17.111+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-58",
+      "expected_updated": "2026-08-11T20:20:26.312+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-59",
+      "expected_updated": "2026-08-11T21:36:09.876+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-60",
+      "expected_updated": "2026-08-11T23:39:14.907+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-61",
+      "expected_updated": "2026-08-12T01:14:24.078+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-65",
+      "expected_updated": "2026-08-15T00:30:48.342+0900",
+      "product_value": "carelog",
+      "component_value": "backend",
+      "target_product_id": "10020",
+      "target_component_id": "10028",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-66",
+      "expected_updated": "2026-08-10T17:56:43.768+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-67",
+      "expected_updated": "2026-08-11T18:37:49.689+0900",
+      "product_value": "dev-harness",
+      "component_value": "infra",
+      "target_product_id": "10027",
+      "target_component_id": "10030",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-72",
+      "expected_updated": "2026-08-12T12:13:25.809+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-73",
+      "expected_updated": "2026-08-12T16:31:07.534+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-74",
+      "expected_updated": "2026-08-13T01:30:28.674+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-76",
+      "expected_updated": "2026-08-13T16:57:27.419+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-79",
+      "expected_updated": "2026-08-12T17:31:59.036+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-86",
+      "expected_updated": "2026-08-14T17:55:09.482+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-87",
+      "expected_updated": "2026-08-20T15:25:39.461+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-90",
+      "expected_updated": "2026-08-15T03:39:22.553+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-92",
+      "expected_updated": "2026-08-15T00:48:13.805+0900",
+      "product_value": "carelog",
+      "component_value": "frontend",
+      "target_product_id": "10020",
+      "target_component_id": "10029",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-97",
+      "expected_updated": "2026-08-16T00:20:31.308+0900",
+      "product_value": "ai",
+      "component_value": "documentation",
+      "target_product_id": "10024",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-99",
+      "expected_updated": "2026-08-16T01:12:04.121+0900",
+      "product_value": "ai",
+      "component_value": "documentation",
+      "target_product_id": "10024",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-100",
+      "expected_updated": "2026-08-16T02:27:32.037+0900",
+      "product_value": "ai",
+      "component_value": "documentation",
+      "target_product_id": "10024",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-101",
+      "expected_updated": "2026-08-16T16:01:46.942+0900",
+      "product_value": "ai",
+      "component_value": "documentation",
+      "target_product_id": "10024",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-102",
+      "expected_updated": "2026-08-25T23:28:24.440+0900",
+      "product_value": "ai",
+      "component_value": "documentation",
+      "target_product_id": "10024",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-103",
+      "expected_updated": "2026-09-08T15:13:40.091+0900",
+      "product_value": "ai",
+      "component_value": "documentation",
+      "target_product_id": "10024",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-104",
+      "expected_updated": "2026-08-26T17:09:56.506+0900",
+      "product_value": "ai",
+      "component_value": "backend",
+      "target_product_id": "10024",
+      "target_component_id": "10028",
+      "operation": "set_new_target_product_component_only"
+    },
+    {
+      "key": "RPL-108",
+      "expected_updated": "2026-09-08T18:06:40.635+0900",
+      "product_value": "platform-foundation",
+      "component_value": "documentation",
+      "target_product_id": "10026",
+      "target_component_id": "10031",
+      "operation": "set_new_target_product_component_only"
+    }
+  ],
+  "requires_owner_decision": [
+    "RPL-1",
+    "RPL-4",
+    "RPL-7",
+    "RPL-10",
+    "RPL-11",
+    "RPL-16",
+    "RPL-22",
+    "RPL-24",
+    "RPL-25",
+    "RPL-28",
+    "RPL-38",
+    "RPL-39",
+    "RPL-40",
+    "RPL-45",
+    "RPL-53",
+    "RPL-54",
+    "RPL-71",
+    "RPL-84",
+    "RPL-96",
+    "RPL-105",
+    "RPL-106",
+    "RPL-109",
+    "RPL-110",
+    "RPL-111"
+  ],
+  "requires_admin_fields": [
+    "RPL-70",
+    "RPL-77",
+    "RPL-80",
+    "RPL-82",
+    "RPL-83",
+    "RPL-85",
+    "RPL-89",
+    "RPL-94",
+    "RPL-115",
+    "RPL-116",
+    "RPL-117",
+    "RPL-118"
+  ],
+  "existing_target": [
+    "RPL-2",
+    "RPL-3",
+    "RPL-5",
+    "RPL-6",
+    "RPL-27",
+    "RPL-34",
+    "RPL-46",
+    "RPL-47",
+    "RPL-51",
+    "RPL-55",
+    "RPL-62",
+    "RPL-63",
+    "RPL-64",
+    "RPL-68",
+    "RPL-69",
+    "RPL-75",
+    "RPL-78",
+    "RPL-81",
+    "RPL-88",
+    "RPL-91",
+    "RPL-93",
+    "RPL-95",
+    "RPL-98",
+    "RPL-107",
+    "RPL-112",
+    "RPL-113",
+    "RPL-114"
+  ]
+}
