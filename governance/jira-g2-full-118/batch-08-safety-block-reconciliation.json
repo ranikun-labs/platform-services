@@ -1,0 +1,16 @@
+{
+  "batch": 8,
+  "status": "SAFETY_TOOL_BLOCK_RECONCILED_NO_RETRY",
+  "source": "Jira read only postwrite JQL",
+  "verified_keys": [
+    "RPL-52",
+    "RPL-56",
+    "RPL-57"
+  ],
+  "note": "Three writes confirmed persisted before tool safety rejection; remaining batch keys not assumed applied. No further Jira writes attempted after rejection.",
+  "planned_remaining": 24,
+  "verified_new_total": 31,
+  "live_target_product_component_count": 58,
+  "read_authority": "legacy",
+  "g3_cutover": false
+}
