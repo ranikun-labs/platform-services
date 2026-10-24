@@ -1,11 +1,25 @@
 name: RPL-55 targeted real product tests
 on:
   push:
-    branches: ['audit/g4-real-three-service-20261023']
+    branches: ['audit/g4-real-three-service-20261023', 'fix/rpl-55-targeted-selector-coverage-20261024']
     paths:
       - '.github/workflows/audit-g4-targeted-feature.yml'
+      - 'scripts/g4/**'
       - 'gateway-app/src/**'
-      - 'platform-core/identity/src/**'
+      - 'gateway-app/build.gradle.kts'
+      - 'gateway-app/settings.gradle.kts'
+      - 'gateway-app/Dockerfile*'
+      - 'platform-core/identity/**'
+      - 'platform-core/app/src/main/resources/**'
+      - 'platform-core/app/build.gradle.kts'
+      - 'platform-core/app/Dockerfile*'
+      - 'platform-core/build.gradle.kts'
+      - 'platform-core/settings.gradle.kts'
+      - 'gradle/**'
+      - 'gradlew*'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'docker-compose*.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,32 +44,17 @@ jobs:
           BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          gateway=false
-          identity=false
-          carelog=false
+          python3 -m unittest discover -s scripts/g4 -p test_select_targeted_jobs.py -v
           if [[ "$EVENT" == "workflow_dispatch" ]]; then
-            gateway=true
-            identity=true
-            carelog=true
+            python3 scripts/g4/select_targeted_jobs.py --all >> "$GITHUB_OUTPUT"
           else
             if [[ -n "$BEFORE" ]] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
-              files="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
+              git diff --name-only "$BEFORE" "$GITHUB_SHA" | python3 scripts/g4/select_targeted_jobs.py >> "$GITHUB_OUTPUT"
             else
-              files="$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA")"
-            fi
-            # Editing the selector itself validates all three lanes once.
-            if printf '%s\n' "$files" | grep -qx '.github/workflows/audit-g4-targeted-feature.yml'; then
-              gateway=true
-              identity=true
-              carelog=true
-            else
-              if printf '%s\n' "$files" | grep -q '^gateway-app/src/'; then gateway=true; fi
-              if printf '%s\n' "$files" | grep -q '^platform-core/identity/src/'; then identity=true; fi
+              git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | python3 scripts/g4/select_targeted_jobs.py >> "$GITHUB_OUTPUT"
             fi
           fi
-          echo "gateway=$gateway" >> "$GITHUB_OUTPUT"
-          echo "identity=$identity" >> "$GITHUB_OUTPUT"
-          echo "carelog=$carelog" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
   gateway-auth:
     needs: scope
     if: needs.scope.outputs.gateway == 'true'
