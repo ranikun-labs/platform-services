@@ -1,0 +1,67 @@
+name: Disposable AI and Frontend Targeted Baseline
+on:
+  push:
+    branches: ['audit/product-ai-fe-targeted-20261026']
+permissions:
+  contents: read
+jobs:
+  spring-ai:
+    name: Shared AI Spring AI neutral gateway contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Shared AI selected Kotlin/JVM contract tests (no paid inference)
+        run: ./gradlew -p platform-core :shared-ai:test --no-daemon --stacktrace
+
+  carelog-fe:
+    name: Carelog FE Assistant prototype and API/auth ports
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ranikun-labs/carelog-fe
+          ref: 6c24e5636d92130dcd4a9aae60d7e22f57790797
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.15.1'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Assistant and real adapter boundary tests
+        run: pnpm exec vitest run src/assistant/assistantAdapter.test.ts src/components/assistant/AssistantSurface.test.tsx src/integrations/carelog/authPort.test.ts src/integrations/carelog/customerPort.test.ts
+      - name: Carelog FE TypeScript contract
+        run: pnpm typecheck
+
+  finance-fe:
+    name: Finance FE Journal API adapters and auth entry
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ranikun-labs/finance-harness-fe
+          ref: 991ec0f3e9fe0979353dc55e4b6d1d9453a56d6f
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.15.1'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Journal HTTP adapters and auth UI tests
+        run: pnpm exec vitest run src/features/journal-new/adapter/HttpJournalCreatePort.test.ts src/features/journal-read/adapter/HttpJournalReadPort.test.ts src/pages/AuthEntryPage.test.tsx
+      - name: Finance FE TypeScript contract
+        run: pnpm typecheck
