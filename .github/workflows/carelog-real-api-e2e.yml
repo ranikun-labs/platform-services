@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ranikun-labs/carelog-fe
-          ref: 95a5912cf3026a1b328d3598a4684600453bb85
+          ref: 3bd79fdf55415f0d3fc1638eecb0dff37dce8586
           path: carelog-fe-e2e
           persist-credentials: false
 
@@ -63,7 +63,7 @@ jobs:
         run: |
           test "$(git merge-base HEAD eeac873afdb51beb1676f215dbd2baa0ae71957d)" = eeac873afdb51beb1676f215dbd2baa0ae71957d
           test "$(git -C carelog-source rev-parse HEAD)" = e730e34db9b245ca4aafabe37b5ca71f459b70b8
-          test "$(git -C carelog-fe-e2e rev-parse HEAD)" = 95a5912cf3026a1b328d3598a4684600453bb85
+          test "$(git -C carelog-fe-e2e rev-parse HEAD)" = 3bd79fdf55415f0d3fc1638eecb0dff37dce8586
           echo "Platform integration candidate: $(git rev-parse HEAD)"
           echo "Platform G4 base source: eeac873afdb51beb1676f215dbd2baa0ae71957d"
           echo "Carelog BE source: $(git -C carelog-source rev-parse HEAD)"
