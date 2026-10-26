@@ -1,0 +1,105 @@
+name: RPL-55 targeted real product tests
+on:
+  push:
+    branches: ['audit/g4-real-three-service-20261023']
+    paths:
+      - '.github/workflows/audit-g4-targeted-feature.yml'
+      - 'gateway-app/src/**'
+      - 'platform-core/identity/src/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scope:
+    name: Determine changed product component
+    runs-on: ubuntu-latest
+    outputs:
+      gateway: ${{ steps.filter.outputs.gateway }}
+      identity: ${{ steps.filter.outputs.identity }}
+      carelog: ${{ steps.filter.outputs.carelog }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve changed paths (or explicit manual request)
+        id: filter
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          gateway=false
+          identity=false
+          carelog=false
+          if [[ "$EVENT" == "workflow_dispatch" ]]; then
+            gateway=true
+            identity=true
+            carelog=true
+          else
+            if [[ -n "$BEFORE" ]] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+              files="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
+            else
+              files="$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA")"
+            fi
+            # Editing the selector itself validates all three lanes once.
+            if printf '%s\n' "$files" | grep -qx '.github/workflows/audit-g4-targeted-feature.yml'; then
+              gateway=true
+              identity=true
+              carelog=true
+            else
+              if printf '%s\n' "$files" | grep -q '^gateway-app/src/'; then gateway=true; fi
+              if printf '%s\n' "$files" | grep -q '^platform-core/identity/src/'; then identity=true; fi
+            fi
+          fi
+          echo "gateway=$gateway" >> "$GITHUB_OUTPUT"
+          echo "identity=$identity" >> "$GITHUB_OUTPUT"
+          echo "carelog=$carelog" >> "$GITHUB_OUTPUT"
+  gateway-auth:
+    needs: scope
+    if: needs.scope.outputs.gateway == 'true'
+    name: Gateway JWT and route unit-integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: ./gradlew -p gateway-app test --tests 'com.ranikunlabs.platform.gateway.filter.JwtGlobalFilterCharacterizationTest' --tests 'com.ranikunlabs.platform.gateway.route.GatewayRoutingHttpIntegrationTest' --no-daemon --stacktrace
+  core-identity:
+    needs: scope
+    if: needs.scope.outputs.identity == 'true'
+    name: Identity login JWT and OAuth unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: ./gradlew -p platform-core :identity:test --tests 'com.ranikunlabs.platform.identity.AuthServiceImplTest' --tests 'com.ranikunlabs.platform.identity.JwtTokenProviderTest' --tests 'com.ranikunlabs.platform.identity.KakaoOAuthAdapterTest' --tests 'com.ranikunlabs.platform.identity.OAuthApplicationServiceTest' --no-daemon --stacktrace
+  carelog-api:
+    needs: scope
+    if: needs.scope.outputs.carelog == 'true'
+    name: Carelog customer scope and auth failures
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ranikun-labs/carelog-be
+          ref: e730e34db9b245ca4aafabe37b5ca71f459b70b8
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: ./gradlew :carelog-be:test --tests 'carelog.carelog.customer.web.CustomerControllerTest' --tests 'carelog.carelog.customer.app.CustomerServiceImplTest' --no-daemon --stacktrace

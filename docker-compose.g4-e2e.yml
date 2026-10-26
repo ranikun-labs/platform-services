@@ -1,0 +1,91 @@
+# Disposable non-production overlay. Source checkout: carelog-source@e730e34.
+# No host ports, volumes, real OAuth or production data.
+services:
+  carelog-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: carelog_g4
+      POSTGRES_USER: carelog_g4
+      POSTGRES_PASSWORD: g4-local-only-test-password
+    volumes:
+      - ./scripts/g4/seed-carelog.sql:/g4/seed-carelog.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carelog_g4 -d carelog_g4"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    networks: [identity-e2e]
+
+  carelog-be:
+    build:
+      context: ./carelog-source
+      dockerfile: carelog-be/Dockerfile
+    image: carelog-g4-e2e:local
+    environment:
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+      NO_PROXY: "*"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://carelog-postgres:5432/carelog_g4
+      SPRING_DATASOURCE_USERNAME: carelog_g4
+      SPRING_DATASOURCE_PASSWORD: g4-local-only-test-password
+      REDIS_HOST: valkey
+      REDIS_PORT: "6379"
+      JWT_SECRET_KEY: issue24-e2e-synthetic-jwt-secret-material-32-bytes
+      JWT_ACCESS_TOKEN_VALIDITY: "900000"
+      JWT_REFRESH_TOKEN_VALIDITY: "3600000"
+      GATEWAY_INTERNAL_SECRET: issue24-e2e-synthetic-gateway-secret
+      CARELOG_INTERNAL_IDENTITY_CLAIMS_ENABLED: "true"
+      CARELOG_INTERNAL_IDENTITY_CLAIMS_SERVICE_SECRET: g4-synthetic-product-claims-secret-at-least-32
+      SPRING_FLYWAY_ENABLED: "true"
+    # Test-only liveness: production Dockerfile probes separate mgmt 8081,
+    # but this non-prod profile serves on 8080 without a separate mgmt listener.
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/8080'"]
+      interval: 3s
+      timeout: 3s
+      retries: 35
+      start_period: 30s
+    depends_on:
+      carelog-postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks: [identity-e2e]
+
+  platform-core-app:
+    environment:
+      PLATFORM_IDENTITY_PRODUCT_CLAIMS_BASE_URL: http://carelog-be:8080
+      PLATFORM_IDENTITY_PRODUCT_CLAIMS_SERVICE_SECRET: g4-synthetic-product-claims-secret-at-least-32
+    depends_on:
+      carelog-be:
+        condition: service_started
+
+  gateway-app:
+    environment:
+      PLATFORM_GATEWAY_CARELOG_BE_URI: http://carelog-be:8080
+    depends_on:
+      carelog-be:
+        condition: service_started
+
+  g4-three-service-runner:
+    image: python:3.12-alpine
+    entrypoint: ["python", "/g4/verify_three_services.py"]
+    volumes:
+      - ./scripts/g4:/g4:ro
+    environment:
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+      NO_PROXY: "*"
+      G4_GATEWAY_URL: http://gateway-app:8080
+      G4_CARELOG_URL: http://carelog-be:8080
+      G4_JWT_SECRET: issue24-e2e-synthetic-jwt-secret-material-32-bytes
+      G4_SERVICE_SECRET: g4-synthetic-product-claims-secret-at-least-32
+    networks: [identity-e2e]
