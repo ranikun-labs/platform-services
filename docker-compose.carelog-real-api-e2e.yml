@@ -2,5 +2,18 @@
 # Publishes the existing G4 Gateway to loopback; no other service is exposed.
 services:
   gateway-app:
+    networks:
+      - identity-e2e
+      - carelog-e2e-loopback
     ports:
       - "127.0.0.1:${CARELOG_E2E_GATEWAY_PORT:?Set a disposable loopback port}:8080"
+
+networks:
+  # A dedicated nonprod attachment allows Docker to publish the loopback-only
+  # Gateway port while its service-to-service traffic stays on identity-e2e.
+  # Disable bridge masquerading so the added attachment does not provide normal
+  # outbound NAT for the disposable Gateway container.
+  carelog-e2e-loopback:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
