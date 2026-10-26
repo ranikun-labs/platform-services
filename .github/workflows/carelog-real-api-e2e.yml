@@ -1,0 +1,111 @@
+name: Carelog real API browser E2E (disposable G4)
+
+on:
+  push:
+    branches:
+      - codex/rpl55-carelog-real-api-e2e-20261026
+
+permissions:
+  contents: read
+
+jobs:
+  carelog-browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      G4_CARELOG_REAL_API_E2E: "1"
+      CARELOG_E2E_DISPOSABLE: "1"
+      CARELOG_E2E_GATEWAY_PORT: "18080"
+      CARELOG_E2E_FE_DIR: ${{ github.workspace }}/carelog-fe-e2e
+      CODEX_PROXY_CERT: ${{ github.workspace }}/docs/testing/evidence/.gitkeep
+    steps:
+      - name: Check hosted runner capacity
+        run: |
+          df -h /
+          available_kb="$(df -Pk / | awk 'NR == 2 { print $4 }')"
+          if ((available_kb < 8000000)); then
+            echo "::error::BLOCKED_ENV: at least 8 GB must be free before G4 image builds"
+            exit 2
+          fi
+
+      - name: Checkout Platform integration candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout pinned Carelog FE candidate
+        uses: actions/checkout@v4
+        with:
+          repository: ranikun-labs/carelog-fe
+          ref: 6ed77887e4df55178f2ff9523a18df41a340d8c0
+          path: carelog-fe-e2e
+          persist-credentials: false
+
+      - name: Checkout pinned Carelog BE candidate
+        uses: actions/checkout@v4
+        with:
+          repository: ranikun-labs/carelog-be
+          ref: e730e34db9b245ca4aafabe37b5ca71f459b70b8
+          path: carelog-source
+          persist-credentials: false
+
+      - name: Mask disposable G4 credentials
+        env:
+          CARELOG_E2E_ACCOUNT_A: issue24-e2e-user
+          CARELOG_E2E_PASSWORD_A: Password123!
+        run: |
+          echo "::add-mask::${CARELOG_E2E_ACCOUNT_A}"
+          echo "::add-mask::${CARELOG_E2E_PASSWORD_A}"
+
+      - name: Record pinned source SHAs
+        run: |
+          test "$(git merge-base HEAD eeac873afdb51beb1676f215dbd2baa0ae71957d)" = eeac873afdb51beb1676f215dbd2baa0ae71957d
+          test "$(git -C carelog-source rev-parse HEAD)" = e730e34db9b245ca4aafabe37b5ca71f459b70b8
+          test "$(git -C carelog-fe-e2e rev-parse HEAD)" = 6ed77887e4df55178f2ff9523a18df41a340d8c0
+          echo "Platform integration candidate: $(git rev-parse HEAD)"
+          echo "Platform G4 base source: eeac873afdb51beb1676f215dbd2baa0ae71957d"
+          echo "Carelog BE source: $(git -C carelog-source rev-parse HEAD)"
+          echo "Carelog FE source: $(git -C carelog-fe-e2e rev-parse HEAD)"
+
+      - name: Set up Node 22 and pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Carelog FE dependencies and Chromium
+        working-directory: carelog-fe-e2e
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.15.1 --activate
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          pnpm typecheck
+          TZ=Asia/Seoul pnpm exec vitest run
+
+      - name: Recheck space before building G4 images
+        run: |
+          df -h /
+          available_kb="$(df -Pk / | awk 'NR == 2 { print $4 }')"
+          if ((available_kb < 8000000)); then
+            echo "::error::BLOCKED_ENV: insufficient disk before G4 image build"
+            exit 2
+          fi
+
+      - name: Run existing G4 checks then real browser flow
+        env:
+          CARELOG_E2E_ACCOUNT_A: issue24-e2e-user
+          CARELOG_E2E_PASSWORD_A: Password123!
+        run: bash scripts/g4/run_three_services.sh
+
+      - name: Remove browser traces and ensure Compose cleanup
+        if: always()
+        run: |
+          project_name="g4-disposable-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker compose --project-name "$project_name" \
+            -f docker-compose.identity-e2e.yml \
+            -f docker-compose.g4-e2e.yml \
+            -f docker-compose.carelog-real-api-e2e.yml \
+            down --volumes --remove-orphans >/dev/null 2>&1 || true
+          rm -rf carelog-fe-e2e/test-results carelog-fe-e2e/playwright-report

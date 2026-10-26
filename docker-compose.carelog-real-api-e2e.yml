@@ -1,0 +1,6 @@
+# Disposable non-production browser E2E overlay only.
+# Publishes the existing G4 Gateway to loopback; no other service is exposed.
+services:
+  gateway-app:
+    ports:
+      - "127.0.0.1:${CARELOG_E2E_GATEWAY_PORT:?Set a disposable loopback port}:8080"
