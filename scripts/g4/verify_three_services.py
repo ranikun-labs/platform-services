@@ -19,6 +19,7 @@ JWT_SECRET = os.environ["G4_JWT_SECRET"]
 SERVICE_SECRET = os.environ["G4_SERVICE_SECRET"]
 ACCOUNT_A = "00000000-0000-4000-8000-000000000024"
 ACCOUNT_B = "00000000-0000-4000-8000-000000000026"
+UNKNOWN_ACCOUNT = "00000000-0000-4000-8000-000000000028"
 ORG_A = "00000000-0000-4000-8000-000000000025"
 ORG_B = "00000000-0000-4000-8000-000000000027"
 NO_REDIRECT = build_opener(ProxyHandler({}), type("NoRedirect", (HTTPRedirectHandler,), {
@@ -125,7 +126,7 @@ def run():
           "200 with three exact claims", status)
     status, _ = req("GET", CARELOG, endpoint, headers={"X-Service-Id":"platform-identity","X-Service-Secret":"incorrect"})
     check("G4-07-wrong-service-secret", status == 403, 403, status)
-    status, _ = req("GET", CARELOG, "/api/v1/internal/identity/claims/"+ACCOUNT_B, headers=service_headers)
+    status, _ = req("GET", CARELOG, "/api/v1/internal/identity/claims/"+UNKNOWN_ACCOUNT, headers=service_headers)
     check("G4-07-unknown-account", status == 404, 404, status)
 
     # B uses a separately seeded Identity account and a real Identity-issued session.
