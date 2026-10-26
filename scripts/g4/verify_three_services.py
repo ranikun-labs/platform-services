@@ -63,15 +63,32 @@ def run():
     # Real Spring Boot login through Gateway -> Identity -> Carelog internal projection.
     status, body = req("POST", GATEWAY, "/api/v1/auth/login",
                        {"userId": "issue24-e2e-user", "password": "Password123!"})
-    check("G4-01-login-through-real-product-projection", status == 200, 200, status)
-    token = json.loads(body)["data"]["accessToken"]
-    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token)
-    check("G4-01-real-product-customer-api", status == 200, 200, status)
+    check("G4-01-login-through-real-product-projection-A", status == 200, 200, status)
+    login_a = json.loads(body)["data"]
+    token_a = login_a["accessToken"]
+    check("G4-01-A-identity-access-token", bool(token_a), "non-empty", "present" if token_a else "missing")
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token_a)
+    check("G4-01-real-product-customer-api-A", status == 200, 200, status)
+    customers = json_data((status, body))
+    check("G4-01-customer-contract-array-A", isinstance(customers, list), "array", type(customers).__name__)
+
+    status, body = req("POST", GATEWAY, "/api/v1/users/customers",
+                       {"displayName": "Synthetic Customer A", "customerMemo": "local disposable"},
+                       token=token_a)
+    check("G4-05-A-create-own-customer", status == 201, 201, status)
+    customer_a_id = json_data((status, body))["publicId"]
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers/" + customer_a_id, token=token_a)
+    check("G4-05-A-owner-can-read", status == 200 and json_data((status, body)).get("publicId") == customer_a_id,
+          "200 exact Customer ID", status)
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token_a)
     customers_a = json_data((status, body))
-    check("G4-01-customer-contract-array", isinstance(customers_a, list), "array", type(customers_a).__name__)
+    check("G4-05-A-list-contains-only-own-customer",
+          status == 200 and isinstance(customers_a, list) and len(customers_a) == 1
+          and customers_a[0].get("publicId") == customer_a_id,
+          "A customer only", status)
 
     # External trusted-header spoofing must not change the verified owner view.
-    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token, headers={
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token_a, headers={
         "X-User-Id": ACCOUNT_B, "X-Organization-Id": ORG_B, "X-Role": "MANAGER",
         "X-Public-Id": ACCOUNT_B, "X-Gateway-Secret": "spoofed",
         "X-Service-Id": "spoofed", "X-Service-Secret": "spoofed"})
@@ -94,7 +111,7 @@ def run():
         code, _ = req("GET", GATEWAY, "/api/v1/users/customers", token=sign(claims))
         check("G4-04-"+label, code == 403, 403, code)
 
-    status, _ = req("GET", GATEWAY, "/api/v1/internal/identity/claims/"+ACCOUNT_A, token=token)
+    status, _ = req("GET", GATEWAY, "/api/v1/internal/identity/claims/"+ACCOUNT_A, token=token_a)
     check("G4-08-public-internal-route-block", status == 403, 403, status)
 
     # Internal product projection is actually hosted by Carelog, not a fake stub.
@@ -111,29 +128,86 @@ def run():
     status, _ = req("GET", CARELOG, "/api/v1/internal/identity/claims/"+ACCOUNT_B, headers=service_headers)
     check("G4-07-unknown-account", status == 404, 404, status)
 
-    # Second synthetic signed token is test-only (not proof of an issued Identity session).
-    now = int(time.time())
-    token_b = sign({"sub": ACCOUNT_B, "organizationId": ORG_B, "publicId": ACCOUNT_B,
-                    "role": "MANAGER", "iat": now-1, "exp": now+900})
+    # B uses a separately seeded Identity account and a real Identity-issued session.
+    status, body = req("POST", GATEWAY, "/api/v1/auth/login",
+                       {"userId": "issue24-e2e-user-b", "password": "Password123!"})
+    check("G4-09-B-login-through-identity", status == 200, 200, status)
+    login_b = json.loads(body)["data"]
+    token_b = login_b.get("accessToken")
+    refresh_b = login_b.get("refreshToken")
+    check("G4-09-B-identity-session-contract", bool(token_b) and bool(refresh_b),
+          "access and refresh present", "present" if token_b and refresh_b else "missing")
+
+    # Login itself resolves B's product-owned organization/public ID through Carelog.
+    endpoint_b = "/api/v1/internal/identity/claims/" + ACCOUNT_B
+    status, body = req("GET", CARELOG, endpoint_b, headers=service_headers)
+    claims_b = json.loads(body) if status == 200 else {}
+    check("G4-06-real-carelog-projection-B", status == 200
+          and claims_b.get("organizationId") == ORG_B
+          and claims_b.get("role") == "MANAGER"
+          and claims_b.get("publicId") == ACCOUNT_B
+          and set(claims_b) == {"organizationId", "role", "publicId"},
+          "200 with B's three exact claims", status)
+
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token_b)
+    customers_b_before = json_data((status, body)) if status == 200 else None
+    check("G4-09-B-customer-api", status == 200 and isinstance(customers_b_before, list),
+          "200 array", status)
+    check("G4-09-B-cannot-list-A-customer",
+          all(item.get("publicId") != customer_a_id for item in customers_b_before),
+          "A customer absent from B's list", "isolated" if customers_b_before is not None else "unavailable")
+
     status, body = req("POST", GATEWAY, "/api/v1/users/customers",
-                       {"displayName":"Synthetic Customer B", "customerMemo":"local disposable"},
+                       {"displayName": "Synthetic Customer B", "customerMemo": "local disposable"},
                        token=token_b)
-    check("G4-05-B-create-foreign-customer", status == 201, 201, status)
-    foreign_id = json_data((status, body))["publicId"]
-    status, body = req("GET", GATEWAY, "/api/v1/users/customers/"+foreign_id, token=token_b)
-    check("G4-05-B-owner-can-read", status == 200 and json_data((status, body))["publicId"] == foreign_id,
+    check("G4-09-B-create-own-customer", status == 201, 201, status)
+    customer_b_id = json_data((status, body))["publicId"]
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers/" + customer_b_id, token=token_b)
+    check("G4-09-B-owner-can-read", status == 200 and json_data((status, body)).get("publicId") == customer_b_id,
           "200 exact Customer ID", status)
-    # Strong spoof proof: B now has a real Customer; A's bearer + B's forged
-    # trusted headers must still produce only A's list (not B's new Customer).
-    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token, headers={
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token_b)
+    customers_b = json_data((status, body)) if status == 200 else None
+    check("G4-09-B-list-contains-only-own-customer",
+          status == 200 and isinstance(customers_b, list) and len(customers_b) == 1
+          and customers_b[0].get("publicId") == customer_b_id,
+          "B customer only", status)
+
+    status, _ = req("GET", GATEWAY, "/api/v1/users/customers/" + customer_a_id, token=token_b)
+    check("G4-09-B-cannot-read-A", status == 404, 404, status)
+    status, _ = req("GET", GATEWAY, "/api/v1/users/customers/" + customer_b_id, token=token_a)
+    check("G4-09-A-cannot-read-B", status == 404, 404, status)
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token_a)
+    check("G4-09-A-list-isolated-after-B-create",
+          status == 200 and json_data((status, body)) == customers_a,
+          "A list unchanged after B create", status)
+    # Recheck header spoofing after B's real customer exists.
+    status, body = req("GET", GATEWAY, "/api/v1/users/customers", token=token_a, headers={
         "X-User-Id": ACCOUNT_B, "X-Organization-Id": ORG_B, "X-Role": "MANAGER",
         "X-Public-Id": ACCOUNT_B, "X-Gateway-Secret": "spoofed",
         "X-Service-Id": "spoofed", "X-Service-Secret": "spoofed"})
     check("G4-02-existing-foreign-customer-spoof-proof",
           status == 200 and json_data((status, body)) == customers_a,
-          "A remains isolated after B seeded a real Customer", status)
-    status, _ = req("GET", GATEWAY, "/api/v1/users/customers/"+foreign_id, token=token)
-    check("G4-05-A-cannot-read-B", status == 404, 404, status)
+          "A remains isolated after B owns a customer", status)
+
+    # B refresh rotation rejects the stale token; logout revokes access and refresh.
+    status, body = req("POST", GATEWAY, "/api/v1/auth/refresh", {"refreshToken": refresh_b})
+    check("G4-10-B-refresh-rotation", status == 200, 200, status)
+    rotated_b = json_data((status, body))
+    access_b_rotated = rotated_b.get("accessToken")
+    refresh_b_rotated = rotated_b.get("refreshToken")
+    check("G4-10-B-refresh-pair-present", bool(access_b_rotated) and bool(refresh_b_rotated),
+          "access and refresh present", "present" if access_b_rotated and refresh_b_rotated else "missing")
+    check("G4-10-B-refresh-token-rotated", refresh_b_rotated != refresh_b,
+          "new refresh token", "rotated" if refresh_b_rotated != refresh_b else "unchanged")
+
+    status, _ = req("POST", GATEWAY, "/api/v1/auth/refresh", {"refreshToken": refresh_b})
+    check("G4-10-B-stale-refresh-rejected", status == 404, 404, status)
+    status, body = req("POST", GATEWAY, "/api/v1/auth/logout", token=access_b_rotated)
+    check("G4-10-B-logout", status == 204 and body == b"", "204 empty", status)
+    status, _ = req("GET", GATEWAY, "/api/v1/users/customers", token=access_b_rotated)
+    check("G4-10-B-access-revoked-after-logout", status == 401, 401, status)
+    status, _ = req("POST", GATEWAY, "/api/v1/auth/refresh", {"refreshToken": refresh_b_rotated})
+    check("G4-10-B-refresh-revoked-after-logout", status == 404, 404, status)
 
 def main():
     for attempt in range(40):

@@ -9,4 +9,12 @@ VALUES (now(), now(), '00000000-0000-4000-8000-000000000025',
         '00000000-0000-4000-8000-000000000024', 'issue24-e2e-user',
         'g4-local@example.test', 'synthetic-no-product-password-auth', 'Synthetic Manager A',
         'MANAGER', 'PHYSICAL_THERAPIST', '00000000-0000-4000-8000-000000000024');
+INSERT INTO platform_accounts(id, status, primary_email, created_at, updated_at)
+VALUES ('00000000-0000-4000-8000-000000000026', 'ACTIVE', 'g4-local-b@example.test', now(), now());
+INSERT INTO users(created_at, updated_at, organization_id, public_id, user_id, email,
+                  password, name, role, manager_type, account_id)
+VALUES (now(), now(), '00000000-0000-4000-8000-000000000027',
+        '00000000-0000-4000-8000-000000000026', 'issue24-e2e-user-b',
+        'g4-local-b@example.test', 'synthetic-no-product-password-auth', 'Synthetic Manager B',
+        'MANAGER', 'PHYSICAL_THERAPIST', '00000000-0000-4000-8000-000000000026');
 COMMIT;
