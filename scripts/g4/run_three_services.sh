@@ -35,6 +35,37 @@ COMPOSE=(docker compose --project-name "g4-disposable-${GITHUB_RUN_ID:-local}-${
 if [[ "$REAL_API_E2E" == "1" ]]; then
   COMPOSE+=(-f docker-compose.carelog-real-api-e2e.yml)
 fi
+report_gateway_port_diagnostics() {
+  local config_json container_id host_bindings published_ports
+  config_json="$("${COMPOSE[@]}" config --format json)"
+  printf '%s' "$config_json" | python3 -c 'import json,sys; ports=json.load(sys.stdin)["services"]["gateway-app"].get("ports", []); print("Gateway Compose port config:", json.dumps([{k:p.get(k) for k in ("host_ip","published","target","protocol")} for p in ports], sort_keys=True))' >&2
+  container_id="$("${COMPOSE[@]}" ps -q gateway-app)"
+  if [[ -n "$container_id" ]]; then
+    host_bindings="$(docker inspect --format '{{json .HostConfig.PortBindings}}' "$container_id")"
+    printf '%s' "$host_bindings" | python3 -c 'import json,sys; data=json.load(sys.stdin) or {}; print("Gateway HostConfig port bindings:", json.dumps(data.get("8080/tcp"), sort_keys=True))' >&2
+    published_ports="$(docker inspect --format '{{json .NetworkSettings.Ports}}' "$container_id")"
+    printf '%s' "$published_ports" | python3 -c 'import json,sys; data=json.load(sys.stdin) or {}; print("Gateway network published ports:", json.dumps(data.get("8080/tcp"), sort_keys=True))' >&2
+  else
+    echo "Gateway container ID: unavailable" >&2
+  fi
+}
+assert_gateway_loopback_port() {
+  local expected="127.0.0.1:${CARELOG_E2E_GATEWAY_PORT}"
+  local actual http_status
+  actual="$("${COMPOSE[@]}" port gateway-app 8080 2>/dev/null || true)"
+  if [[ "$actual" != "$expected" ]]; then
+    echo "BLOCKED_ENV: expected Gateway loopback mapping ${expected}, Compose reports ${actual:-none}" >&2
+    report_gateway_port_diagnostics
+    return 2
+  fi
+  http_status="$(curl --connect-timeout 3 --max-time 5 --noproxy '*' -sS -o /dev/null -w '%{http_code}' "http://${expected}/" 2>/dev/null || true)"
+  if ! [[ "$http_status" =~ ^[1-5][0-9][0-9]$ ]]; then
+    echo "BLOCKED_ENV: Gateway loopback port mapping exists but HTTP connection failed (status: ${http_status:-unreachable})" >&2
+    report_gateway_port_diagnostics
+    return 2
+  fi
+  echo "Gateway loopback mapping verified: ${expected} (HTTP ${http_status})"
+}
 cleanup() {
   code=$?
   if ((code != 0)); then
@@ -65,6 +96,7 @@ fi
 "${COMPOSE[@]}" exec -T carelog-postgres psql -v ON_ERROR_STOP=1 -U carelog_g4 -d carelog_g4 -f /g4/seed-carelog.sql
 "${COMPOSE[@]}" run --rm g4-three-service-runner
 if [[ "$REAL_API_E2E" == "1" ]]; then
+  assert_gateway_loopback_port
   export CARELOG_E2E_GATEWAY_TARGET="http://127.0.0.1:${CARELOG_E2E_GATEWAY_PORT}"
   echo "Running Carelog real API Playwright journey while G4 services are alive"
   (cd "$CARELOG_E2E_FE_DIR" && pnpm exec playwright test --config playwright.real-api.config.ts)
