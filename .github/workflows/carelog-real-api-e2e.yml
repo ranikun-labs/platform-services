@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - codex/rpl55-carelog-real-api-e2e-20261026
+      - codex/rpl55-platform-selector-integration-20261027
 
 permissions:
   contents: read
@@ -19,6 +20,14 @@ jobs:
       CARELOG_E2E_FE_DIR: ${{ github.workspace }}/carelog-fe-e2e
       CODEX_PROXY_CERT: ${{ github.workspace }}/docs/testing/evidence/.gitkeep
     steps:
+      - name: Mask disposable G4 credentials
+        env:
+          CARELOG_E2E_ACCOUNT_A: issue24-e2e-user
+          CARELOG_E2E_PASSWORD_A: Password123!
+        run: |
+          echo "::add-mask::${CARELOG_E2E_ACCOUNT_A}"
+          echo "::add-mask::${CARELOG_E2E_PASSWORD_A}"
+
       - name: Check hosted runner capacity
         run: |
           df -h /
@@ -39,7 +48,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ranikun-labs/carelog-fe
-          ref: 34e9f6a890c78b175aca3e46fd2d23a2f1a82cf2
+          ref: d0dafe0ce55d0a6c0bab8471a02dd8da9c93ac7b
           path: carelog-fe-e2e
           persist-credentials: false
 
@@ -51,19 +60,11 @@ jobs:
           path: carelog-source
           persist-credentials: false
 
-      - name: Mask disposable G4 credentials
-        env:
-          CARELOG_E2E_ACCOUNT_A: issue24-e2e-user
-          CARELOG_E2E_PASSWORD_A: Password123!
-        run: |
-          echo "::add-mask::${CARELOG_E2E_ACCOUNT_A}"
-          echo "::add-mask::${CARELOG_E2E_PASSWORD_A}"
-
       - name: Record pinned source SHAs
         run: |
           test "$(git merge-base HEAD eeac873afdb51beb1676f215dbd2baa0ae71957d)" = eeac873afdb51beb1676f215dbd2baa0ae71957d
           test "$(git -C carelog-source rev-parse HEAD)" = e730e34db9b245ca4aafabe37b5ca71f459b70b8
-          test "$(git -C carelog-fe-e2e rev-parse HEAD)" = 34e9f6a890c78b175aca3e46fd2d23a2f1a82cf2
+          test "$(git -C carelog-fe-e2e rev-parse HEAD)" = d0dafe0ce55d0a6c0bab8471a02dd8da9c93ac7b
           echo "Platform integration candidate: $(git rev-parse HEAD)"
           echo "Platform G4 base source: eeac873afdb51beb1676f215dbd2baa0ae71957d"
           echo "Carelog BE source: $(git -C carelog-source rev-parse HEAD)"
