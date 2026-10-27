@@ -20,6 +20,14 @@ jobs:
       CARELOG_E2E_FE_DIR: ${{ github.workspace }}/carelog-fe-e2e
       CODEX_PROXY_CERT: ${{ github.workspace }}/docs/testing/evidence/.gitkeep
     steps:
+      - name: Mask disposable G4 credentials
+        env:
+          CARELOG_E2E_ACCOUNT_A: issue24-e2e-user
+          CARELOG_E2E_PASSWORD_A: Password123!
+        run: |
+          echo "::add-mask::${CARELOG_E2E_ACCOUNT_A}"
+          echo "::add-mask::${CARELOG_E2E_PASSWORD_A}"
+
       - name: Check hosted runner capacity
         run: |
           df -h /
@@ -51,14 +59,6 @@ jobs:
           ref: e730e34db9b245ca4aafabe37b5ca71f459b70b8
           path: carelog-source
           persist-credentials: false
-
-      - name: Mask disposable G4 credentials
-        env:
-          CARELOG_E2E_ACCOUNT_A: issue24-e2e-user
-          CARELOG_E2E_PASSWORD_A: Password123!
-        run: |
-          echo "::add-mask::${CARELOG_E2E_ACCOUNT_A}"
-          echo "::add-mask::${CARELOG_E2E_PASSWORD_A}"
 
       - name: Record pinned source SHAs
         run: |
