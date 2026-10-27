@@ -38,9 +38,13 @@ fi
 if [[ -z "${CARELOG_E2E_PASSWORD_A:-}" ]]; then
   CARELOG_E2E_PASSWORD_A="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 fi
-G4_E2E_PASSWORD_B="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+if [[ "${G4_SECURE_OUTPUT_GATE:-0}" == "1" ]]; then
+  : "${G4_E2E_PASSWORD_B:?secure output gate must supply a per-run B credential}"
+else
+  G4_E2E_PASSWORD_B="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+fi
 export CARELOG_E2E_ACCOUNT_A CARELOG_E2E_PASSWORD_A G4_E2E_PASSWORD_B
-if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+if [[ "${GITHUB_ACTIONS:-}" == "true" && "${G4_SECURE_OUTPUT_GATE:-0}" != "1" ]]; then
   printf '::add-mask::%s\n' "$CARELOG_E2E_ACCOUNT_A"
   printf '::add-mask::%s\n' "$CARELOG_E2E_PASSWORD_A"
   printf '::add-mask::%s\n' "$G4_E2E_PASSWORD_B"
@@ -116,3 +120,4 @@ if [[ "$REAL_API_E2E" == "1" ]]; then
   echo "Running Carelog real API Playwright journey while G4 services are alive"
   (cd "$CARELOG_E2E_FE_DIR" && pnpm exec playwright test --config playwright.real-api.config.ts)
 fi
+

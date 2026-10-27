@@ -94,7 +94,7 @@ jobs:
             echo "::error::Required Carelog E2E repository secrets are not configured."
             exit 2
           fi
-          bash scripts/g4/run_three_services.sh
+          python3 scripts/g4/secure_output_gate.py
 
       - name: Remove browser traces and ensure Compose cleanup
         if: always()
@@ -106,3 +106,4 @@ jobs:
             -f docker-compose.carelog-real-api-e2e.yml \
             down --volumes --remove-orphans >/dev/null 2>&1 || true
           rm -rf carelog-fe-e2e/test-results carelog-fe-e2e/playwright-report
+
