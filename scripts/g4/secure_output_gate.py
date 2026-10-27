@@ -48,13 +48,22 @@ class Scanner:
 
 def main():
     env = os.environ.copy()
-    required = ("CARELOG_E2E_ACCOUNT_A", "CARELOG_E2E_PASSWORD_A")
-    if any(not env.get(key) for key in required) or env.get("CARELOG_E2E_DISPOSABLE") != "1":
-        print("G4_SECURE_OUTPUT_GATE: BLOCKED_MISSING_DISPOSABLE_CREDENTIALS")
+    if env.get("CARELOG_E2E_DISPOSABLE") != "1":
+        print("G4_SECURE_OUTPUT_GATE: BLOCKED_NON_DISPOSABLE_EXECUTION")
         return 2
+    # Replace any inherited values so each disposable run starts with new A/B
+    # credentials, independent of the caller's environment.
+    env["CARELOG_E2E_ACCOUNT_A"] = (
+        f"g4-a-{secrets.token_hex(8)}@example.invalid"
+    )
+    env["CARELOG_E2E_PASSWORD_A"] = secrets.token_urlsafe(32)
     env["G4_E2E_PASSWORD_B"] = secrets.token_urlsafe(32)
     env["G4_SECURE_OUTPUT_GATE"] = "1"
-    scanner = Scanner([env[key] for key in (*required, "G4_E2E_PASSWORD_B")])
+    scanner = Scanner([
+        env["CARELOG_E2E_ACCOUNT_A"],
+        env["CARELOG_E2E_PASSWORD_A"],
+        env["G4_E2E_PASSWORD_B"],
+    ])
     try:
         with subprocess.Popen(["bash", "scripts/g4/run_three_services.sh"], env=env,
                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as child:

@@ -2,6 +2,7 @@ import base64
 import contextlib
 import io
 import os
+import re
 import unittest
 from unittest.mock import patch
 
@@ -47,26 +48,100 @@ class OutputGateTests(unittest.TestCase):
             scanner.feed(b"x" * 8192)
         self.assertLessEqual(len(scanner.tail), scanner.overlap)
 
-    def test_missing_credentials_fail_closed(self):
-        with patch.dict(os.environ, {}, clear=True), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(main(), 2)
+    def test_missing_disposable_flag_fails_closed(self):
+        output = io.StringIO()
+        with patch.dict(os.environ, {}, clear=True), \
+                patch("subprocess.Popen") as popen, \
+                contextlib.redirect_stdout(output):
+            result = main()
+        self.assertTrue(result == 2)
+        self.assertTrue(not popen.called)
+        self.assertTrue(
+            output.getvalue() == "G4_SECURE_OUTPUT_GATE: BLOCKED_NON_DISPOSABLE_EXECUTION\n"
+        )
 
-    def test_failure_output_never_forwarded(self):
+    def test_generates_independent_a_and_b_credentials_per_invocation(self):
         class Child:
             def __enter__(self):
-                self.stdout = io.BytesIO(OutputGateTests.values[1].encode())
+                self.stdout = io.BytesIO(b"clean output")
                 return self
             def __exit__(self, *args):
                 pass
             def wait(self):
                 return 0
+
+        captured = []
+
+        def fake_popen(args, env, stdout, stderr):
+            captured.append(dict(env))
+            return Child()
+
+        inherited = {
+            "CARELOG_E2E_DISPOSABLE": "1",
+            "CARELOG_E2E_ACCOUNT_A": "stale-account@example.invalid",
+            "CARELOG_E2E_PASSWORD_A": "synthetic-stale-account-password",
+            "G4_E2E_PASSWORD_B": "synthetic-stale-b-password",
+        }
+        output = io.StringIO()
+        with patch.dict(os.environ, inherited, clear=True), \
+                patch("subprocess.Popen", side_effect=fake_popen), \
+                contextlib.redirect_stdout(output):
+            results = (main(), main())
+
+        self.assertTrue(results == (0, 0))
+        self.assertTrue(len(captured) == 2)
+        account_a = [env["CARELOG_E2E_ACCOUNT_A"] for env in captured]
+        password_a = [env["CARELOG_E2E_PASSWORD_A"] for env in captured]
+        password_b = [env["G4_E2E_PASSWORD_B"] for env in captured]
+        for index, env in enumerate(captured):
+            self.assertTrue(
+                re.fullmatch(r"g4-a-[0-9a-f]{16}@example\.invalid", account_a[index])
+                is not None
+            )
+            self.assertTrue(account_a[index] != inherited["CARELOG_E2E_ACCOUNT_A"])
+            self.assertTrue(password_a[index] != inherited["CARELOG_E2E_PASSWORD_A"])
+            self.assertTrue(password_b[index] != inherited["G4_E2E_PASSWORD_B"])
+            self.assertTrue(password_a[index] != password_b[index])
+            self.assertTrue(env["G4_SECURE_OUTPUT_GATE"] == "1")
+        self.assertTrue(account_a[0] != account_a[1])
+        self.assertTrue(password_a[0] != password_a[1])
+        self.assertTrue(password_b[0] != password_b[1])
+        self.assertTrue(
+            output.getvalue() == (
+                "G4_CREDENTIAL_OUTPUT_SCAN: PASS\nG4_BROWSER_COMMAND: PASS\n"
+            ) * 2
+        )
+
+    def test_failure_output_never_forwarded(self):
+        class Child:
+            def __init__(self, secret):
+                self.stdout = io.BytesIO(secret.encode())
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def wait(self):
+                return 0
+
+        captured = []
+
+        def fake_popen(args, env, stdout, stderr):
+            captured.append(dict(env))
+            return Child(env["CARELOG_E2E_PASSWORD_A"])
+
         env = dict(CARELOG_E2E_DISPOSABLE="1", CARELOG_E2E_ACCOUNT_A=self.values[0],
                    CARELOG_E2E_PASSWORD_A=self.values[1])
         output = io.StringIO()
-        with patch.dict(os.environ, env, clear=True), patch("subprocess.Popen", return_value=Child()), contextlib.redirect_stdout(output):
-            self.assertEqual(main(), 1)
-        self.assertNotIn(self.values[1], output.getvalue())
-        self.assertIn("G4_CREDENTIAL_OUTPUT_SCAN: FAIL", output.getvalue())
+        with patch.dict(os.environ, env, clear=True), \
+                patch("subprocess.Popen", side_effect=fake_popen), \
+                contextlib.redirect_stdout(output):
+            result = main()
+        self.assertTrue(result == 1)
+        self.assertTrue(len(captured) == 1)
+        self.assertTrue(captured[0]["CARELOG_E2E_PASSWORD_A"] not in output.getvalue())
+        self.assertTrue(output.getvalue() == (
+            "G4_CREDENTIAL_OUTPUT_SCAN: FAIL\nG4_BROWSER_COMMAND: PASS\n"
+        ))
 
 
 if __name__ == "__main__":

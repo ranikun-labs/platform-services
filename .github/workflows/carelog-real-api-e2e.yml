@@ -86,12 +86,9 @@ jobs:
           fi
 
       - name: Run existing G4 checks then real browser flow
-        env:
-          CARELOG_E2E_ACCOUNT_A: ${{ secrets.CARELOG_E2E_ACCOUNT_A }}
-          CARELOG_E2E_PASSWORD_A: ${{ secrets.CARELOG_E2E_PASSWORD_A }}
         run: |
-          if [[ -z "${CARELOG_E2E_ACCOUNT_A:-}" || -z "${CARELOG_E2E_PASSWORD_A:-}" ]]; then
-            echo "::error::Required Carelog E2E repository secrets are not configured."
+          if [[ "${CARELOG_E2E_DISPOSABLE:-}" != "1" || "${G4_CARELOG_REAL_API_E2E:-}" != "1" ]]; then
+            echo "::error::Carelog browser E2E requires the disposable workflow configuration."
             exit 2
           fi
           python3 scripts/g4/secure_output_gate.py
