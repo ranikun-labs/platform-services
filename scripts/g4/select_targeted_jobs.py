@@ -18,7 +18,7 @@ def select(paths, manual=False):
         }:
             out["gateway"] = True
         if p.startswith("platform-core/identity/") or p.startswith(
-            "platform-core/app/src/main/resources/"
+            "platform-core/app/src/"
         ) or p in {
             "platform-core/app/build.gradle.kts", "platform-core/build.gradle.kts",
             "platform-core/settings.gradle.kts", "platform-core/app/Dockerfile.e2e",

@@ -10,7 +10,7 @@ on:
       - 'gateway-app/settings.gradle.kts'
       - 'gateway-app/Dockerfile*'
       - 'platform-core/identity/**'
-      - 'platform-core/app/src/main/resources/**'
+      - 'platform-core/app/src/**'
       - 'platform-core/app/build.gradle.kts'
       - 'platform-core/app/Dockerfile*'
       - 'platform-core/build.gradle.kts'
