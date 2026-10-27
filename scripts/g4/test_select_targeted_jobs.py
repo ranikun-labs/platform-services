@@ -17,6 +17,17 @@ class SelectorTests(unittest.TestCase):
             {"gateway": False, "identity": True, "carelog": False},
         )
 
+    def test_platform_core_app_dockerfiles(self):
+        for path in (
+            "platform-core/app/Dockerfile",
+            "platform-core/app/Dockerfile.e2e",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(
+                    select([path]),
+                    {"gateway": False, "identity": True, "carelog": False},
+                )
+
     def test_docs(self):
         self.assertFalse(any(select(['docs/README.md']).values()))
     def test_self_change(self):
