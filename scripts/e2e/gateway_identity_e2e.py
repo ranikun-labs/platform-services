@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import os
+import secrets
 import re
 import socket
 import sys
@@ -433,7 +434,7 @@ def main():
         if phase == "functional":
             check_unauthorized_and_forbidden()
             invalid = http("POST", GATEWAY_URL, "/api/v1/auth/login",
-                           {"userId": LOGIN_ID, "password": "WrongPassword123!"})
+                           {"userId": LOGIN_ID, "password": secrets.token_urlsafe(24)})
             assert_envelope(invalid, 401, "아이디 또는 비밀번호가 일치하지 않습니다.",
                             "gateway.identity.invalid_credentials")
             check_refresh_rotation_and_revocation()

@@ -1,10 +1,14 @@
+\getenv carelog_e2e_account_a CARELOG_E2E_ACCOUNT_A
+\getenv carelog_e2e_password_a CARELOG_E2E_PASSWORD_A
+\getenv g4_e2e_password_b G4_E2E_PASSWORD_B
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 BEGIN;
 
 INSERT INTO identity.platform_accounts (id, status, primary_email, created_at, updated_at)
 VALUES (
     '00000000-0000-4000-8000-000000000024',
     'ACTIVE',
-    'issue24-e2e@example.test',
+    :'carelog_e2e_account_a',
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )
@@ -19,8 +23,8 @@ INSERT INTO identity.password_credentials (
 )
 VALUES (
     '00000000-0000-4000-8000-000000000024',
-    'issue24-e2e-user',
-    '$2b$12$AHH4H52EJRT6SStucoc1uek9jFBsXg/7fCKY4NtqQF3mP0CFD0Eim',
+    :'carelog_e2e_account_a',
+    crypt(:'carelog_e2e_password_a', gen_salt('bf', 10)),
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )
@@ -46,7 +50,7 @@ INSERT INTO identity.password_credentials (
 VALUES (
     '00000000-0000-4000-8000-000000000026',
     'issue24-e2e-user-b',
-    '$2b$12$AHH4H52EJRT6SStucoc1uek9jFBsXg/7fCKY4NtqQF3mP0CFD0Eim',
+    crypt(:'g4_e2e_password_b', gen_salt('bf', 10)),
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )

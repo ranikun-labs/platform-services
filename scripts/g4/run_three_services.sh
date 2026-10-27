@@ -31,6 +31,21 @@ if [[ "$REAL_API_E2E" == "1" ]]; then
     exit 2
   fi
 fi
+# Use the CI supplied login for the browser journey; G4-only runs get fresh local credentials.
+if [[ -z "${CARELOG_E2E_ACCOUNT_A:-}" ]]; then
+  CARELOG_E2E_ACCOUNT_A="g4-a-$(python3 -c 'import secrets; print(secrets.token_hex(8))')@example.invalid"
+fi
+if [[ -z "${CARELOG_E2E_PASSWORD_A:-}" ]]; then
+  CARELOG_E2E_PASSWORD_A="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+fi
+G4_E2E_PASSWORD_B="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export CARELOG_E2E_ACCOUNT_A CARELOG_E2E_PASSWORD_A G4_E2E_PASSWORD_B
+if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+  printf '::add-mask::%s\n' "$CARELOG_E2E_ACCOUNT_A"
+  printf '::add-mask::%s\n' "$CARELOG_E2E_PASSWORD_A"
+  printf '::add-mask::%s\n' "$G4_E2E_PASSWORD_B"
+fi
+
 COMPOSE=(docker compose --project-name "g4-disposable-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}" -f docker-compose.identity-e2e.yml -f docker-compose.g4-e2e.yml)
 if [[ "$REAL_API_E2E" == "1" ]]; then
   COMPOSE+=(-f docker-compose.carelog-real-api-e2e.yml)

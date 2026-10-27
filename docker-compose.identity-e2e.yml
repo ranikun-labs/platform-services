@@ -155,6 +155,9 @@ services:
         psql -v ON_ERROR_STOP=1 -h postgres -U platform_e2e -d platform_e2e -f /e2e/seed.sql
     environment:
       PGPASSWORD: issue24-local-postgres-password
+      CARELOG_E2E_ACCOUNT_A: ${CARELOG_E2E_ACCOUNT_A:?required}
+      CARELOG_E2E_PASSWORD_A: ${CARELOG_E2E_PASSWORD_A:?required}
+      G4_E2E_PASSWORD_B: ${G4_E2E_PASSWORD_B:?required}
     volumes:
       - ./scripts/e2e:/e2e:ro
     networks: [identity-e2e]
@@ -173,8 +176,8 @@ services:
       PLATFORM_E2E_VALKEY_HOST: valkey
       PLATFORM_E2E_VALKEY_PORT: "6379"
       PLATFORM_E2E_JWT_SECRET: issue24-e2e-synthetic-jwt-secret-material-32-bytes
-      PLATFORM_E2E_LOGIN_ID: issue24-e2e-user
-      PLATFORM_E2E_PASSWORD: Password123!
+      PLATFORM_E2E_LOGIN_ID: ${CARELOG_E2E_ACCOUNT_A:?required}
+      PLATFORM_E2E_PASSWORD: ${CARELOG_E2E_PASSWORD_A:?required}
       PLATFORM_E2E_FAKE_KAKAO_CODE: issue24-synthetic-oauth-code
     networks: [identity-e2e]
 
