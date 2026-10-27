@@ -54,6 +54,16 @@ COMPOSE=(docker compose --project-name "g4-disposable-${GITHUB_RUN_ID:-local}-${
 if [[ "$REAL_API_E2E" == "1" ]]; then
   COMPOSE+=(-f docker-compose.carelog-real-api-e2e.yml)
 fi
+mark_stage() {
+  local stage="$1"
+  case "$stage" in
+    BUILD|SERVICES|IDENTITY_SEED|CARELOG_SEED|G4_VERIFY|PLAYWRIGHT) ;;
+    *) return 2 ;;
+  esac
+  if [[ -n "${G4_E2E_STAGE_FILE:-}" ]]; then
+    printf '%s\n' "$stage" > "$G4_E2E_STAGE_FILE"
+  fi
+}
 report_gateway_port_diagnostics() {
   local config_json container_id host_bindings published_ports
   config_json="$("${COMPOSE[@]}" config --format json)"
@@ -97,11 +107,15 @@ cleanup() {
   exit "$code"
 }
 trap cleanup EXIT INT TERM
+mark_stage BUILD
 "${COMPOSE[@]}" config --quiet
 "${COMPOSE[@]}" build carelog-be platform-core-app gateway-app
+mark_stage SERVICES
 "${COMPOSE[@]}" up -d --wait postgres valkey fake-kakao carelog-postgres
 "${COMPOSE[@]}" up -d --wait carelog-be platform-core-app gateway-app
+mark_stage IDENTITY_SEED
 "${COMPOSE[@]}" run --rm identity-e2e-seed
+mark_stage CARELOG_SEED
 ready=0
 for _ in $(seq 1 50); do
   if "${COMPOSE[@]}" exec -T carelog-postgres psql -U carelog_g4 -d carelog_g4 -Atqc "SELECT count(*) FROM flyway_schema_history WHERE success AND version='8'" 2>/dev/null | grep -qx 1; then
@@ -113,11 +127,13 @@ if [[ "$ready" != 1 ]]; then
   echo "BLOCKED_ENV: Carelog migration V8 did not finish"; exit 2
 fi
 "${COMPOSE[@]}" exec -T carelog-postgres psql -v ON_ERROR_STOP=1 -U carelog_g4 -d carelog_g4 -f /g4/seed-carelog.sql
+mark_stage G4_VERIFY
 "${COMPOSE[@]}" run --rm g4-three-service-runner
 if [[ "$REAL_API_E2E" == "1" ]]; then
   assert_gateway_loopback_port
   export CARELOG_E2E_GATEWAY_TARGET="http://127.0.0.1:${CARELOG_E2E_GATEWAY_PORT}"
   echo "Running Carelog real API Playwright journey while G4 services are alive"
+  mark_stage PLAYWRIGHT
   (cd "$CARELOG_E2E_FE_DIR" && pnpm exec playwright test --config playwright.real-api.config.ts)
 fi
 

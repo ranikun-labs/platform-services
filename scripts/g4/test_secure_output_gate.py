@@ -60,6 +60,18 @@ class OutputGateTests(unittest.TestCase):
             output.getvalue() == "G4_SECURE_OUTPUT_GATE: BLOCKED_NON_DISPOSABLE_EXECUTION\n"
         )
 
+    def test_missing_real_api_flag_fails_closed_before_child(self):
+        output = io.StringIO()
+        with patch.dict(os.environ, {"CARELOG_E2E_DISPOSABLE": "1"}, clear=True), \
+                patch("subprocess.Popen") as popen, \
+                contextlib.redirect_stdout(output):
+            result = main()
+        self.assertEqual(result, 2)
+        self.assertFalse(popen.called)
+        self.assertEqual(
+            output.getvalue(), "G4_SECURE_OUTPUT_GATE: BLOCKED_REAL_API_E2E_REQUIRED\n"
+        )
+
     def test_generates_independent_a_and_b_credentials_per_invocation(self):
         class Child:
             def __enter__(self):
@@ -78,6 +90,7 @@ class OutputGateTests(unittest.TestCase):
 
         inherited = {
             "CARELOG_E2E_DISPOSABLE": "1",
+            "G4_CARELOG_REAL_API_E2E": "1",
             "CARELOG_E2E_ACCOUNT_A": "stale-account@example.invalid",
             "CARELOG_E2E_PASSWORD_A": "synthetic-stale-account-password",
             "G4_E2E_PASSWORD_B": "synthetic-stale-b-password",
@@ -112,7 +125,117 @@ class OutputGateTests(unittest.TestCase):
             ) * 2
         )
 
-    def test_failure_output_never_forwarded(self):
+    def test_failure_reports_allowlisted_stage_and_hides_child_output(self):
+        class Child:
+            def __init__(self, stage_path):
+                self.stdout = io.BytesIO(b"synthetic HTTP response body with private details")
+                with open(stage_path, "wb") as stage_file:
+                    stage_file.write(b"G4_VERIFY\n")
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def wait(self):
+                return 17
+
+        def fake_popen(args, env, stdout, stderr):
+            return Child(env["G4_E2E_STAGE_FILE"])
+
+        env = dict(CARELOG_E2E_DISPOSABLE="1", G4_CARELOG_REAL_API_E2E="1",
+                   CARELOG_E2E_ACCOUNT_A=self.values[0],
+                   CARELOG_E2E_PASSWORD_A=self.values[1])
+        output = io.StringIO()
+        with patch.dict(os.environ, env, clear=True), \
+                patch("subprocess.Popen", side_effect=fake_popen), \
+                contextlib.redirect_stdout(output):
+            result = main()
+        self.assertEqual(result, 1)
+        self.assertEqual(
+            output.getvalue(),
+            "G4_CREDENTIAL_OUTPUT_SCAN: PASS\n"
+            "G4_BROWSER_COMMAND: FAIL\n"
+            "G4_FAILURE stage=G4_VERIFY category=CHILD_EXIT exit_code=17\n",
+        )
+
+    def test_unknown_or_malformed_diagnostic_fails_closed(self):
+        class Child:
+            def __init__(self, stage_path, marker):
+                self.stdout = io.BytesIO(b"raw child stderr with synthetic details")
+                with open(stage_path, "wb") as stage_file:
+                    stage_file.write(marker)
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def wait(self):
+                return 9
+
+        def fake_popen(args, env, stdout, stderr):
+            return Child(env["G4_E2E_STAGE_FILE"], current_marker[0])
+
+        env = dict(CARELOG_E2E_DISPOSABLE="1", G4_CARELOG_REAL_API_E2E="1")
+        for marker in (b"UNKNOWN_STAGE\n", b"G4_VERIFY", b"G4_VERIFY\nextra\n", b"\xff\n"):
+            current_marker = [marker]
+            output = io.StringIO()
+            with self.subTest(marker=marker), \
+                    patch.dict(os.environ, env, clear=True), \
+                    patch("subprocess.Popen", side_effect=fake_popen), \
+                    contextlib.redirect_stdout(output):
+                result = main()
+            self.assertEqual(result, 2)
+            self.assertEqual(
+                output.getvalue(),
+                "G4_CREDENTIAL_OUTPUT_SCAN: PASS\n"
+                "G4_BROWSER_COMMAND: FAIL\n"
+                "G4_FAILURE stage=BUILD category=DIAGNOSTIC exit_code=2\n",
+            )
+
+    def test_missing_diagnostic_fails_closed_with_fixed_summaries(self):
+        class Child:
+            def __init__(self, stage_path):
+                self.stdout = io.BytesIO(b"unforwarded child output")
+                os.remove(stage_path)
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+            def wait(self):
+                return 17
+
+        def fake_popen(args, env, stdout, stderr):
+            return Child(env["G4_E2E_STAGE_FILE"])
+
+        env = dict(CARELOG_E2E_DISPOSABLE="1", G4_CARELOG_REAL_API_E2E="1")
+        output = io.StringIO()
+        with patch.dict(os.environ, env, clear=True), \
+                patch("subprocess.Popen", side_effect=fake_popen), \
+                contextlib.redirect_stdout(output):
+            result = main()
+        self.assertEqual(result, 2)
+        self.assertEqual(
+            output.getvalue(),
+            "G4_CREDENTIAL_OUTPUT_SCAN: PASS\n"
+            "G4_BROWSER_COMMAND: FAIL\n"
+            "G4_FAILURE stage=BUILD category=DIAGNOSTIC exit_code=2\n",
+        )
+
+    def test_popen_exception_has_fixed_summaries_and_no_exception_text(self):
+        env = dict(CARELOG_E2E_DISPOSABLE="1", G4_CARELOG_REAL_API_E2E="1")
+        output = io.StringIO()
+        with patch.dict(os.environ, env, clear=True), \
+                patch("subprocess.Popen", side_effect=RuntimeError("synthetic private details")), \
+                contextlib.redirect_stdout(output):
+            result = main()
+        self.assertEqual(result, 2)
+        self.assertNotIn("synthetic private details", output.getvalue())
+        self.assertEqual(
+            output.getvalue(),
+            "G4_CREDENTIAL_OUTPUT_SCAN: PASS\n"
+            "G4_BROWSER_COMMAND: FAIL\n"
+            "G4_FAILURE stage=BUILD category=EXECUTION exit_code=2\n",
+        )
+
+    def test_output_scan_failure_never_forwards_credentials(self):
         class Child:
             def __init__(self, secret):
                 self.stdout = io.BytesIO(secret.encode())
@@ -123,25 +246,25 @@ class OutputGateTests(unittest.TestCase):
             def wait(self):
                 return 0
 
-        captured = []
-
         def fake_popen(args, env, stdout, stderr):
-            captured.append(dict(env))
             return Child(env["CARELOG_E2E_PASSWORD_A"])
 
-        env = dict(CARELOG_E2E_DISPOSABLE="1", CARELOG_E2E_ACCOUNT_A=self.values[0],
+        env = dict(CARELOG_E2E_DISPOSABLE="1", G4_CARELOG_REAL_API_E2E="1",
+                   CARELOG_E2E_ACCOUNT_A=self.values[0],
                    CARELOG_E2E_PASSWORD_A=self.values[1])
         output = io.StringIO()
         with patch.dict(os.environ, env, clear=True), \
                 patch("subprocess.Popen", side_effect=fake_popen), \
                 contextlib.redirect_stdout(output):
             result = main()
-        self.assertTrue(result == 1)
-        self.assertTrue(len(captured) == 1)
-        self.assertTrue(captured[0]["CARELOG_E2E_PASSWORD_A"] not in output.getvalue())
-        self.assertTrue(output.getvalue() == (
-            "G4_CREDENTIAL_OUTPUT_SCAN: FAIL\nG4_BROWSER_COMMAND: PASS\n"
-        ))
+        self.assertEqual(result, 1)
+        self.assertNotIn(self.values[1], output.getvalue())
+        self.assertEqual(
+            output.getvalue(),
+            "G4_CREDENTIAL_OUTPUT_SCAN: FAIL\n"
+            "G4_BROWSER_COMMAND: PASS\n"
+            "G4_FAILURE stage=BUILD category=OUTPUT_SCAN exit_code=1\n",
+        )
 
 
 if __name__ == "__main__":
