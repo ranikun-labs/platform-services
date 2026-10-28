@@ -46,7 +46,7 @@ class ReviewKnowledgeSkillHandler(
             val retrievalObservedAt = clock.instant()
 
             val modelResult = measured(command, ExecutionStage.MODEL, TechnicalFailureCategory.MODEL_FAILURE) {
-                modelGateway.interpret(
+                val result = modelGateway.interpret(
                     ModelRequest(
                         command.context.executionReference,
                         command.context.scope,
@@ -55,6 +55,8 @@ class ReviewKnowledgeSkillHandler(
                         retrieved,
                     ),
                 )
+                require(result.interpretation.isNotBlank()) { "model interpretation must not be blank" }
+                result
             }
             measured(command, ExecutionStage.CORRELATION, TechnicalFailureCategory.CORRELATION_FAILURE) {
                 correlationValidator.validate(command.context, modelResult)
@@ -134,7 +136,7 @@ class ReviewKnowledgeSkillHandler(
         var failure: TechnicalFailureCategory? = null
         return try {
             action()
-        } catch (exception: RuntimeException) {
+        } catch (exception: Exception) {
             failure = category
             throw StageFailure(category, exception)
         } finally {
@@ -148,6 +150,6 @@ class ReviewKnowledgeSkillHandler(
 
     private class StageFailure(
         val category: TechnicalFailureCategory,
-        cause: RuntimeException,
+        cause: Exception,
     ) : RuntimeException(cause)
 }

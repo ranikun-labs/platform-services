@@ -84,6 +84,27 @@ class SharedAiExecutionService(private val registry: SkillRegistry) {
                 command.context.executionReference,
                 TechnicalFailureCategory.UNSUPPORTED_SKILL,
             )
-        return handler.execute(command)
+        val result = handler.execute(command)
+        if (result.executionReference != command.context.executionReference) {
+            return correlationFailure(command)
+        }
+        if (result is ExecutionResult.Success) {
+            if (result.evidence.context != command.context) {
+                return correlationFailure(command)
+            }
+            if (result.interpretation.isBlank()) {
+                return ExecutionResult.TechnicalFailure(
+                    command.context.executionReference,
+                    TechnicalFailureCategory.MODEL_FAILURE,
+                )
+            }
+        }
+        return result
     }
+
+    private fun correlationFailure(command: ExecutionCommand) =
+        ExecutionResult.TechnicalFailure(
+            command.context.executionReference,
+            TechnicalFailureCategory.CORRELATION_FAILURE,
+        )
 }
