@@ -57,7 +57,7 @@ fi
 mark_stage() {
   local stage="$1"
   case "$stage" in
-    BUILD|SERVICES|IDENTITY_SEED|CARELOG_SEED|G4_VERIFY|PLAYWRIGHT) ;;
+    BUILD|SERVICES|IDENTITY_SEED|CARELOG_SEED|G4_VERIFY|GATEWAY_PREFLIGHT|PLAYWRIGHT) ;;
     *) return 2 ;;
   esac
   if [[ -n "${G4_E2E_STAGE_FILE:-}" ]]; then
@@ -130,6 +130,7 @@ fi
 mark_stage G4_VERIFY
 "${COMPOSE[@]}" run --rm g4-three-service-runner
 if [[ "$REAL_API_E2E" == "1" ]]; then
+  mark_stage GATEWAY_PREFLIGHT
   assert_gateway_loopback_port
   export CARELOG_E2E_GATEWAY_TARGET="http://127.0.0.1:${CARELOG_E2E_GATEWAY_PORT}"
   echo "Running Carelog real API Playwright journey while G4 services are alive"

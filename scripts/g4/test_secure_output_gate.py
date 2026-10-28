@@ -3,7 +3,9 @@ import contextlib
 import io
 import os
 import re
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from secure_output_gate import Scanner, main
@@ -155,6 +157,56 @@ class OutputGateTests(unittest.TestCase):
             "G4_CREDENTIAL_OUTPUT_SCAN: PASS\n"
             "G4_BROWSER_COMMAND: FAIL\n"
             "G4_FAILURE stage=G4_VERIFY category=CHILD_EXIT exit_code=17\n",
+        )
+
+    def test_gateway_loopback_preflight_reports_distinct_stage(self):
+        fake_docker_source = """#!/usr/bin/env python3
+import json
+import sys
+
+args = sys.argv[1:]
+if args[-2:] == ["config", "--quiet"]:
+    raise SystemExit(0)
+if args[-3:] == ["config", "--format", "json"]:
+    print(json.dumps({"services": {"gateway-app": {"ports": []}}}))
+    raise SystemExit(0)
+if "port" in args and "gateway-app" in args:
+    print("0.0.0.0:54321")
+    raise SystemExit(0)
+if any("SELECT count(*)" in arg for arg in args):
+    print("1")
+raise SystemExit(0)
+"""
+        with tempfile.TemporaryDirectory(prefix="g4-fake-docker-") as temporary:
+            root = Path(temporary)
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            docker = fake_bin / "docker"
+            docker.write_text(fake_docker_source, encoding="utf-8")
+            docker.chmod(0o755)
+            frontend = root / "frontend"
+            frontend.mkdir()
+
+            env = {
+                "CARELOG_E2E_DISPOSABLE": "1",
+                "G4_CARELOG_REAL_API_E2E": "1",
+                "CARELOG_E2E_GATEWAY_PORT": "54321",
+                "CARELOG_E2E_ACCOUNT_A": self.values[0],
+                "CARELOG_E2E_PASSWORD_A": self.values[1],
+                "CARELOG_E2E_FE_DIR": str(frontend),
+                "PATH": str(fake_bin) + os.pathsep + os.environ.get("PATH", ""),
+            }
+            output = io.StringIO()
+            with patch.dict(os.environ, env, clear=True):
+                with contextlib.redirect_stdout(output):
+                    result = main()
+
+        self.assertEqual(result, 1)
+        self.assertEqual(
+            output.getvalue(),
+            "G4_CREDENTIAL_OUTPUT_SCAN: PASS\n"
+            "G4_BROWSER_COMMAND: FAIL\n"
+            "G4_FAILURE stage=GATEWAY_PREFLIGHT category=CHILD_EXIT exit_code=2\n",
         )
 
     def test_unknown_or_malformed_diagnostic_fails_closed(self):
