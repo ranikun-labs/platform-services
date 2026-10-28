@@ -98,7 +98,7 @@ class SharedAiExecutionContractTest {
     fun `rejects a handler result whose evidence carries another execution context`() {
         val otherContext = context.copy(correlationReference = "another-correlation")
         val handler = object : SkillHandler {
-            override fun skillId() = SkillId("consumer-contract")
+            override fun skillId() = SkillId.REVIEW_KNOWLEDGE
 
             override fun execute(command: ExecutionCommand) =
                 ExecutionResult.Success(
@@ -117,7 +117,7 @@ class SharedAiExecutionContractTest {
     @Test
     fun `rejects a handler result carrying another execution reference`() {
         val handler = object : SkillHandler {
-            override fun skillId() = SkillId("consumer-contract")
+            override fun skillId() = SkillId.REVIEW_KNOWLEDGE
 
             override fun execute(command: ExecutionCommand) =
                 ExecutionResult.TechnicalFailure("another-execution", TechnicalFailureCategory.MODEL_FAILURE)
