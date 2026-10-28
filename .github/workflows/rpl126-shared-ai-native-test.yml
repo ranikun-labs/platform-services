@@ -1,0 +1,32 @@
+name: RPL-126 Shared AI Native Test
+
+on:
+  push:
+    branches:
+      - codex/rpl126-shared-ai-test-rebuilt
+
+permissions:
+  contents: read
+
+jobs:
+  shared-ai-native-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout fixed Shared AI source
+        uses: actions/checkout@v4
+        with:
+          ref: f30bea6e3706a2f190c6d0b19ee375857fbc67aa
+          persist-credentials: false
+
+      - name: Set up Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Verify fixed source SHA
+        run: test "$(git rev-parse HEAD)" = f30bea6e3706a2f190c6d0b19ee375857fbc67aa
+
+      - name: Run Shared AI native tests
+        run: ./gradlew -p platform-core :shared-ai:test --no-daemon --stacktrace
