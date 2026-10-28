@@ -16,7 +16,7 @@ jobs:
       - name: Checkout fixed Shared AI source
         uses: actions/checkout@v4
         with:
-          ref: f30bea6e3706a2f190c6d0b19ee375857fbc67aa
+          ref: 2aa4fb0ea3456bc340544da1bef729b5de738780
           persist-credentials: false
 
       - name: Set up Temurin JDK 21
@@ -26,7 +26,7 @@ jobs:
           java-version: '21'
 
       - name: Verify fixed source SHA
-        run: test "$(git rev-parse HEAD)" = f30bea6e3706a2f190c6d0b19ee375857fbc67aa
+        run: test "$(git rev-parse HEAD)" = 2aa4fb0ea3456bc340544da1bef729b5de738780
 
       - name: Run Shared AI native tests
         run: ./gradlew -p platform-core :shared-ai:test --no-daemon --stacktrace
