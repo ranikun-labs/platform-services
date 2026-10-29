@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - codex/rpl126-finance-consumer
-      - recovery/f4-rpl126
 
 permissions:
   contents: read
