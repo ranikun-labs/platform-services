@@ -29,6 +29,37 @@ class ExecutionContextTest {
     }
 
     @Test
+    fun `child context preserves contract version and optional authority reference`() {
+        val parent = ExecutionContext(
+            ExecutionScope("product-a", "tenant-a", setOf("one", "two")),
+            "principal-a",
+            "request-a",
+            "execution-a",
+            "correlation-a",
+            authorityReference = "authority:opaque-a",
+        )
+
+        val child = parent.child(ExecutionScope("product-a", "tenant-a", setOf("one")))
+
+        assertThat(child.contextVersion).isEqualTo(ExecutionContext.CURRENT_CONTEXT_VERSION)
+        assertThat(child.authorityReference).isEqualTo("authority:opaque-a")
+    }
+
+    @Test
+    fun `requires nonblank contract version and optional authority reference`() {
+        val scope = ExecutionScope("product-a", "tenant-a", emptySet())
+
+        assertThatThrownBy {
+            ExecutionContext(scope, "principal-a", "request-a", "execution-a", null, contextVersion = " ")
+        }.isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("contextVersion")
+        assertThatThrownBy {
+            ExecutionContext(scope, "principal-a", "request-a", "execution-a", null, authorityReference = " ")
+        }.isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("authorityReference")
+    }
+
+    @Test
     fun `rejects a child scope that widens or changes tenant`() {
         val context = context(ExecutionScope("product-a", "tenant-a", setOf("one")))
 
