@@ -1,0 +1,86 @@
+{
+  "record_type": "JIRA_G3_RPL125_POSTUPDATE_VERIFICATION",
+  "observed_at": "2026-10-30T16:28:31.060+09:00",
+  "jira": "https://ranikunlabs.atlassian.net/browse/RPL-125",
+  "scope": "owner-delegated field-only correction, no authority cutover",
+  "pre_snapshot": "rpl125-preupdate-classification-20261030.json",
+  "before": {
+    "target_product": null,
+    "target_component": null,
+    "target_concern": null,
+    "legacy_product": [
+      "platform-foundation"
+    ],
+    "legacy_component": [
+      "documentation"
+    ],
+    "legacy_labels": [
+      "aws",
+      "ecs-aurora",
+      "scale-to-zero"
+    ],
+    "status": "할 일"
+  },
+  "after": {
+    "target_product": {
+      "id": "10026",
+      "value": "platform-foundation"
+    },
+    "target_component": {
+      "id": "10031",
+      "value": "documentation"
+    },
+    "target_concern": null,
+    "legacy_product": [
+      "platform-foundation"
+    ],
+    "legacy_component": [
+      "documentation"
+    ],
+    "legacy_labels": [
+      "aws",
+      "ecs-aurora",
+      "scale-to-zero"
+    ],
+    "status": "할 일"
+  },
+  "jira_changelog": {
+    "id": "11099",
+    "timestamp": "2026-10-30T16:28:31.060+09:00",
+    "changed_fields": [
+      "Product (Target)",
+      "Component (Target)"
+    ],
+    "other_classification_fields_changed": false
+  },
+  "jql_recheck": {
+    "active_missing_target_product_or_component": 4,
+    "keys": [
+      "RPL-123",
+      "RPL-121",
+      "RPL-120",
+      "RPL-119"
+    ],
+    "all_optional_type": "Story",
+    "required_types_missing": 0
+  },
+  "authority": {
+    "origin": "UNVERIFIED",
+    "read_authority": "NOT_CHANGED",
+    "write_authority": "NOT_CHANGED",
+    "cutover_approval_ref": null,
+    "warning": "Field update is not existing-issue authority cutover; origin for this post-G2-created issue must be independently verified before any reader authority claim"
+  },
+  "review": {
+    "native_jira_get": "PASS",
+    "jql_recheck": "PASS",
+    "changelog": "PASS",
+    "prod_reader": "NOT_RUN",
+    "rollback_drill": "NOT_RUN"
+  },
+  "restrictions": {
+    "legacy_deleted": false,
+    "issue_created": false,
+    "other_workstream_code_changed": false
+  }
+}
