@@ -1,5 +1,8 @@
 # Jira Migration — G0~G4 Current Roadmap & Closure (2026-10-30 KST)
 
+> **2026-10-31 F4 READY 실행 — Taxonomy §8.2 초안 저장:** 기존 보존·Canary PASS를 반복하지 않고 `taxonomy-8-2-native-scope-proposed-delta-20261031.md`를 감사 브랜치에 신규 작성. Board #2 Filter 10001·활성 RPL Automation은 `NO_CLASSIFICATION_CONSUMER`, Feature/Task Target Screen은 `TARGET_EXPOSURE`, 다른 소유자 비공개 Filter는 `ACCESS_UNKNOWN`으로 구분했다. Jira Native-only 운영을 제품 제안으로 좁히고, 승인된 소비처 없는 경우 **범위 한정** Reader/Restore 검증 예외를 정본 §8.2 후보로 작성. **Taxonomy v1.0 발효 상태 유지, §8.2 초안 NOT_APPROVED/NOT_EFFECTIVE, RPL-88 CutoverApprovalRef=null, 어떤 Jira/G3/G4 설정도 미변경.** 다음 Gate는 Owner의 Native 운영 권위/화면 preview 위험 채택 → 정본 정책 PR 고정 HEAD Review/Owner Merge 별도 Gate → RPL-88 Sole Writer/별도 Cutover Approval다.
+
+
 > **2026-10-31 Native Scope Gate — 최신 의사결정 초안:** Jira Work에서 RPL Board #2 내부 Filter `10001`의 JQL `project = RPL ORDER BY cf[10019] ASC`(Rank), 접근 가능한 활성 RPL Automation의 날짜·상태 전용 JQL, 현재 계정의 저장/공유 Filter 목록 0건을 확인했다. **확인 범위에서는 분류 소비처가 없어 Board/Automation 변경 대상 없음.** Feature/Task Screen은 Target 필드를 노출. 다른 사용자 비공개 Filter/외부 서비스는 UNKNOWN. Jira Native를 우선 운영 화면으로 추천하며 근거 없는 Reader 서버 신규 구축은 제외하지만, accepted Taxonomy의 기존 Issue 권위·원장·Cutover/복구 계약을 묵시적으로 면제할 수 없다. 정확한 Owner 결정 D1~D4와 승인 범위는 `g3-g4-native-operational-closure-owner-gate-20261031.md` (PROPOSED/NOT_APPROVED/NO_CUTOVER) 참조. **현재 G3 기존 이슈 Cutover BLOCKED, G4 확인 범위 PASS/전체 PARTIAL, 원본 Legacy 보존.**
 
 
