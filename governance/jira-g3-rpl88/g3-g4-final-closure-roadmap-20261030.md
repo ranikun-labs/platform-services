@@ -1,5 +1,8 @@
 # Jira Migration — G0~G4 Current Roadmap & Closure (2026-10-30 KST)
 
+> **2026-10-31 Owner Native Adoption → Source Draft PR #53:** Owner가 Jira Native를 RPL의 사용자 운영 화면으로 **우선 채택하고 §8.2 최소 정책 PR 준비를 승인**했다. Foundation `ranikun-labs/harness-foundation-docs`의 `docs/jira-g3-g4-native-scope-taxonomy-8-2-20261031` 브랜치에 정본 원문을 보존한 채 §8.2만 추가했다(Commit `f983525d19ed4720455af1d1e846451ce077ac7b`, Base `86b5bea721a54029886119f62757db3f89809db5`). [Draft PR #53](https://github.com/ranikun-labs/harness-foundation-docs/pull/53): 단일 Taxonomy 파일 +11/-0, 독립 리뷰 0건·CI status contexts 0건, `DRAFT/NOT_EFFECTIVE`. 허용된 범위는 Source 변경안 작성과 PR 준비까지며, **Merge·RPL-88 CutoverApprovalRef·실제 Cutover·Deploy·Legacy Hide/Delete는 별도 Gate**다. 다음 F4 Gate는 고정 HEAD Sol High 독립 Reviewer(실효 모델 확인) → Finding Closure → Owner Source Merge 판단; 그 후 RPL-88 한정 Cutover 기술 검증/별도 승인이다. 기존 `verified/legacy/frozen`은 유지한다.
+
+
 > **2026-10-31 F4 READY 실행 — Taxonomy §8.2 초안 저장:** 기존 보존·Canary PASS를 반복하지 않고 `taxonomy-8-2-native-scope-proposed-delta-20261031.md`를 감사 브랜치에 신규 작성. Board #2 Filter 10001·활성 RPL Automation은 `NO_CLASSIFICATION_CONSUMER`, Feature/Task Target Screen은 `TARGET_EXPOSURE`, 다른 소유자 비공개 Filter는 `ACCESS_UNKNOWN`으로 구분했다. Jira Native-only 운영을 제품 제안으로 좁히고, 승인된 소비처 없는 경우 **범위 한정** Reader/Restore 검증 예외를 정본 §8.2 후보로 작성. **Taxonomy v1.0 발효 상태 유지, §8.2 초안 NOT_APPROVED/NOT_EFFECTIVE, RPL-88 CutoverApprovalRef=null, 어떤 Jira/G3/G4 설정도 미변경.** 다음 Gate는 Owner의 Native 운영 권위/화면 preview 위험 채택 → 정본 정책 PR 고정 HEAD Review/Owner Merge 별도 Gate → RPL-88 Sole Writer/별도 Cutover Approval다.
 
 
