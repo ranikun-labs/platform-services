@@ -12,7 +12,7 @@
   },
   "execution": {
     "writer": "jira-migration ChatGPT session through connected Jira and GitHub; single sequential writer",
-    "status": "BATCH1_PARTIAL_EPIC_VERIFIED",
+    "status": "BATCH1_2_OF_2_VERIFIED",
     "batch_size_limit": 2,
     "approval_is_final_cutover": false
   },
@@ -118,12 +118,12 @@
       "issue_type_name": "작업",
       "tag": "TASK",
       "expected_summary": "[MIGRATION-G3-TASK-CANARY-20261030] Target 필수 저장값 검증",
-      "state": "pending",
-      "jira_issue_key": null,
-      "origin": "pending_unverified",
-      "phase": "create_pending",
-      "read_authority": "none",
-      "write_authority": "frozen",
+      "state": "verified",
+      "jira_issue_key": "RPL-130",
+      "origin": "target_create",
+      "phase": "create_ready",
+      "read_authority": "target",
+      "write_authority": "target",
       "activation_ref": "OWNER_G3_CANARY_4_TYPES_2026_10_30",
       "effective_from": "2026-10-30",
       "effective_to": "2026-11-02",
@@ -147,16 +147,51 @@
         "assignee_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
         "reporter_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
       },
-      "jira_create_call_status": "IN_FLIGHT",
-      "jira_create_receipt": null,
-      "jira_get_proof": null,
-      "jql_proof": null,
+      "jira_create_call_status": "SUCCESS_VERIFIED",
+      "jira_create_receipt": {
+        "issue_key": "RPL-130",
+        "issue_id": "10247"
+      },
+      "jira_get_proof": {
+        "issue_key": "RPL-130",
+        "issue_type_id": "10010",
+        "summary_matches": true,
+        "start": "2026-10-30",
+        "due": "2026-11-02",
+        "target_product": "10026",
+        "target_component": "10030",
+        "target_concern": [
+          "10039"
+        ],
+        "legacy_fields": [
+          null,
+          null,
+          null
+        ],
+        "assignee_confirmed": true
+      },
+      "jql_proof": {
+        "query": "project = RPL AND key = RPL-130 AND cf[10108] IS NOT EMPTY AND cf[10109] IS NOT EMPTY",
+        "matched_keys": [
+          "RPL-130"
+        ],
+        "count": 1
+      },
       "legacy_snapshot_ref": "not_applicable",
-      "preserve_evidence": null,
-      "reader_evidence": null,
+      "preserve_evidence": {
+        "legacy_fields_empty": true,
+        "issue_status": "할 일",
+        "description_mutation": false
+      },
+      "reader_evidence": {
+        "mode": "Jira Native GET/JQL",
+        "production_external_consumer_verified": false
+      },
       "exceptions": [],
       "create_attempt_number": 1,
-      "attempt_started_date": "2026-10-30"
+      "attempt_started_date": "2026-10-30",
+      "jira_issue_id": "10247",
+      "verified_at": "2026-10-30T18:01:41.763+09:00"
     },
     {
       "create_request_id": "RPL-G3-CANARY-20261030-10012-01",
