@@ -1,0 +1,47 @@
+{
+  "record_type": "JIRA_G3_RPL125_PREUPDATE_CLASSIFICATION_SNAPSHOT",
+  "approved_scope": "2026-10-30 user directive: /senior decide and progress Jira Migration goals; limited to previously proposed RPL-125 Target-only Product/Component correction",
+  "issue_key": "RPL-125",
+  "issue_type": "Research",
+  "issue_type_id": "10013",
+  "source": "Jira live GET before mutation, 2026-10-30 KST",
+  "before": {
+    "Legacy_Product": [
+      "platform-foundation"
+    ],
+    "Legacy_Component": [
+      "documentation"
+    ],
+    "Legacy_Labels": [
+      "aws",
+      "ecs-aurora",
+      "scale-to-zero"
+    ],
+    "Target_Product": null,
+    "Target_Component": null,
+    "Target_Concern": null,
+    "status": "할 일",
+    "updated": "2026-10-28T15:17:38.869+0900",
+    "changelog_count": 0
+  },
+  "intended": {
+    "Target_Product": {
+      "id": "10026",
+      "value": "platform-foundation"
+    },
+    "Target_Component": {
+      "id": "10031",
+      "value": "documentation"
+    }
+  },
+  "invariants": [
+    "Legacy fields unchanged",
+    "no status/description/assignee changes",
+    "no Target Concern infer from Legacy labels",
+    "do not infer ReadAuthority cutover",
+    "single issue only",
+    "GET verify immediately",
+    "rollback requires separate human-scoped action"
+  ],
+  "policy": "harness-foundation-docs/docs/governance/jira-field-taxonomy.md §8.0"
+}
