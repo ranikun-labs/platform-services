@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -74,6 +75,75 @@ class RuntimeCredentialWiringTests(unittest.TestCase):
         cls.carelog_seed = (ROOT / "scripts/g4/seed-carelog.sql").read_text()
         cls.identity_compose = (ROOT / "docker-compose.identity-e2e.yml").read_text()
         cls.g4_compose = (ROOT / "docker-compose.g4-e2e.yml").read_text()
+        cls.real_api_workflow = (ROOT / ".github/workflows/carelog-real-api-e2e.yml").read_text()
+
+    @staticmethod
+    def _write_fake_docker(directory: Path) -> None:
+        docker_stub = directory / "docker"
+        docker_stub.write_text(
+            r"""#!/usr/bin/env python3
+import os
+import sys
+
+if os.environ.get("FAKE_DOCKER_CAPTURE_CREDENTIALS") == "1" and sys.argv[-2:] == ["config", "--quiet"]:
+    keys = ("CARELOG_E2E_ACCOUNT_A", "CARELOG_E2E_PASSWORD_A", "G4_E2E_PASSWORD_B")
+    report_fd = int(os.environ["FAKE_DOCKER_REPORT_FD"])
+    os.write(report_fd, "\0".join(os.environ.get(key, "") for key in keys).encode())
+    raise SystemExit(79)
+
+if os.environ.get("FAKE_DOCKER_REPORT_CALLS") == "1":
+    report_fd = int(os.environ["FAKE_DOCKER_REPORT_FD"])
+    os.write(report_fd, b"docker-called")
+    raise SystemExit(88)
+
+raise SystemExit(0)
+"""
+        )
+        docker_stub.chmod(0o755)
+
+    @staticmethod
+    def _invoke_with_fake_docker(
+        directory: Path, environment: dict[str, str]
+    ) -> tuple[subprocess.CompletedProcess[bytes], bytes]:
+        read_fd, write_fd = os.pipe()
+        child_environment = dict(environment)
+        child_environment["PATH"] = (
+            f"{directory}{os.pathsep}{child_environment.get('PATH', os.defpath)}"
+        )
+        child_environment["FAKE_DOCKER_REPORT_FD"] = str(write_fd)
+        try:
+            # The stub reports generated values through this anonymous pipe, never stdout, stderr, or a file.
+            result = subprocess.run(
+                ["bash", str(ROOT / "scripts/g4/run_three_services.sh")],
+                env=child_environment,
+                pass_fds=(write_fd,),
+                capture_output=True,
+                timeout=10,
+            )
+        finally:
+            os.close(write_fd)
+
+        report = bytearray()
+        try:
+            while chunk := os.read(read_fd, 4096):
+                report.extend(chunk)
+        finally:
+            os.close(read_fd)
+        return result, bytes(report)
+
+    @staticmethod
+    def _real_api_test_environment() -> dict[str, str]:
+        return {
+            "PATH": os.environ.get("PATH", os.defpath),
+            "G4_CARELOG_REAL_API_E2E": "1",
+            "CARELOG_E2E_DISPOSABLE": "1",
+            "CARELOG_E2E_GATEWAY_PORT": "18080",
+            "CARELOG_E2E_FE_DIR": str(ROOT),
+            "CARELOG_E2E_ACCOUNT_A": "inherited-test-account@example.invalid",
+            "CARELOG_E2E_PASSWORD_A": "inherited-test-password",
+            "G4_E2E_PASSWORD_B": "inherited-test-password-b",
+            "FAKE_DOCKER_CAPTURE_CREDENTIALS": "1",
+        }
 
     def test_verifier_reads_a_login_from_environment_and_keeps_static_ids(self):
         tree = ast.parse(self.verifier)
@@ -203,39 +273,155 @@ class RuntimeCredentialWiringTests(unittest.TestCase):
             self.assertTrue("G4_E2E_PASSWORD_B:" in block,
                             "B password environment forwarding is missing")
         self.assertTrue("PLATFORM_E2E_LOGIN_ID: ${CARELOG_E2E_ACCOUNT_A:?required}" in identity_runner,
-                        "identity runner must use the A login secret")
+                        "identity runner must use the generated A login")
         self.assertTrue("PLATFORM_E2E_PASSWORD: ${CARELOG_E2E_PASSWORD_A:?required}" in identity_runner,
-                        "identity runner must use the A password secret")
+                        "identity runner must use the generated A password")
 
-    def test_browser_mode_fails_closed_and_g4_only_mode_generates_silent_values(self):
+    def test_browser_mode_validates_disposable_config_before_generating_credentials(self):
         required_loop = self.runner.index(
             "for required in CARELOG_E2E_DISPOSABLE CARELOG_E2E_GATEWAY_PORT "
-            "CARELOG_E2E_ACCOUNT_A CARELOG_E2E_PASSWORD_A CARELOG_E2E_FE_DIR"
+            "CARELOG_E2E_FE_DIR"
         )
-        fallback = self.runner.index("# Use the CI supplied login for the browser journey")
-        self.assertLess(required_loop, fallback)
-        self.assertTrue("exit 2" in self.runner[:fallback],
-                        "browser mode must fail closed before local fallback")
+        generation = self.runner.index(
+            "# Disposable browser runs always use fresh synthetic identities"
+        )
+        self.assertLess(required_loop, generation)
+        self.assertTrue("exit 2" in self.runner[:generation],
+                        "invalid browser configuration must fail closed before credential generation")
+        self.assertIn("if [[ \"$REAL_API_E2E\" == \"1\" ]]; then",
+                      self.runner[generation:])
         self.assertTrue("CARELOG_E2E_ACCOUNT_A=\"g4-a-$(python3 -c 'import secrets;" in self.runner,
-                        "G4-only account generation is missing")
+                        "per-run A account generation is missing")
         self.assertTrue("CARELOG_E2E_PASSWORD_A=\"$(python3 -c 'import secrets;" in self.runner,
-                        "G4-only password generation is missing")
+                        "per-run A password generation is missing")
         self.assertTrue("export CARELOG_E2E_ACCOUNT_A CARELOG_E2E_PASSWORD_A" in self.runner,
                         "runtime credential export is missing")
         self.assertTrue("G4_E2E_PASSWORD_B=\"$(python3 -c 'import secrets;" in self.runner,
                         "G4 verifier B password generation is missing")
-        self.assertTrue("::add-mask::%s\\n" in self.runner and "G4_E2E_PASSWORD_B" in self.runner,
-                        "Actions values must be masked before service startup")
+        self.assertEqual(self.runner.count("::add-mask::%s"), 3,
+                         "Actions must mask the account and both passwords")
+        for name in ("CARELOG_E2E_ACCOUNT_A", "CARELOG_E2E_PASSWORD_A", "G4_E2E_PASSWORD_B"):
+            mask_statement = f"printf '::add-mask::%s\\n' \"${name}\""
+            self.assertIn(mask_statement, self.runner,
+                          "each runtime credential must be masked")
+            self.assertLess(self.runner.index(mask_statement),
+                            self.runner.index('"${COMPOSE[@]}" config --quiet'),
+                            "every runtime credential must be masked before child startup")
+        actions_guard = self.runner.index('if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then')
+        generated = self.runner.index("# Disposable browser runs always use fresh synthetic identities")
+        masked = self.runner.index("::add-mask::%s")
+        compose = self.runner.index("COMPOSE=(")
+        first_child = self.runner.index('"${COMPOSE[@]}" config --quiet')
+        self.assertLess(generated, masked)
+        self.assertLess(actions_guard, masked)
+        self.assertLess(masked, compose, "credentials must be masked before Compose starts")
+        self.assertLess(masked, first_child, "credentials must be masked before child startup")
         self.assertTrue(not re.search(r"(?m)^\s*set\s+-[^\n]*x", self.runner),
                         "shell xtrace is enabled")
-        self.assertTrue("echo \"$CARELOG_E2E_PASSWORD_A\"" not in self.runner,
-                        "password echo is present")
+        for line in self.runner.splitlines():
+            if "::add-mask::%s" in line:
+                continue
+            self.assertFalse(
+                re.search(
+                    r"(?i)^\s*(?:echo|printf)\b.*\$\{?(?:CARELOG_E2E_ACCOUNT_A|"
+                    r"CARELOG_E2E_PASSWORD_A|G4_E2E_PASSWORD_B)\}?",
+                    line,
+                ),
+                "credential values must not be sent to shell output",
+            )
+        self.assertIn('trap cleanup EXIT INT TERM', self.runner)
+        self.assertIn('"${COMPOSE[@]}" down --volumes --remove-orphans >/dev/null 2>&1 || true',
+                      self.runner)
+        self.assertIn('if [[ "$REAL_API_E2E" != "1" ]]; then', self.runner)
+        self.assertIn(
+            r"sed -E 's/(password|secret|token)=([^[:space:]]+)/\1=[REDACTED]/Ig' || true",
+            self.runner,
+        )
         self.assertTrue("G4_E2E_PASSWORD_B=\"$(python3 -c 'import secrets;" in self.identity_script,
                         "identity-only test must generate a B password")
         self.assertTrue("::add-mask::%s\\n" in self.identity_script,
                         "identity-only Actions run must mask runtime credentials")
         self.assertTrue(not re.search(r"(?m)^\s*set\s+-[^\n]*x", self.identity_script),
                         "identity-only test must not enable shell xtrace")
+
+    def test_real_api_generates_fresh_values_across_two_invocations_without_logging(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fake_docker_directory = Path(temporary_directory)
+            self._write_fake_docker(fake_docker_directory)
+            generated_values = []
+
+            for _ in range(2):
+                result, report = self._invoke_with_fake_docker(
+                    fake_docker_directory,
+                    self._real_api_test_environment(),
+                )
+                self.assertEqual(result.returncode, 79,
+                                 "fake Docker should stop before any service starts")
+                parts = report.split(b"\0")
+                self.assertEqual(len(parts), 3,
+                                 "fake Docker should receive A login, A password, and B password")
+                try:
+                    account_a, password_a, password_b = (part.decode("ascii") for part in parts)
+                except UnicodeDecodeError:
+                    self.fail("generated credential format must be ASCII")
+
+                self.assertTrue(
+                    re.fullmatch(r"g4-a-[0-9a-f]{16}@example\.invalid", account_a) is not None,
+                    "REAL_API_E2E must generate a fresh synthetic Account A login",
+                )
+                self.assertTrue(
+                    re.fullmatch(r"[A-Za-z0-9_-]{32,}", password_a) is not None,
+                    "REAL_API_E2E must generate a fresh Account A password",
+                )
+                self.assertTrue(
+                    re.fullmatch(r"[A-Za-z0-9_-]{32,}", password_b) is not None,
+                    "REAL_API_E2E must generate a fresh Account B password",
+                )
+                credential_bytes = tuple(value.encode("ascii") for value in
+                                         (account_a, password_a, password_b))
+                self.assertFalse(
+                    any(value in result.stdout or value in result.stderr for value in credential_bytes),
+                    "generated credentials appeared in script stdout or stderr",
+                )
+                generated_values.append((account_a, password_a, password_b))
+
+            if not all(left != right for left, right in zip(*generated_values)):
+                self.fail("every synthetic credential must differ across invocations")
+
+    def test_missing_or_malformed_disposable_flag_fails_before_child_startup(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fake_docker_directory = Path(temporary_directory)
+            self._write_fake_docker(fake_docker_directory)
+
+            for disposable_value in (None, "not-1"):
+                environment = {
+                    "PATH": os.environ.get("PATH", os.defpath),
+                    "G4_CARELOG_REAL_API_E2E": "1",
+                    "CARELOG_E2E_GATEWAY_PORT": "18080",
+                    "CARELOG_E2E_FE_DIR": str(ROOT),
+                    "FAKE_DOCKER_REPORT_CALLS": "1",
+                }
+                if disposable_value is not None:
+                    environment["CARELOG_E2E_DISPOSABLE"] = disposable_value
+
+                result, child_calls = self._invoke_with_fake_docker(
+                    fake_docker_directory,
+                    environment,
+                )
+                self.assertEqual(result.returncode, 2,
+                                 "missing or malformed disposable mode must fail closed")
+                self.assertEqual(child_calls, b"",
+                                 "invalid disposable mode must fail before any child starts")
+
+    def test_real_api_workflow_has_no_persistent_credential_secret_inputs(self):
+        self.assertNotIn("${{ secrets.CARELOG_E2E_ACCOUNT_A }}", self.real_api_workflow)
+        self.assertNotIn("${{ secrets.CARELOG_E2E_PASSWORD_A }}", self.real_api_workflow)
+        self.assertNotIn("Required Carelog E2E repository secrets are not configured.", self.real_api_workflow)
+        self.assertNotRegex(self.real_api_workflow, r"\$\{\{\s*secrets\.")
+        self.assertIn('G4_CARELOG_REAL_API_E2E: "1"', self.real_api_workflow)
+        self.assertIn('CARELOG_E2E_DISPOSABLE: "1"', self.real_api_workflow)
+        self.assertIn("if: always()", self.real_api_workflow)
+        self.assertIn("down --volumes --remove-orphans", self.real_api_workflow)
 
     def test_identity_runner_requires_login_and_password_environment(self):
         tree = ast.parse(self.identity_entrypoint)

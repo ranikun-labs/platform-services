@@ -7,7 +7,7 @@ if [[ "$REAL_API_E2E" != "0" && "$REAL_API_E2E" != "1" ]]; then
   exit 2
 fi
 if [[ "$REAL_API_E2E" == "1" ]]; then
-  for required in CARELOG_E2E_DISPOSABLE CARELOG_E2E_GATEWAY_PORT CARELOG_E2E_ACCOUNT_A CARELOG_E2E_PASSWORD_A CARELOG_E2E_FE_DIR; do
+  for required in CARELOG_E2E_DISPOSABLE CARELOG_E2E_GATEWAY_PORT CARELOG_E2E_FE_DIR; do
     if [[ -z "${!required:-}" ]]; then
       printf 'BLOCKED_ENV: %s is required for Carelog real API E2E\n' "$required" >&2
       exit 2
@@ -31,12 +31,18 @@ if [[ "$REAL_API_E2E" == "1" ]]; then
     exit 2
   fi
 fi
-# Use the CI supplied login for the browser journey; G4-only runs get fresh local credentials.
-if [[ -z "${CARELOG_E2E_ACCOUNT_A:-}" ]]; then
+if [[ "$REAL_API_E2E" == "1" ]]; then
+  # Disposable browser runs always use fresh synthetic identities, never inherited CI credentials.
   CARELOG_E2E_ACCOUNT_A="g4-a-$(python3 -c 'import secrets; print(secrets.token_hex(8))')@example.invalid"
-fi
-if [[ -z "${CARELOG_E2E_PASSWORD_A:-}" ]]; then
   CARELOG_E2E_PASSWORD_A="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+else
+  # G4-only local runs may use an explicit test fixture or generate a fresh one.
+  if [[ -z "${CARELOG_E2E_ACCOUNT_A:-}" ]]; then
+    CARELOG_E2E_ACCOUNT_A="g4-a-$(python3 -c 'import secrets; print(secrets.token_hex(8))')@example.invalid"
+  fi
+  if [[ -z "${CARELOG_E2E_PASSWORD_A:-}" ]]; then
+    CARELOG_E2E_PASSWORD_A="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+  fi
 fi
 G4_E2E_PASSWORD_B="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 export CARELOG_E2E_ACCOUNT_A CARELOG_E2E_PASSWORD_A G4_E2E_PASSWORD_B

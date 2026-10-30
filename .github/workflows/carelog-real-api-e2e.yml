@@ -87,15 +87,7 @@ jobs:
           fi
 
       - name: Run existing G4 checks then real browser flow
-        env:
-          CARELOG_E2E_ACCOUNT_A: ${{ secrets.CARELOG_E2E_ACCOUNT_A }}
-          CARELOG_E2E_PASSWORD_A: ${{ secrets.CARELOG_E2E_PASSWORD_A }}
-        run: |
-          if [[ -z "${CARELOG_E2E_ACCOUNT_A:-}" || -z "${CARELOG_E2E_PASSWORD_A:-}" ]]; then
-            echo "::error::Required Carelog E2E repository secrets are not configured."
-            exit 2
-          fi
-          bash scripts/g4/run_three_services.sh
+        run: bash scripts/g4/run_three_services.sh
 
       - name: Remove browser traces and ensure Compose cleanup
         if: always()
