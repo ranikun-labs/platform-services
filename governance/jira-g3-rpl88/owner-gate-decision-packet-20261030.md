@@ -18,7 +18,34 @@ G1/G2 118건 PASS; G3 5유형 Admin Target Required 및 RPL-128 Feature Canary �
 - private source: ranikun-labs/platform-services branch audit/jira-g3-rpl88-pilot-20261030, governance/jira-g3-rpl88; offline reader synthetic 12/12 (not production); G2 originals separately retained in private Library.
 - 지원 없는 Reader/실제 복구 Drill을 PASS로 주장하지 않는다.
 
-## Owner 결정 제안 — 일괄 결재하되 각 결정은 별개
+## 2026-10-30 15:41 KST 추가 운영 정정 — 이 절이 아래 A 제안보다 우선함
+
+**관리 Jira 신규 Task 생성은 Taxonomy §8.0 Fast Track의 기술적 필수 Gate가 아님.** 기존 §8.0은 단일 Writer·Owner의 정확한 변경 승인·단일 비공개 JSON/CSV 원장·원본/변경 검증/복구를 요구한다. 새 Task 부재만으로 읽기 전용 실행·원장 사전 준비·G4 영향 조사를 멈추지 않는다. Portfolio 단일 Primary Jira 요구와 신규 Task 생성 권한은 별도 정책 문제이며 임의로 이슈를 생성하지 않는다.
+
+### 실제 Live JQL 전수 분류 (신규 감사 고정)
+참조: `g3-g4-live-inventory-20261030.json`
+- RPL 128건 / 완료 82건 / 미완료 46건
+- 미완료 30건: Legacy와 Target 모두 존재 (권위 전환 증거가 아님)
+- 11건: Target만 존재 (Origin/승인 검증 없으면 권위 추정 금지)
+- 1건 RPL-125 Research: 기존 Legacy Product=platform-foundation, Component=documentation이 있지만 Target Product/Component 모두 비어 있음. 현재 Research는 두 Target 필드가 Required.
+- 4건 RPL-119/120/121/123 Story: Target 둘 다 비어 있으나 Story는 Optional; 먼저 Owner의 분류 정책/예외 승인으로 처리, 자동 보충 금지.
+- 일부 Target 필드만 기록된 미완료 이슈 0건.
+- 보호: UNKNOWN_ORIGIN RPL-112/113/114, 폐기 RPL-40, 과거 Done 일괄 Backfill 금지.
+
+### 가장 가까운 실행 가능한 G3 보정
+RPL-125의 **필드 전용 Correction 후보**:
+Before: Legacy Product=[platform-foundation], Component=[documentation], Labels=[aws,ecs-aurora,scale-to-zero]; Target Product/Component/Concern=null.
+After 후보: Target Product=option 10026 (platform-foundation), Target Component=option 10031 (documentation), Target Concern=미지정(기존 Labels는 임의로 Concern으로 매핑하지 않음).
+정확한 해당 이슈 및 필드/옵션, 적용 기간, 단일 Jira Writer가 **Owner에게 승인되기 전 실제 Jira 수정 금지**. 승인 후 현재 GET/version 대조, 분류 전용 Before Snapshot, 단일 필드 Update, Changelog/비대상 값·이력 보존, 실패시 중단/복구 경로 검증 순서로 실행.
+
+### F4 Ready-First 우선순위
+1. 승인 필요 없는 Native G3/G4 읽기/원장 재사용·영향 검증은 진행한다.
+2. RPL-125의 정확한 2필드 보정에 대한 Owner 승인/단일 Writer를 우선 확보한다.
+3. 다른 필수 유형 Create 시범은 기존 Feature Canary와 분리해 소량·직렬로 승인 받은 후 실행한다.
+4. RPL-88 실제 Reader·Mixed-Origin·Restore Drill이 입증된 뒤 최종 CutoverApprovalRef를 **별도로** 요청한다.
+5. 무분별한 신규 관리 Task, 신규 범용 Reader 서비스, 임의 Legacy 삭제를 Goal 선행조건으로 만들지 않는다.
+
+## Owner 결정 제안 — 일괄 결재하되 각 결정은 별개 (아래 A는 선택 제안으로 격하)
 A. 관리 이슈: Jira RPL에 **Task 1건 생성** 승인 제안.
    제목: Jira Migration — G3/G4 Native Closure & RPL-88 Cutover Governance.
    Target Product platform-foundation (option 10026), Component infra (10030), Concern migration (10039).
