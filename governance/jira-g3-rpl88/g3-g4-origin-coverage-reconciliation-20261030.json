@@ -1,12 +1,15 @@
 {
   "record_type": "JIRA_MIGRATION_G3_G4_NATIVE_READ_ONLY_ORIGIN_COVERAGE",
-  "date": "2026-10-30 KST",
+  "date": "2026-10-30 KST — reconciliation after missing source recovery",
   "status": "AUDIT_ONLY_NOT_CUTOVER_NOT_AUTHORITY_PROMOTION",
   "source": {
     "live_jira": "GET/JQL project=RPL statusCategory != Done 50/50",
     "canary_ledger": "g3-target-create-ledger-20261030.json",
     "legacy_pilot": "readiness.json",
-    "policy": "harness-foundation-docs/docs/governance/jira-field-taxonomy.md §8.0"
+    "policy": "harness-foundation-docs/docs/governance/jira-field-taxonomy.md §8.0",
+    "feature_canary_original_repo": "ranikun-labs/harness-foundation-docs",
+    "feature_canary_original_branch": "audit/jira-g3-feature-canary-20261030",
+    "feature_canary_original_path": "docs/governance/jira-g3-canary-feature-2026-10-30.json"
   },
   "scope": "RPL active current issues only; does not auto-promote ReadAuthority, does not inspect protected UNKNOWN_ORIGIN RPL-112/113/114",
   "counts": {
@@ -22,14 +25,13 @@
   },
   "target_only": {
     "native_canaries_verified_from_pre_create_pending_ledger": [
+      "RPL-128",
       "RPL-129",
       "RPL-130",
       "RPL-131",
       "RPL-132"
     ],
-    "feature_canary_with_prior_create_evidence_but_origin_ledger_unverified": [
-      "RPL-128"
-    ],
+    "feature_canary_with_prior_create_evidence_but_origin_ledger_unverified": [],
     "remaining_target_only_origin_unverified_in_current_audit": [
       "RPL-83",
       "RPL-94",
@@ -42,7 +44,50 @@
       "RPL-126",
       "RPL-127"
     ],
-    "warning": "No Origin inference from Target field presence; missing evidence in THIS audit does not establish absence in all durable stores. Do not write/transition/quarantine these tickets on this information alone."
+    "warning": "No Origin inference from Target field presence; missing evidence in THIS audit does not establish absence in all durable stores. Do not write/transition/quarantine these tickets on this information alone.",
+    "feature_canary_verified_from_original_pending_ledger": {
+      "issue_key": "RPL-128",
+      "original_repo": "ranikun-labs/harness-foundation-docs",
+      "original_branch": "audit/jira-g3-feature-canary-20261030",
+      "original_path": "docs/governance/jira-g3-canary-feature-2026-10-30.json",
+      "create_request_id": "RPL-G3-20261030-FEATURE-CANARY-01",
+      "activation_ref": "OWNER_APPROVED_FEATURE_CANARY_20261030",
+      "pending_commit_sha": "0b1f4526eb32ed7744f6a47d664b8faff22b59f2",
+      "pending_blob_sha": "3ee9e93c7ea28de588cb18fa9a87850cd7a4ecb4",
+      "final_blob_sha": "07a6c7d42ddad01a00846b0113befa405c19ed06",
+      "pending_phase": "pending",
+      "pending_issue_key": null,
+      "final_origin": "target_create",
+      "final_phase": "create_ready",
+      "final_issue_key": "RPL-128",
+      "actual_jira_get_fields_verified": {
+        "issue_type_id": "10009",
+        "start": "2026-10-30",
+        "due": "2026-11-02",
+        "target_product": "10026",
+        "target_component": "10030",
+        "target_concern": [
+          "10039"
+        ],
+        "legacy": [
+          null,
+          null,
+          null
+        ]
+      },
+      "actual_jql_get": {
+        "matched_count": 1,
+        "issue_key": "RPL-128"
+      },
+      "evidence_verdict": "PRE_CREATE_PENDING_AND_POST_CREATE_ORIGIN_LINK_PASS",
+      "production_consumer_integration": "NOT_VERIFIED"
+    },
+    "prior_audit_finding": {
+      "statement": "RPL-128 feature canary with prior create evidence but origin ledger unverified",
+      "status": "CLOSED_AFTER_ORIGINAL_REPO_DISCOVERY",
+      "original_ledger_repo_missed": "ranikun-labs/harness-foundation-docs",
+      "note": "Previous GitHub search scoped to platform-services missed original ledger, source found and independently verified"
+    }
   },
   "mixed_field_31": {
     "readiness": "LEGACY_TARGET_FIELD_VALUES_PRESENT_NOT_CUTOVER",
@@ -77,9 +122,9 @@
       "action": "REUSE"
     },
     {
-      "task": "Origin evidence inventory of 11 pre-existing Target-only active issues",
+      "task": "Origin evidence inventory of remaining 10 non-Canary Target-only active issues",
       "status": "READY_READ_ONLY",
-      "action": "Search exact private durable ledger/Create evidence where authorized; do not change other workstreams' source or tickets"
+      "action": "RPL-128 FOUND/VERIFIED in original harness-foundation-docs repo. For 10 others, read-only verified source search, no source modifications or automatic quarantine."
     },
     {
       "task": "RPL-88 operational Reader, actual Jira consumer mixed-Origin, controlled restore drill",
@@ -107,6 +152,7 @@
     "jira_edit": 0,
     "jira_transition": 0,
     "manifest_authority_cutover": 0,
-    "legacy_delete": 0
+    "legacy_delete": 0,
+    "git_audit_file_update": 1
   }
 }
