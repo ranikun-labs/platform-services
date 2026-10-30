@@ -1,0 +1,40 @@
+{
+  "key": "RPL-88",
+  "fields": {
+    "issuetype": {
+      "id": "10010"
+    },
+    "customfield_10042": [
+      "carelog"
+    ],
+    "customfield_10043": [
+      "documentation"
+    ],
+    "customfield_10044": [
+      "adr",
+      "architecture",
+      "contract"
+    ],
+    "customfield_10108": {
+      "id": "10020"
+    },
+    "customfield_10109": {
+      "id": "10031"
+    },
+    "customfield_10110": [
+      {
+        "id": "10044"
+      },
+      {
+        "id": "10045"
+      }
+    ]
+  },
+  "changelog": {
+    "histories": [
+      {
+        "id": "10934"
+      }
+    ]
+  }
+}
