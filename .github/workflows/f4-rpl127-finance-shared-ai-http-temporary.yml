@@ -101,9 +101,9 @@ jobs:
             else
               echo "SPRING_CONTEXT_STARTED=NO"
             fi
-            cause_type="$(sed -nE 's/.*Caused by: ([A-Za-z0-9_.$]+).*/\\1/p' "$log" | tail -1)"
-            if [ -n "$cause_type" ]; then
-              echo "ROOT_CAUSE_TYPE=$cause_type"
+            cause_types="$(awk -F'Caused by: ' 'NF > 1 { split($2, part, ":"); print part[1] }' "$log" | tail -5 | paste -sd, -)"
+            if [ -n "$cause_types" ]; then
+              echo "ROOT_CAUSE_TYPES=$cause_types"
             fi
             if grep -Fq "APPLICATION FAILED TO START" "$log"; then
               echo "STARTUP_CATEGORY=SPRING_APP_STARTUP_FAILED"
