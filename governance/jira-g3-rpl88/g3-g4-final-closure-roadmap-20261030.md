@@ -1,5 +1,8 @@
 # Jira Migration — G0~G4 Current Roadmap & Closure (2026-10-30 KST)
 
+> **F4 Origin Coverage 추가 점검 (2026-10-30):** 미완료 50건은 Legacy+Target 31, Target-only 15, Optional Story 무분류 4건. Target-only 15건 중 이번 4건(RPL-129~132)은 pending→Create→GET/JQL→Origin 원장 검증 완료; Feature RPL-128은 기존 Canary PASS이나 본 범위 영속 Origin 원장까지 재확인하지 않았고, 다른 10건은 Origin 증거 확인이 별도로 필요하다. 필드 존재만으로 ReadAuthority를 결정하지 않는다. 근거: `g3-g4-origin-coverage-reconciliation-20261030.json`.
+
+
 > **2026-10-30 18:04 KST 실제 실행 최신 업데이트:** Owner 승인된 G3 Target-only Canary 4건(Epic RPL-129 / Task RPL-130 / Bug RPL-131 / Research RPL-132)이 모두 Native Jira Create→GET→JQL 4/4 PASS; 기존 Feature RPL-128과 합쳐 Target 필수 5유형 신규 Create 시험 완료. 인증된 외부 Manifest Reader·Mixed Origin·Rollback/Restore 및 RPL-88 Cutover는 여전히 NOT_RUN/BLOCKED. 현재 Jira 전체 132건 / 미완료 50건, 활성 필수 Target 누락 0건. `g3-target-create-four-canary-execution-20261030.md` 및 `g3-target-create-ledger-20261030.json`이 해당 신규 Create의 최신 증거다. 아래 기존 날짜별 수치와 미검증 4유형 문구는 **실행 전 역사 스냅샷**으로 보존한다. G4는 현재 접근 가능 범위만 PASS이며 전체 Closure 아님.
 
 
