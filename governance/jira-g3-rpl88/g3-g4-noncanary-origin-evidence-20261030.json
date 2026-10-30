@@ -1,0 +1,204 @@
+{
+  "record_type": "JIRA_G3_NONCANARY_TARGET_ONLY_10_HISTORIC_ORIGIN_EVIDENCE_AUDIT",
+  "as_of": "2026-10-30 KST",
+  "execution": "READ_ONLY_JIRA_GET_CHANGELOG",
+  "verdict": "HISTORY_PROVEN_BUT_NOT_CREATE_AUTHORITY_VERIFIED",
+  "source": "Jira actual issue GET including changelog; pre-approved G2 118 decision-register historical 2026-10-21; live G3 G4 policy",
+  "scope": {
+    "issues": [
+      "RPL-83",
+      "RPL-94",
+      "RPL-115",
+      "RPL-116",
+      "RPL-117",
+      "RPL-118",
+      "RPL-122",
+      "RPL-124",
+      "RPL-126",
+      "RPL-127"
+    ],
+    "excluded": [
+      "RPL-112",
+      "RPL-113",
+      "RPL-114"
+    ],
+    "other_workstream_code_touched": false
+  },
+  "evidence_categories": {
+    "target_filled_by_post_creation_edit": [
+      {
+        "key": "RPL-83",
+        "issue_type": "Subtask",
+        "created": "2026-08-13T00:22:37.370+09:00",
+        "changelog_id": "11063",
+        "changed_at": "2026-10-23T12:41:15.129+09:00",
+        "fields_changed": [
+          "Product (Target)",
+          "Component (Target)"
+        ],
+        "earlier_target_values_empty": true,
+        "legacy_fields_currently_empty": true,
+        "evidence_verdict": "TARGET_FIELD_EDIT_VERIFIED / CREATE_ORIGIN_UNVERIFIED",
+        "required_owner_decision": "Historical legacy-less existing Issue later Target field-only backfill; policy requires explicit origin exception or approved mapping. Do not mark target_create."
+      },
+      {
+        "key": "RPL-94",
+        "issue_type": "Subtask",
+        "created": "2026-08-15T01:22:27.111+09:00",
+        "changelog_id": "11066",
+        "changed_at": "2026-10-23T12:43:51.903+09:00",
+        "fields_changed": [
+          "Product (Target)",
+          "Component (Target)"
+        ],
+        "earlier_target_values_empty": true,
+        "legacy_fields_currently_empty": true,
+        "evidence_verdict": "TARGET_FIELD_EDIT_VERIFIED / CREATE_ORIGIN_UNVERIFIED",
+        "required_owner_decision": "Historical legacy-less existing Issue later Target field-only backfill; policy requires explicit origin exception or approved mapping. Do not mark target_create."
+      },
+      {
+        "key": "RPL-115",
+        "issue_type": "Story",
+        "created": "2026-10-20T17:11:38.378+09:00",
+        "changelog_id": "11067",
+        "changed_at": "2026-10-23T12:43:56.340+09:00",
+        "fields_changed": [
+          "Product (Target)",
+          "Component (Target)"
+        ],
+        "earlier_target_values_empty": true,
+        "legacy_fields_currently_empty": true,
+        "evidence_verdict": "TARGET_FIELD_EDIT_VERIFIED / CREATE_ORIGIN_UNVERIFIED",
+        "required_owner_decision": "Historical legacy-less existing Issue later Target field-only backfill; policy requires explicit origin exception or approved mapping. Do not mark target_create."
+      },
+      {
+        "key": "RPL-116",
+        "issue_type": "Story",
+        "created": "2026-10-21T09:48:41.305+09:00",
+        "changelog_id": "11068",
+        "changed_at": "2026-10-23T12:44:01.778+09:00",
+        "fields_changed": [
+          "Product (Target)",
+          "Component (Target)"
+        ],
+        "earlier_target_values_empty": true,
+        "legacy_fields_currently_empty": true,
+        "evidence_verdict": "TARGET_FIELD_EDIT_VERIFIED / CREATE_ORIGIN_UNVERIFIED",
+        "required_owner_decision": "Historical legacy-less existing Issue later Target field-only backfill; policy requires explicit origin exception or approved mapping. Do not mark target_create."
+      },
+      {
+        "key": "RPL-117",
+        "issue_type": "Story",
+        "created": "2026-10-21T10:13:10.731+09:00",
+        "changelog_id": "11069",
+        "changed_at": "2026-10-23T12:44:06.816+09:00",
+        "fields_changed": [
+          "Product (Target)",
+          "Component (Target)"
+        ],
+        "earlier_target_values_empty": true,
+        "legacy_fields_currently_empty": true,
+        "evidence_verdict": "TARGET_FIELD_EDIT_VERIFIED / CREATE_ORIGIN_UNVERIFIED",
+        "required_owner_decision": "Historical legacy-less existing Issue later Target field-only backfill; policy requires explicit origin exception or approved mapping. Do not mark target_create."
+      },
+      {
+        "key": "RPL-118",
+        "issue_type": "Story",
+        "created": "2026-10-21T10:13:55.105+09:00",
+        "changelog_id": "11070",
+        "changed_at": "2026-10-23T12:44:11.918+09:00",
+        "fields_changed": [
+          "Product (Target)",
+          "Component (Target)"
+        ],
+        "earlier_target_values_empty": true,
+        "legacy_fields_currently_empty": true,
+        "evidence_verdict": "TARGET_FIELD_EDIT_VERIFIED / CREATE_ORIGIN_UNVERIFIED",
+        "required_owner_decision": "Historical legacy-less existing Issue later Target field-only backfill; policy requires explicit origin exception or approved mapping. Do not mark target_create."
+      }
+    ],
+    "target_present_no_target_edit_history": [
+      {
+        "key": "RPL-122",
+        "issue_type": "Task",
+        "created": "2026-10-28T10:21:36.222+09:00",
+        "target_currently_present": true,
+        "legacy_fields_currently_empty": true,
+        "changelog_total": 0,
+        "changelog_target_edit_count": 0,
+        "evidence_verdict": "NO_TARGET_EDIT_HISTORY / PRECREATE_INTENT_NOT_FOUND",
+        "note": "Consistent with Target present at issue creation, but cannot prove approved CreateRequestId, pending Intent, ActivationRef, and identity of original writer."
+      },
+      {
+        "key": "RPL-124",
+        "issue_type": "Task",
+        "created": "2026-10-28T11:03:52.962+09:00",
+        "target_currently_present": true,
+        "legacy_fields_currently_empty": true,
+        "changelog_total": 0,
+        "changelog_target_edit_count": 0,
+        "evidence_verdict": "NO_TARGET_EDIT_HISTORY / PRECREATE_INTENT_NOT_FOUND",
+        "note": "Consistent with Target present at issue creation, but cannot prove approved CreateRequestId, pending Intent, ActivationRef, and identity of original writer."
+      },
+      {
+        "key": "RPL-126",
+        "issue_type": "Story",
+        "created": "2026-10-28T21:49:54.434+09:00",
+        "target_currently_present": true,
+        "legacy_fields_currently_empty": true,
+        "changelog_total": 2,
+        "changelog_target_edit_count": 0,
+        "evidence_verdict": "NO_TARGET_EDIT_HISTORY / PRECREATE_INTENT_NOT_FOUND",
+        "note": "Consistent with Target present at issue creation, but cannot prove approved CreateRequestId, pending Intent, ActivationRef, and identity of original writer."
+      },
+      {
+        "key": "RPL-127",
+        "issue_type": "Story",
+        "created": "2026-10-28T21:50:09.635+09:00",
+        "target_currently_present": true,
+        "legacy_fields_currently_empty": true,
+        "changelog_total": 2,
+        "changelog_target_edit_count": 0,
+        "evidence_verdict": "NO_TARGET_EDIT_HISTORY / PRECREATE_INTENT_NOT_FOUND",
+        "note": "Consistent with Target present at issue creation, but cannot prove approved CreateRequestId, pending Intent, ActivationRef, and identity of original writer."
+      }
+    ]
+  },
+  "findings": [
+    {
+      "severity": "MAJOR",
+      "code": "ORIGIN_ENUM_COVERAGE_GAP",
+      "summary": "Six legacy-less issues predate/precede G3 operation and were subsequently given Target fields on 2026-10-23, proven via changelogs. They are not safely classifiable as target_create, yet have no Legacy fields. Policy authority routing needs Owner-approved exception/explicit canonical interpretation; preserve unknown until then."
+    },
+    {
+      "severity": "MAJOR",
+      "code": "CREATION_PROVENANCE_GAP",
+      "summary": "Four other 2026-10-28 issues have Target values and no Target change history, but historical absence of a target field update does not prove pre-Create Intent or approved Create origin."
+    },
+    {
+      "severity": "NOTE",
+      "code": "G2_HISTORICAL_REGISTER_STALE",
+      "summary": "Oct 21 G2 register marked Story/Subtask types unsupported. Subsequent Oct 23 actual Jira target field-only writes occurred; use current Jira change history and current type metadata rather than stale register as runtime truth, without retroactively inventing write approval."
+    }
+  ],
+  "restrictions": [
+    "DO_NOT_WRITE_JIRA",
+    "DO_NOT_AUTO_PROMOTE_TARGET_AUTHORITY",
+    "DO_NOT_TOUCH_OTHER_WORKSTREAM_REPOS",
+    "DO_NOT_CREATE_DUPLICATE_ISSUES",
+    "DO_NOT_INFER_ORIGIN_FROM_TARGET_FIELD_EXISTENCE",
+    "DO_NOT_OVERRIDE_APPROVED_SNAPSHOT"
+  ],
+  "next_steps": [
+    "Owner identify exact historical exception policy for 6 post-create Target changes",
+    "For 4 Oct28 Jira creates, seek exact prior Owner approval/CreateRequestId/activation logs (no reinterpretation)",
+    "Scope read authority only for proven supported consumers; RPL-88 separate live consumer/recovery gates and CutoverApprovalRef"
+  ],
+  "delta_this_audit": {
+    "jira_create": 0,
+    "jira_update": 0,
+    "jira_transition": 0,
+    "authority_change": 0,
+    "legacy_delete": 0
+  }
+}
