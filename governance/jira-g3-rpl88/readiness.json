@@ -1,0 +1,74 @@
+{
+  "record_type": "JIRA_RPL88_EXISTING_ISSUE_CUTOVER_AUDIT",
+  "as_of": "2026-10-30 KST",
+  "status": "PRIVATE_EVIDENCE_STAGED_READER_OFFLINE_TESTED_CUTOVER_NOT_RUN",
+  "workstream": "jira-migration",
+  "issue_key": "RPL-88",
+  "issue_type_id": "10010",
+  "owner_directive": {
+    "reference": "2026-10-30 user instruction to execute reader, rollback, and final approval steps for RPL-88",
+    "scope": "pilot preparation and execution only after policy acceptance gates",
+    "is_final_cutover_approval": false
+  },
+  "writer_boundary": {
+    "private_repo": "ranikun-labs/platform-services",
+    "branch": "audit/jira-g3-rpl88-pilot-20261030",
+    "scope": "governance/jira-g3-rpl88 audit files only",
+    "main_modified": false,
+    "other_writer_branch_modified": false
+  },
+  "previous_evidence": {
+    "original_verified_archive_sha256": "5cde5f2a270f0af15786a429e852c2650e98b563d0193355dd39ac9351899ec3",
+    "prewrite_snapshot_sha256": "552649ebdd4eb5289c56666933418511e4ec6a38195e35c034341df3792ca2c5",
+    "legacy_snapshot_canonical_sha256": "27cf94d79f6ba47bc08d99c47b50987c12ab52b1d56b0b24476a0c2f747375a7",
+    "jira_changelog_id": "10934",
+    "jira_comment_id": "10721"
+  },
+  "jql_get": {
+    "RPL-88": "PASS_LIVE_JIRA_GET_20261030",
+    "product": "PASS",
+    "component": "PASS",
+    "concern_architecture": "PASS",
+    "concern_contract": "PASS",
+    "legacy_target_parity": "PASS"
+  },
+  "active_authority": {
+    "Origin": "legacy_migration",
+    "Phase": "verified",
+    "ReadAuthority": "legacy",
+    "WriteAuthority": "frozen",
+    "CutoverApprovalRef": null
+  },
+  "reader": {
+    "file": "authority_reader.py",
+    "mode": "OFFLINE_SNAPSHOT_VERIFIER",
+    "local_tests": "12/12 PASS",
+    "live_jira_connector_get": "PASS_OUTSIDE_SCRIPT",
+    "consumer_deployed": false,
+    "operational_mixed_origin_parity": false
+  },
+  "rollback": {
+    "method": "SIMULATED_MANIFEST_TARGET_TO_LEGACY_ONLY",
+    "simulation": "PASS",
+    "production_drill": false,
+    "original_snapshot_immutable": true
+  },
+  "remaining": [
+    "OWNER_SPECIFIC_FINAL_CUTOVER_APPROVAL_AFTER_REVIEW",
+    "PRODUCTION_READER_CONNECTOR_DEPLOYMENT_AND_FAIL_CLOSED_E2E",
+    "MIXED_ORIGIN_BOARD_FILTER_AUTOMATION_CONSUMER_PARITY",
+    "CONTROLLED_RESTORE_DRILL"
+  ],
+  "forbidden": [
+    "never delete Jira fields or issue",
+    "never rewrite old G2 archive",
+    "never silently treat Target saved as authority",
+    "never publish raw private snapshots"
+  ],
+  "mutations": {
+    "JiraClassification": 0,
+    "JiraAuthority": 0,
+    "JiraCreate": 0,
+    "MainBranch": 0
+  }
+}
