@@ -7,6 +7,9 @@ services:
       POSTGRES_DB: carelog_g4
       POSTGRES_USER: carelog_g4
       POSTGRES_PASSWORD: g4-local-only-test-password
+      CARELOG_E2E_ACCOUNT_A: ${CARELOG_E2E_ACCOUNT_A:?required}
+      CARELOG_E2E_PASSWORD_A: ${CARELOG_E2E_PASSWORD_A:?required}
+      G4_E2E_PASSWORD_B: ${G4_E2E_PASSWORD_B:?required}
     volumes:
       - ./scripts/g4/seed-carelog.sql:/g4/seed-carelog.sql:ro
     healthcheck:
@@ -88,4 +91,7 @@ services:
       G4_CARELOG_URL: http://carelog-be:8080
       G4_JWT_SECRET: issue24-e2e-synthetic-jwt-secret-material-32-bytes
       G4_SERVICE_SECRET: g4-synthetic-product-claims-secret-at-least-32
+      CARELOG_E2E_ACCOUNT_A: ${CARELOG_E2E_ACCOUNT_A:?required}
+      CARELOG_E2E_PASSWORD_A: ${CARELOG_E2E_PASSWORD_A:?required}
+      G4_E2E_PASSWORD_B: ${G4_E2E_PASSWORD_B:?required}
     networks: [identity-e2e]

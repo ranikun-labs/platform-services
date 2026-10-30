@@ -9,6 +9,10 @@ import hashlib
 import hmac
 import json
 import os
+
+LOGIN_ACCOUNT_A = os.environ["CARELOG_E2E_ACCOUNT_A"]
+LOGIN_PASSWORD_A = os.environ["CARELOG_E2E_PASSWORD_A"]
+LOGIN_PASSWORD_B = os.environ["G4_E2E_PASSWORD_B"]
 import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHandler
@@ -63,7 +67,7 @@ def sign(payload):
 def run():
     # Real Spring Boot login through Gateway -> Identity -> Carelog internal projection.
     status, body = req("POST", GATEWAY, "/api/v1/auth/login",
-                       {"userId": "issue24-e2e-user", "password": "Password123!"})
+                       {"userId": LOGIN_ACCOUNT_A, "password": LOGIN_PASSWORD_A})
     check("G4-01-login-through-real-product-projection-A", status == 200, 200, status)
     login_a = json.loads(body)["data"]
     token_a = login_a["accessToken"]
@@ -131,7 +135,7 @@ def run():
 
     # B uses a separately seeded Identity account and a real Identity-issued session.
     status, body = req("POST", GATEWAY, "/api/v1/auth/login",
-                       {"userId": "issue24-e2e-user-b", "password": "Password123!"})
+                       {"userId": "issue24-e2e-user-b", "password": LOGIN_PASSWORD_B})
     check("G4-09-B-login-through-identity", status == 200, 200, status)
     login_b = json.loads(body)["data"]
     token_b = login_b.get("accessToken")
