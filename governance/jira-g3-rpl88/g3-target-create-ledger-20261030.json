@@ -1,0 +1,219 @@
+{
+  "schema_version": "JIRA_G3_NATIVE_FAST_TRACK_CREATE_LEDGER_V1",
+  "ledger_scope": "RPL_G3_FOUR_TYPE_CANARY_ONLY",
+  "policy": "ranikun-labs/harness-foundation-docs/docs/governance/jira-field-taxonomy.md §8.0/§8.1",
+  "owner_approval_ref": "OWNER_G3_CANARY_4_TYPES_2026_10_30",
+  "owner_approval_text": "Explicit in current Jira Migration conversation on 2026-10-30: create one Epic(10007), Task(10010), Bug(10012), Research(10013) in RPL, serialized batches ≤2, start 2026-10-30 due 2026-11-02, Product 10026 Component 10030 Concern 10039, Research assignee identical to RPL-128; pending Intent before Jira Create; GET/JQL and durable Origin verification; excludes RPL-88 Cutover, Legacy deletion, Merge, Deploy.",
+  "owner_approved_at_date": "2026-10-30",
+  "run_window": {
+    "effective_from": "2026-10-30",
+    "effective_to": "2026-11-02",
+    "timezone": "Asia/Seoul"
+  },
+  "execution": {
+    "writer": "jira-migration ChatGPT session through connected Jira and GitHub; single sequential writer",
+    "status": "PREPARED_PENDING",
+    "batch_size_limit": 2,
+    "approval_is_final_cutover": false
+  },
+  "evidence": {
+    "jira_before_canary": "RPL-128",
+    "jira_before_created_since_20261030": [
+      "RPL-128"
+    ],
+    "type_metadata_checked": true,
+    "legacy_create_not_exposed": true,
+    "target_options_checked": true,
+    "provider_account_proven": "RPL-128 and RPL-125 GET"
+  },
+  "records": [
+    {
+      "create_request_id": "RPL-G3-CANARY-20261030-10007-01",
+      "batch": 1,
+      "issue_type_id": "10007",
+      "issue_type_name": "에픽",
+      "tag": "EPIC",
+      "expected_summary": "[MIGRATION-G3-EPIC-CANARY-20261030] Target 필수 저장값 검증",
+      "state": "pending",
+      "jira_issue_key": null,
+      "origin": "pending_unverified",
+      "phase": "create_pending",
+      "read_authority": "none",
+      "write_authority": "frozen",
+      "activation_ref": "OWNER_G3_CANARY_4_TYPES_2026_10_30",
+      "effective_from": "2026-10-30",
+      "effective_to": "2026-11-02",
+      "fields": {
+        "start_date": "2026-10-30",
+        "due_date": "2026-11-02",
+        "product": {
+          "id": "10026",
+          "value": "platform-foundation"
+        },
+        "component": {
+          "id": "10030",
+          "value": "infra"
+        },
+        "concern": [
+          {
+            "id": "10039",
+            "value": "migration"
+          }
+        ],
+        "assignee_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+        "reporter_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
+      },
+      "jira_create_call_status": "NOT_CALLED",
+      "jira_create_receipt": null,
+      "jira_get_proof": null,
+      "jql_proof": null,
+      "legacy_snapshot_ref": "not_applicable",
+      "preserve_evidence": null,
+      "reader_evidence": null,
+      "exceptions": []
+    },
+    {
+      "create_request_id": "RPL-G3-CANARY-20261030-10010-01",
+      "batch": 1,
+      "issue_type_id": "10010",
+      "issue_type_name": "작업",
+      "tag": "TASK",
+      "expected_summary": "[MIGRATION-G3-TASK-CANARY-20261030] Target 필수 저장값 검증",
+      "state": "pending",
+      "jira_issue_key": null,
+      "origin": "pending_unverified",
+      "phase": "create_pending",
+      "read_authority": "none",
+      "write_authority": "frozen",
+      "activation_ref": "OWNER_G3_CANARY_4_TYPES_2026_10_30",
+      "effective_from": "2026-10-30",
+      "effective_to": "2026-11-02",
+      "fields": {
+        "start_date": "2026-10-30",
+        "due_date": "2026-11-02",
+        "product": {
+          "id": "10026",
+          "value": "platform-foundation"
+        },
+        "component": {
+          "id": "10030",
+          "value": "infra"
+        },
+        "concern": [
+          {
+            "id": "10039",
+            "value": "migration"
+          }
+        ],
+        "assignee_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+        "reporter_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
+      },
+      "jira_create_call_status": "NOT_CALLED",
+      "jira_create_receipt": null,
+      "jira_get_proof": null,
+      "jql_proof": null,
+      "legacy_snapshot_ref": "not_applicable",
+      "preserve_evidence": null,
+      "reader_evidence": null,
+      "exceptions": []
+    },
+    {
+      "create_request_id": "RPL-G3-CANARY-20261030-10012-01",
+      "batch": 2,
+      "issue_type_id": "10012",
+      "issue_type_name": "버그",
+      "tag": "BUG",
+      "expected_summary": "[MIGRATION-G3-BUG-CANARY-20261030] Target 필수 저장값 검증",
+      "state": "pending",
+      "jira_issue_key": null,
+      "origin": "pending_unverified",
+      "phase": "create_pending",
+      "read_authority": "none",
+      "write_authority": "frozen",
+      "activation_ref": "OWNER_G3_CANARY_4_TYPES_2026_10_30",
+      "effective_from": "2026-10-30",
+      "effective_to": "2026-11-02",
+      "fields": {
+        "start_date": "2026-10-30",
+        "due_date": "2026-11-02",
+        "product": {
+          "id": "10026",
+          "value": "platform-foundation"
+        },
+        "component": {
+          "id": "10030",
+          "value": "infra"
+        },
+        "concern": [
+          {
+            "id": "10039",
+            "value": "migration"
+          }
+        ],
+        "assignee_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+        "reporter_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
+      },
+      "jira_create_call_status": "NOT_CALLED",
+      "jira_create_receipt": null,
+      "jira_get_proof": null,
+      "jql_proof": null,
+      "legacy_snapshot_ref": "not_applicable",
+      "preserve_evidence": null,
+      "reader_evidence": null,
+      "exceptions": []
+    },
+    {
+      "create_request_id": "RPL-G3-CANARY-20261030-10013-01",
+      "batch": 2,
+      "issue_type_id": "10013",
+      "issue_type_name": "Research",
+      "tag": "RESEARCH",
+      "expected_summary": "[MIGRATION-G3-RESEARCH-CANARY-20261030] Target 필수 저장값 검증",
+      "state": "pending",
+      "jira_issue_key": null,
+      "origin": "pending_unverified",
+      "phase": "create_pending",
+      "read_authority": "none",
+      "write_authority": "frozen",
+      "activation_ref": "OWNER_G3_CANARY_4_TYPES_2026_10_30",
+      "effective_from": "2026-10-30",
+      "effective_to": "2026-11-02",
+      "fields": {
+        "start_date": "2026-10-30",
+        "due_date": "2026-11-02",
+        "product": {
+          "id": "10026",
+          "value": "platform-foundation"
+        },
+        "component": {
+          "id": "10030",
+          "value": "infra"
+        },
+        "concern": [
+          {
+            "id": "10039",
+            "value": "migration"
+          }
+        ],
+        "assignee_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+        "reporter_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
+      },
+      "jira_create_call_status": "NOT_CALLED",
+      "jira_create_receipt": null,
+      "jira_get_proof": null,
+      "jql_proof": null,
+      "legacy_snapshot_ref": "not_applicable",
+      "preserve_evidence": null,
+      "reader_evidence": null,
+      "exceptions": []
+    }
+  ],
+  "restrictions": {
+    "no_rpl88_cutover": true,
+    "no_merge": true,
+    "no_deploy": true,
+    "no_legacy_delete": true,
+    "no_create_retry_after_ambiguous_response": true,
+    "admin_scope_only": true
+  }
+}
