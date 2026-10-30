@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          finance_source_sha="03147e16f0e937f880ea010fe59045dda3081515"
+          finance_source_sha="e193641b3d4486d5efc0c82810faabaef4540f06"
           archive="$RUNNER_TEMP/finance-source.zip"
           unpack="$RUNNER_TEMP/finance-source"
           curl --fail --silent --show-error --location \
@@ -66,7 +66,7 @@ jobs:
           git -C "$finance_dir" init -q
           git -C "$finance_dir" add -f -A
           finance_tree="$(git -C "$finance_dir" write-tree)"
-          test "$finance_tree" = "7b8215f01a3ee2dabc7a90af5425aa1b60128408"
+          test "$finance_tree" = "56f73710051cf7b19039bb5421e45c724f4f75cc"
           echo "FINANCE_SOURCE_DIR=$finance_dir" >> "$GITHUB_ENV"
           echo "FINANCE_SOURCE_SHA=$finance_source_sha"
           echo "FINANCE_SOURCE_TREE=$finance_tree"
