@@ -1,5 +1,8 @@
 # Jira Migration — G0~G4 Current Roadmap & Closure (2026-10-30 KST)
 
+> **2026-10-30 18:04 KST 실제 실행 최신 업데이트:** Owner 승인된 G3 Target-only Canary 4건(Epic RPL-129 / Task RPL-130 / Bug RPL-131 / Research RPL-132)이 모두 Native Jira Create→GET→JQL 4/4 PASS; 기존 Feature RPL-128과 합쳐 Target 필수 5유형 신규 Create 시험 완료. 인증된 외부 Manifest Reader·Mixed Origin·Rollback/Restore 및 RPL-88 Cutover는 여전히 NOT_RUN/BLOCKED. 현재 Jira 전체 132건 / 미완료 50건, 활성 필수 Target 누락 0건. `g3-target-create-four-canary-execution-20261030.md` 및 `g3-target-create-ledger-20261030.json`이 해당 신규 Create의 최신 증거다. 아래 기존 날짜별 수치와 미검증 4유형 문구는 **실행 전 역사 스냅샷**으로 보존한다. G4는 현재 접근 가능 범위만 PASS이며 전체 Closure 아님.
+
+
 **F1 Verdict: G4 최종 완료 아님. G3·G4 모두 부분 완료.**
 
 ## 실제 연결 기준
