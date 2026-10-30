@@ -105,6 +105,24 @@ jobs:
             if [ -n "$cause_types" ]; then
               echo "ROOT_CAUSE_TYPES=$cause_types"
             fi
+            exception_types="$(grep -Eo '[A-Za-z0-9_$.]*(Exception|Error)' "$log" | sort -u | paste -sd, - || true)"
+            if [ -n "$exception_types" ]; then
+              echo "EXCEPTION_TYPES=$exception_types"
+            fi
+            if grep -Fq "Execution failed for task ':app:bootRun'" "$log"; then
+              echo "FAILED_TASK=APP_BOOTRUN"
+            elif grep -Fq "Execution failed for task" "$log"; then
+              echo "FAILED_TASK=OTHER_GRADLE_TASK"
+            fi
+            if grep -Fq "Could not start process" "$log"; then
+              echo "STARTUP_CATEGORY=PROCESS_START_FAILED"
+            elif grep -Fq "Could not resolve" "$log"; then
+              echo "STARTUP_CATEGORY=DEPENDENCY_RESOLUTION_FAILED"
+            elif grep -Fq "Failed to bind properties" "$log"; then
+              echo "STARTUP_CATEGORY=CONFIGURATION_BIND_FAILED"
+            elif grep -Fq "Application run failed" "$log"; then
+              echo "STARTUP_CATEGORY=SPRING_RUNTIME_FAILED"
+            fi
             if grep -Fq "APPLICATION FAILED TO START" "$log"; then
               echo "STARTUP_CATEGORY=SPRING_APP_STARTUP_FAILED"
             elif grep -Fq "Failed to configure a DataSource" "$log"; then
