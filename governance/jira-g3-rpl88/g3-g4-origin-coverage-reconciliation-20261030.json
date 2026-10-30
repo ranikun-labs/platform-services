@@ -1,0 +1,112 @@
+{
+  "record_type": "JIRA_MIGRATION_G3_G4_NATIVE_READ_ONLY_ORIGIN_COVERAGE",
+  "date": "2026-10-30 KST",
+  "status": "AUDIT_ONLY_NOT_CUTOVER_NOT_AUTHORITY_PROMOTION",
+  "source": {
+    "live_jira": "GET/JQL project=RPL statusCategory != Done 50/50",
+    "canary_ledger": "g3-target-create-ledger-20261030.json",
+    "legacy_pilot": "readiness.json",
+    "policy": "harness-foundation-docs/docs/governance/jira-field-taxonomy.md §8.0"
+  },
+  "scope": "RPL active current issues only; does not auto-promote ReadAuthority, does not inspect protected UNKNOWN_ORIGIN RPL-112/113/114",
+  "counts": {
+    "all_jira_issues": 132,
+    "done": 82,
+    "not_done": 50,
+    "legacy_and_target": 31,
+    "target_only": 15,
+    "legacy_only": 0,
+    "neither": 4,
+    "partial_target": 0,
+    "required_target_missing": 0
+  },
+  "target_only": {
+    "native_canaries_verified_from_pre_create_pending_ledger": [
+      "RPL-129",
+      "RPL-130",
+      "RPL-131",
+      "RPL-132"
+    ],
+    "feature_canary_with_prior_create_evidence_but_origin_ledger_unverified": [
+      "RPL-128"
+    ],
+    "remaining_target_only_origin_unverified_in_current_audit": [
+      "RPL-83",
+      "RPL-94",
+      "RPL-115",
+      "RPL-116",
+      "RPL-117",
+      "RPL-118",
+      "RPL-122",
+      "RPL-124",
+      "RPL-126",
+      "RPL-127"
+    ],
+    "warning": "No Origin inference from Target field presence; missing evidence in THIS audit does not establish absence in all durable stores. Do not write/transition/quarantine these tickets on this information alone."
+  },
+  "mixed_field_31": {
+    "readiness": "LEGACY_TARGET_FIELD_VALUES_PRESENT_NOT_CUTOVER",
+    "pilot": "RPL-88",
+    "rpl88_recorded_authority": {
+      "origin": "legacy_migration",
+      "phase": "verified",
+      "read": "legacy",
+      "write": "frozen",
+      "cutover_approval_ref": null
+    },
+    "protected_unknown_origin": [
+      "RPL-112",
+      "RPL-113",
+      "RPL-114"
+    ],
+    "discarded": [
+      "RPL-40"
+    ],
+    "policy": "G2 stored Target does not independently mean official Target read authority."
+  },
+  "optional_story_without_target": [
+    "RPL-119",
+    "RPL-120",
+    "RPL-121",
+    "RPL-123"
+  ],
+  "f4_goal_actions": [
+    {
+      "task": "G3 Native Required Types 5/5 Create",
+      "status": "PASS",
+      "action": "REUSE"
+    },
+    {
+      "task": "Origin evidence inventory of 11 pre-existing Target-only active issues",
+      "status": "READY_READ_ONLY",
+      "action": "Search exact private durable ledger/Create evidence where authorized; do not change other workstreams' source or tickets"
+    },
+    {
+      "task": "RPL-88 operational Reader, actual Jira consumer mixed-Origin, controlled restore drill",
+      "status": "BLOCKED_DEPENDENCY",
+      "action": "Existing Work with actual admin/runner access; capture real ConsumerIntegrationRef and RestoreDrillRef; do not reinterpret offline 12/12 as live"
+    },
+    {
+      "task": "RPL-88 final authority cutover",
+      "status": "OWNER_GATE_AFTER_PROOF",
+      "action": "Only after live read/restore and separate CutoverApprovalRef, issue-specific and no bulk mutation"
+    },
+    {
+      "task": "G4 user-private Filter visibility",
+      "status": "ACCESS_UNKNOWN",
+      "action": "Use owner/admin authorized UI audit; do not assert all shared/other-user filters checked"
+    },
+    {
+      "task": "Legacy physical deletion",
+      "status": "OUT_OF_SCOPE",
+      "action": "Preserve historical data"
+    }
+  ],
+  "mutations_performed_in_this_reconciliation": {
+    "jira_create": 0,
+    "jira_edit": 0,
+    "jira_transition": 0,
+    "manifest_authority_cutover": 0,
+    "legacy_delete": 0
+  }
+}
