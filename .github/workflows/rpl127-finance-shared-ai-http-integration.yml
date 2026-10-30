@@ -71,6 +71,10 @@ jobs:
           echo "FINANCE_SOURCE_SHA=$finance_source_sha"
           echo "FINANCE_SOURCE_TREE=$finance_tree"
 
+      - name: Run Shared AI native module tests
+        run: >-
+          ./gradlew -p platform-core :shared-ai:test --no-daemon --stacktrace --console=plain
+
       - name: Run Shared AI HTTP contract and production guard tests
         run: >-
           ./gradlew -p platform-core :app:test --no-daemon --stacktrace --console=plain
