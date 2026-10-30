@@ -75,6 +75,9 @@ jobs:
           PLATFORM_IDENTITY_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:5432/platform
           PLATFORM_IDENTITY_DATASOURCE_USERNAME: integration_test
           PLATFORM_IDENTITY_DATASOURCE_PASSWORD: disposable-integration-only
+          PLATFORM_IDENTITY_REDIS_HOST: '127.0.0.1'
+          PLATFORM_IDENTITY_REDIS_PORT: '6379'
+          PLATFORM_IDENTITY_REDIS_KEY_PREFIX: 'rpl-http-integration:'
           PLATFORM_IDENTITY_AUTH_ENABLED: 'false'
           SHARED_AI_FOUNDATION_ENABLED: 'true'
           SHARED_AI_SPRING_AI_ENABLED: 'false'
