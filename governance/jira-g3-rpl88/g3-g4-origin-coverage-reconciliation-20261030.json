@@ -87,6 +87,45 @@
       "status": "CLOSED_AFTER_ORIGINAL_REPO_DISCOVERY",
       "original_ledger_repo_missed": "ranikun-labs/harness-foundation-docs",
       "note": "Previous GitHub search scoped to platform-services missed original ledger, source found and independently verified"
+    },
+    "noncanary_10_changelog_analysis": {
+      "supporting_artifact": "g3-g4-noncanary-origin-evidence-20261030.json",
+      "actual_jira_get_changelog_evidence": {
+        "six_target_field_only_edits_after_create": [
+          {
+            "key": "RPL-83",
+            "changelog_id": "11063"
+          },
+          {
+            "key": "RPL-94",
+            "changelog_id": "11066"
+          },
+          {
+            "key": "RPL-115",
+            "changelog_id": "11067"
+          },
+          {
+            "key": "RPL-116",
+            "changelog_id": "11068"
+          },
+          {
+            "key": "RPL-117",
+            "changelog_id": "11069"
+          },
+          {
+            "key": "RPL-118",
+            "changelog_id": "11070"
+          }
+        ],
+        "four_target_populated_without_target_change_history": [
+          "RPL-122",
+          "RPL-124",
+          "RPL-126",
+          "RPL-127"
+        ]
+      },
+      "conclusion": "6 Proven Target edits are NOT verified target_create; 4 other issues lack pre-create Intent even when current Target values are present. None can be promoted to target_create solely from these observations. Existing Jira fields preserved.",
+      "owner_decision_required": "Explicit governance interpretation for legacy-less pre-G3 issues and/or original approved CreateRequestId for remaining new issues; does not block the proven five Native Canaries."
     }
   },
   "mixed_field_31": {
@@ -123,8 +162,8 @@
     },
     {
       "task": "Origin evidence inventory of remaining 10 non-Canary Target-only active issues",
-      "status": "READY_READ_ONLY",
-      "action": "RPL-128 FOUND/VERIFIED in original harness-foundation-docs repo. For 10 others, read-only verified source search, no source modifications or automatic quarantine."
+      "status": "READ_ONLY_HISTORY_AUDIT_COMPLETE_PENDING_ORIGIN_GOVERNANCE",
+      "action": "10/10 Jira history inspected. Six Target post-create Change IDs verified, four no Target history; proceed only on Owner-approved Origin classification after locating original creation approval/Intent."
     },
     {
       "task": "RPL-88 operational Reader, actual Jira consumer mixed-Origin, controlled restore drill",
