@@ -1,0 +1,50 @@
+{
+  "schema": "jira-native-fast-track-create-intent/v1",
+  "status": "pending",
+  "record_type": "PRIMARY_JIRA_MANAGEMENT_TASK_CREATE",
+  "CreateRequestId": "RPL-G3-PR53-PRIMARY-JIRA-20261031-01",
+  "OwnerApprovalRef": "current-conversation-2026-10-31: Owner approved PR #53 primary Jira; reuse existing suitable issue else create exactly one Task, assign Jira Migration Work sole writer, conditional merge only",
+  "OwnerApprovalScope": "ONE administrative Task for Jira Migration PR #53 ownership; no RPL-88 cutover, Jira Admin, Legacy delete or deploy",
+  "ActivationRef": "OWNER_APPROVED_PR53_SINGLE_TASK_CREATE_20261031",
+  "EffectiveFrom": "2026-10-31",
+  "EffectiveTo": "2026-11-06",
+  "ProjectKey": "RPL",
+  "IssueTypeId": "10010",
+  "IssueTypeName": "작업",
+  "Summary": "Jira Migration — G3/G4 Native 정책 PR #53 Source Merge Gate",
+  "StartDate": "2026-10-31",
+  "DueDate": "2026-11-06",
+  "DateDecision": "working dates chosen inside Owner-approved execution scope; date adjustments require ordinary Jira validation",
+  "TargetProduct": {
+    "field": "customfield_10108",
+    "id": "10026",
+    "value": "platform-foundation"
+  },
+  "TargetComponent": {
+    "field": "customfield_10109",
+    "id": "10031",
+    "value": "documentation"
+  },
+  "TargetConcern": {
+    "field": "customfield_10110",
+    "id": "10039",
+    "value": "migration"
+  },
+  "AssigneeAccountId": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+  "ReporterAccountId": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+  "WriterScope": "Jira Migration Owner-directed single sequential writer for THIS task; concurrent external Work session locking not independently observable",
+  "Head": {
+    "repo": "ranikun-labs/harness-foundation-docs",
+    "pr": 53,
+    "base": "86b5bea721a54029886119f62757db3f89809db5",
+    "head": "f983525d19ed4720455af1d1e846451ce077ac7b"
+  },
+  "IssueKey": null,
+  "Origin": "unknown",
+  "Phase": "create_pending",
+  "ReadAuthority": "none",
+  "WriteAuthority": "frozen",
+  "LegacySnapshotRef": "not_applicable",
+  "IdempotencyRule": "Before creating, query Jira for same exact CreateRequestId or summary; if result uncertain do not repeat Create without GET/JQL reconciling",
+  "AllowedNextAction": "one Jira Task create then GET, option/field verification and durable Origin finalization before success report"
+}
