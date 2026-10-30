@@ -153,7 +153,7 @@ jobs:
           trap cleanup EXIT
           ready=false
           for attempt in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:18081/actuator/health >/dev/null; then
+            if curl -fsS http://127.0.0.1:18081/actuator/health/readiness >/dev/null; then
               ready=true
               break
             fi
