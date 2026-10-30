@@ -1,5 +1,8 @@
 # Jira Migration — G0~G4 Current Roadmap & Closure (2026-10-30 KST)
 
+> **2026-10-31 F4 PR #53 Reviewer Fan-in (최신):** Foundation Draft [PR #53](https://github.com/ranikun-labs/harness-foundation-docs/pull/53) `main@86b5bea7` → `f983525d` 유지, §8.2 +11/-0 변경 없음. 별도 READ-ONLY 세션이 `PASS_WITH_NOTES / B0 M0 m0` 보고했고 문구 수정 불필요. **Sol High/Fast OFF 실효 설정 UNKNOWN**, GitHub 공식 Review 제출 0건이므로 공식 Reviewer Approval 아님. 이 신규 증거와 역사적 `NOT_RUN` 기록을 구분해 PR Body에 반영 완료. 기존 G0~G2/Canary 5/5/G4 확인 소비처 증거 재사용. F4 남은 READY_WRITE 없음; **Source Merge는 Owner 별도 승인 전 금지**, RPL-88 `ReadAuthority=legacy / WriteAuthority=frozen / CutoverApprovalRef=null` 유지. 다음 Gate: 실제 독립 Reviewer 조건 충족과 Owner Source Merge 결정; Merge 후 별도 RPL-88 Cutover 실행 Gate. `adaptive-goal-closure` 원문 수동 적용이며 Codex Cloud Native Skill 런타임 활성화 주장 아님.
+
+
 > **2026-10-31 Owner Native Adoption → Source Draft PR #53:** Owner가 Jira Native를 RPL의 사용자 운영 화면으로 **우선 채택하고 §8.2 최소 정책 PR 준비를 승인**했다. Foundation `ranikun-labs/harness-foundation-docs`의 `docs/jira-g3-g4-native-scope-taxonomy-8-2-20261031` 브랜치에 정본 원문을 보존한 채 §8.2만 추가했다(Commit `f983525d19ed4720455af1d1e846451ce077ac7b`, Base `86b5bea721a54029886119f62757db3f89809db5`). [Draft PR #53](https://github.com/ranikun-labs/harness-foundation-docs/pull/53): 단일 Taxonomy 파일 +11/-0, 독립 리뷰 0건·CI status contexts 0건, `DRAFT/NOT_EFFECTIVE`. 허용된 범위는 Source 변경안 작성과 PR 준비까지며, **Merge·RPL-88 CutoverApprovalRef·실제 Cutover·Deploy·Legacy Hide/Delete는 별도 Gate**다. 다음 F4 Gate는 고정 HEAD Sol High 독립 Reviewer(실효 모델 확인) → Finding Closure → Owner Source Merge 판단; 그 후 RPL-88 한정 Cutover 기술 검증/별도 승인이다. 기존 `verified/legacy/frozen`은 유지한다.
 
 
