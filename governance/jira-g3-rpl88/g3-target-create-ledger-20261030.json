@@ -229,14 +229,16 @@
         "assignee_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
         "reporter_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
       },
-      "jira_create_call_status": "NOT_CALLED",
+      "jira_create_call_status": "IN_FLIGHT",
       "jira_create_receipt": null,
       "jira_get_proof": null,
       "jql_proof": null,
       "legacy_snapshot_ref": "not_applicable",
       "preserve_evidence": null,
       "reader_evidence": null,
-      "exceptions": []
+      "exceptions": [],
+      "create_attempt_number": 1,
+      "attempt_started_date": "2026-10-30"
     },
     {
       "create_request_id": "RPL-G3-CANARY-20261030-10013-01",
