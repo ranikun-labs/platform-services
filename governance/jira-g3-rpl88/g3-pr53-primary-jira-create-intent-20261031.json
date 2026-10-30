@@ -1,6 +1,6 @@
 {
   "schema": "jira-native-fast-track-create-intent/v1",
-  "status": "pending",
+  "status": "verified_create_ready",
   "record_type": "PRIMARY_JIRA_MANAGEMENT_TASK_CREATE",
   "CreateRequestId": "RPL-G3-PR53-PRIMARY-JIRA-20261031-01",
   "OwnerApprovalRef": "current-conversation-2026-10-31: Owner approved PR #53 primary Jira; reuse existing suitable issue else create exactly one Task, assign Jira Migration Work sole writer, conditional merge only",
@@ -39,12 +39,40 @@
     "base": "86b5bea721a54029886119f62757db3f89809db5",
     "head": "f983525d19ed4720455af1d1e846451ce077ac7b"
   },
-  "IssueKey": null,
-  "Origin": "unknown",
-  "Phase": "create_pending",
-  "ReadAuthority": "none",
-  "WriteAuthority": "frozen",
+  "IssueKey": "RPL-133",
+  "Origin": "target_create",
+  "Phase": "create_ready",
+  "ReadAuthority": "target",
+  "WriteAuthority": "target",
   "LegacySnapshotRef": "not_applicable",
   "IdempotencyRule": "Before creating, query Jira for same exact CreateRequestId or summary; if result uncertain do not repeat Create without GET/JQL reconciling",
-  "AllowedNextAction": "one Jira Task create then GET, option/field verification and durable Origin finalization before success report"
+  "AllowedNextAction": "one Jira Task create then GET, option/field verification and durable Origin finalization before success report",
+  "IssueId": "10250",
+  "CreatedAt": "2026-10-31T02:02:44.325+09:00",
+  "InitializedAt": "2026-10-31T02:02:44.325+09:00",
+  "VerifiedAt": "2026-10-31",
+  "CreateActivationRef": "OWNER_APPROVED_PR53_SINGLE_TASK_CREATE_20261031",
+  "JiraVerification": {
+    "IssueTypeId": "10010",
+    "ProjectKey": "RPL",
+    "summary_matches": true,
+    "request_id_in_description": true,
+    "started": "2026-10-31",
+    "due": "2026-11-06",
+    "ProductOptionId": "10026",
+    "ComponentOptionId": "10031",
+    "ConcernOptionId": "10039",
+    "legacy_fields": [
+      null,
+      null,
+      null
+    ],
+    "assignee_match": true,
+    "reporter_match": true,
+    "required_people_match": true,
+    "exact_target_jql_one_match": true,
+    "read_mode": "LIVE_JIRA_GET_PLUS_TARGET_NATIVE_JQL",
+    "create_result": "ONE_ISSUE_CONFIRMED"
+  },
+  "OriginRecordMeaning": "Source-of-truth for this supervised one-off Jira Create is versioned intent+verified creation record, NOT proof that a deployed external Reader is Origin-aware"
 }
