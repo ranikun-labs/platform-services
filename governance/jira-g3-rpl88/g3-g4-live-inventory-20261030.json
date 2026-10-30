@@ -1,0 +1,137 @@
+{
+  "schema": "JIRA_NATIVE_G3_G4_CURRENT_STATE_AUDIT_V1",
+  "as_of": "2026-10-30 Asia/Seoul",
+  "scope": "RPL_JIRA_NATIVE_MIGRATION_ONLY",
+  "source": {
+    "type": "Jira live JQL/GET",
+    "authority": "observation_only",
+    "native_jql_field_ids": {
+      "legacy_product": "cf[10042]",
+      "target_product": "cf[10108]",
+      "target_component": "cf[10109]"
+    }
+  },
+  "totals": {
+    "all": 128,
+    "done": 82,
+    "not_done": 46,
+    "target_both": 41,
+    "missing_target": 5
+  },
+  "active_partition": {
+    "legacy_and_target": 30,
+    "target_no_legacy": 11,
+    "legacy_missing_target": 1,
+    "no_legacy_no_target": 4,
+    "partial_target_one_field": 0
+  },
+  "filters": {
+    "all": "project = RPL",
+    "done": "project = RPL AND statusCategory = Done",
+    "active": "project = RPL AND statusCategory != Done",
+    "legacy_and_target": "project = RPL AND statusCategory != Done AND cf[10042] IS NOT EMPTY AND cf[10108] IS NOT EMPTY AND cf[10109] IS NOT EMPTY",
+    "target_no_legacy": "project = RPL AND statusCategory != Done AND cf[10042] IS EMPTY AND cf[10108] IS NOT EMPTY AND cf[10109] IS NOT EMPTY",
+    "legacy_missing_target": "project = RPL AND statusCategory != Done AND cf[10042] IS NOT EMPTY AND (cf[10108] IS EMPTY OR cf[10109] IS EMPTY)",
+    "no_legacy_no_target": "project = RPL AND statusCategory != Done AND cf[10042] IS EMPTY AND (cf[10108] IS EMPTY OR cf[10109] IS EMPTY)"
+  },
+  "active_missing": {
+    "required_type": [
+      {
+        "key": "RPL-125",
+        "type": "Research",
+        "created": "2026-10-28",
+        "before": {
+          "legacy_product": [
+            "platform-foundation"
+          ],
+          "legacy_component": [
+            "documentation"
+          ],
+          "legacy_labels": [
+            "aws",
+            "ecs-aurora",
+            "scale-to-zero"
+          ],
+          "target_product": null,
+          "target_component": null,
+          "target_concern": null
+        },
+        "proposed_field_only_target": {
+          "product_option_id": "10026",
+          "component_option_id": "10031",
+          "concern": []
+        },
+        "classification": "UNAPPROVED_CORRECTION_CANDIDATE",
+        "note": "Legacy labels are NOT automatically mapped into Concern; preserve existing labels and all other fields. Must first verify issue version/current values, Owner-approved field-only scope, snapshot, effects, verified reader/restore path. Do not edit automatically."
+      }
+    ],
+    "optional_story": [
+      {
+        "key": "RPL-123",
+        "type": "Story"
+      },
+      {
+        "key": "RPL-121",
+        "type": "Story"
+      },
+      {
+        "key": "RPL-120",
+        "type": "Story"
+      },
+      {
+        "key": "RPL-119",
+        "type": "Story"
+      }
+    ]
+  },
+  "protected": {
+    "unknown_origin": [
+      "RPL-112",
+      "RPL-113",
+      "RPL-114"
+    ],
+    "discarded": [
+      "RPL-40"
+    ],
+    "historic_done_default_exclusion": true
+  },
+  "g3_native_create_metadata": {
+    "required_target": [
+      "Epic",
+      "Feature",
+      "Task",
+      "Bug",
+      "Research"
+    ],
+    "optional_target": [
+      "Story",
+      "Subtask",
+      "Tech Debt"
+    ],
+    "legacy_create_not_exposed_all_eight": true,
+    "tech_debt_target_concern_not_exposed": true
+  },
+  "remaining_gates": [
+    "Owner-approved field-only correction scope for RPL-125; exact data snapshot and restore evidence before mutation",
+    "Single-Writer and canonical migration ledger path",
+    "Distinct per-type trial Create approvals and actual saved-value rechecks for unverified required types",
+    "Shared filter/reader/board/automation consumer scope verification",
+    "Mixed-Origin authority and controlled restore drill for RPL-88",
+    "Separate RPL-88 CutoverApprovalRef after evidence review"
+  ],
+  "prohibited_until_approved": [
+    "Jira issue Create",
+    "Jira classification update",
+    "manifest authority promotion",
+    "physical Legacy delete",
+    "bulk Done backfill",
+    "other Workstream code changes"
+  ],
+  "mutations_this_audit": {
+    "jira_create": 0,
+    "jira_update": 0,
+    "jira_transition": 0,
+    "authority_cutover": 0,
+    "legacy_delete": 0
+  }
+}
