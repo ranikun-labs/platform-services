@@ -1,5 +1,8 @@
 # Jira Migration — G0~G4 Current Roadmap & Closure (2026-10-30 KST)
 
+> **최신 G3/G4 F4 Audit Delta · 2026-10-30 22:34 KST 이후 — Original RPL-128 Intent Restored:** RPL-128 Feature의 생성 전 `pending` Git Commit `0b1f4526eb32ed7744f6a47d664b8faff22b59f2` / Blob `3ee9e93c7ea28de588cb18fa9a87850cd7a4ecb4`, 최종 `target_create/create_ready` Blob `07a6c7d42ddad01a00846b0113befa405c19ed06`를 다른 저장소 `ranikun-labs/harness-foundation-docs@audit/jira-g3-feature-canary-20261030:docs/governance/jira-g3-canary-feature-2026-10-30.json`에서 직접 검증. Jira RPL-128 GET/JQL/Option ID와 대조 PASS. 따라서 Target 필수 5유형 Canary의 **생성 전 pending→생성 후 Origin** 증거 연결 5/5 PASS (RPL-129~132는 별도 원장). **타 Target-only 10건 READ-ONLY Changelog 구분:** 6건(RPL-83/94/115/116/117/118) 2026-10-23 생성 후 Target 필드 갱신 증명(Change IDs 11063, 11066~11070); 4건(RPL-122/124/126/127)은 현재 Target 존재·Target 변경 이력 없음, 생성 전 Intent 미확인. 10건 모두 무단 `target_create` 승격 불가. `g3-g4-origin-coverage-reconciliation-20261030.json`, `g3-g4-noncanary-origin-evidence-20261030.json` 참고. **Reader 계약 추가 Finding:** `authority_reader.py`가 `ReadAuthority=legacy`라도 Target Option IDs를 `classification`에 반환하며, rollback simulation은 authority label만 검증함. 실제 소비처에 연결 전 의도·effective value를 확정하고 검증할 것 (`senior-reader-semantics-review-20261030.md`). **G3 Existing-Issue Cutover는 여전히 BLOCKED, G4 검증 범위 한정 PASS.** 이 최신 Delta가 아래 이전 Origin 미확인 기록보다 우선하며 역사 기록은 삭제하지 않는다.
+
+
 > **F4 Origin Coverage 추가 점검 (2026-10-30):** 미완료 50건은 Legacy+Target 31, Target-only 15, Optional Story 무분류 4건. Target-only 15건 중 이번 4건(RPL-129~132)은 pending→Create→GET/JQL→Origin 원장 검증 완료; Feature RPL-128은 기존 Canary PASS이나 본 범위 영속 Origin 원장까지 재확인하지 않았고, 다른 10건은 Origin 증거 확인이 별도로 필요하다. 필드 존재만으로 ReadAuthority를 결정하지 않는다. 근거: `g3-g4-origin-coverage-reconciliation-20261030.json`.
 
 
