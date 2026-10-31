@@ -1,0 +1,114 @@
+{
+  "record_type": "JIRA_G3_SUPERVISED_SINGLE_AUTHORITY_LEDGER_CANDIDATE",
+  "schema_version": 1,
+  "as_of": "2026-10-31 KST",
+  "status": "STAGED_NOT_OPERATIONALLY_ACTIVATED",
+  "primary_jira": "RPL-134",
+  "owner_approval_ref": "2026-10-31 direct Owner approval: Jira Native MVP scoped operation; see g3-native-mvp-decision-pilot-task-intent-20261031.json",
+  "owner_writer": "existing Jira Migration Work session",
+  "writer_lock": "UNKNOWN_NOT_INFERRED",
+  "jira_authenticated_actor": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+  "policy": {
+    "repo": "ranikun-labs/harness-foundation-docs",
+    "file": "docs/governance/jira-field-taxonomy.md",
+    "blob": "a14fb8c97142328949461d2b5580717fec0f2fb5",
+    "sections": [
+      "8.0",
+      "8.2"
+    ]
+  },
+  "source_archive": {
+    "source": "private Library /하네스/jira-g2-active-batch1-20261019/jira-g2-active-batch1-20261019-verified.zip",
+    "immutable": true,
+    "sha256": "5cde5f2a270f0af15786a429e852c2650e98b563d0193355dd39ac9351899ec3",
+    "g2_manifest_sha256": "543ab37949720f2efa276e753fc143810fa0acd7835b7d62d83350886ef2c90a"
+  },
+  "operational_policy": {
+    "user_interface": "JIRA_NATIVE",
+    "origin_aware_search_aggregation_mvp": "NOT_SUPPORTED",
+    "excluded_consumer_specific_reader_and_drill": [
+      "RPL Board #2 Filter 10001",
+      "current inspected RPL due-date reminder Automation"
+    ],
+    "exception": "NOT_APPLICABLE_BY_APPROVED_SCOPE_FOR_EXPLICIT_CONSUMERS_ONLY",
+    "does_not_exempt": [
+      "other private filters",
+      "external consumers",
+      "TARGET_EXPOSURE",
+      "per-issue Origin/Cutover/Recovery"
+    ]
+  },
+  "entries": [
+    {
+      "IssueKey": "RPL-88",
+      "IssueTypeId": "10010",
+      "Origin": "legacy_migration",
+      "Phase": "verified",
+      "ReadAuthority": "legacy",
+      "WriteAuthority": "frozen",
+      "CutoverApprovalRef": null,
+      "SnapshotRef": "RPL-88.before.json in private G2 verified ZIP",
+      "RollbackRef": "RPL-88.before.json in private G2 verified ZIP",
+      "BeforeFileSHA256": "552649ebdd4eb5289c56666933418511e4ec6a38195e35c034341df3792ca2c5",
+      "ExpectedLegacyHash": "27cf94d79f6ba47bc08d99c47b50987c12ab52b1d56b0b24476a0c2f747375a7",
+      "TargetFieldIDs": {
+        "product": "customfield_10108",
+        "component": "customfield_10109",
+        "concern": "customfield_10110"
+      },
+      "TargetOptionIDs": {
+        "product": "10020",
+        "component": "10031",
+        "concern": [
+          "10044",
+          "10045"
+        ]
+      },
+      "JiraChangelogId": "10934",
+      "VerifiedAt": "2026-10-19T13:42:54.065+0900",
+      "ConsumerIntegrationRef": null,
+      "RestoreDrillRef": null,
+      "CutoverEligibility": "NOT_APPROVED",
+      "description_restorable_from_g2_snapshot": false
+    }
+  ],
+  "verification": {
+    "jira_field_read": "LIVE_GET_REUSE",
+    "g2_hashes": "VERIFIED",
+    "writer_lock": "UNKNOWN",
+    "runtime_reader": false,
+    "actual_restore_drill": false,
+    "authority_mutations": 0
+  },
+  "cutover_gate": {
+    "status": "BLOCKED",
+    "required": [
+      "real separate Owner CutoverApprovalRef for exactly RPL-88",
+      "bounded owner-approved execution window and recovery",
+      "sole Writer/exclusive Run proof",
+      "current Git branch/ledger blob revision and Jira GET drift check",
+      "effective read and recovery evidence consistent with scoped §8.2"
+    ],
+    "before": {
+      "Phase": "verified",
+      "ReadAuthority": "legacy",
+      "WriteAuthority": "frozen",
+      "CutoverApprovalRef": null
+    },
+    "proposed_after_only": {
+      "Phase": "cutover",
+      "ReadAuthority": "target",
+      "WriteAuthority": "target"
+    },
+    "atomic_update": "one writer must check expected branch HEAD and source file blob revision; abort on any mismatch; never overwrite concurrent changes",
+    "rollback": "restore only RPL-88 ledger record to verified/legacy/frozen using approved prior revision, compare Jira six classification fields; never derive Legacy Labels from Target Concern"
+  },
+  "forbidden": [
+    "RPL-88 authority change before separate final approval",
+    "raw backup publication",
+    "Legacy Hide/Delete",
+    "Deploy",
+    "bulk Origin promotion",
+    "claim synthetic rollback is live E2E"
+  ]
+}
