@@ -2,7 +2,7 @@
   "record_type": "JIRA_G3_NATIVE_MVP_OWNER_APPROVAL_AND_PRIMARY_TASK_PENDING_INTENT",
   "schema_version": 1,
   "as_of": "2026-10-31 KST",
-  "status": "PENDING_JIRA_CREATE",
+  "status": "VERIFIED_TASK_CREATED",
   "owner_approval": {
     "source": "explicit approval in 2026-10-31 current user message ('승인하는데') of preceding Jira Native MVP scope and G3 Writer execution proposal",
     "approval_class": "SCOPE_LIMITED_G3_PREPARATION_NOT_CUTOVER",
@@ -48,8 +48,8 @@
   "task_create": {
     "CreateRequestId": "RPL-G3-NATIVE-PILOT-PRIMARY-20261031-01",
     "ActivationRef": "OWNER_APPROVED_G3_NATIVE_MVP_WRITER_PREPARATION_20261031",
-    "Status": "pending",
-    "IssueKey": null,
+    "Status": "verified_create_ready",
+    "IssueKey": "RPL-134",
     "project": "RPL",
     "issueTypeId": "10010",
     "summary": "Jira Migration G3 — RPL-88 Pilot 정본 원장·Writer·복구 Gate",
@@ -64,7 +64,30 @@
     "start_date": "2026-10-31",
     "due_date": "2026-11-06",
     "date_semantics": "administrative target dates, not approved release deadline",
-    "idempotency": "verify request ID and exact summary in JQL BEFORE one Jira create, and GET after; if outcome unknown reconcile before any retry"
+    "idempotency": "verify request ID and exact summary in JQL BEFORE one Jira create, and GET after; if outcome unknown reconcile before any retry",
+    "IssueId": "10251",
+    "Origin": "target_create",
+    "Phase": "create_ready",
+    "ReadAuthority": "target",
+    "WriteAuthority": "target",
+    "VerifiedAt": "2026-10-31",
+    "LegacySnapshotRef": "not_applicable",
+    "Verification": {
+      "method": "JIRA_GET_AND_TARGET_NATIVE_JQL",
+      "issue_type_id": "10010",
+      "product_option_id": "10026",
+      "component_option_id": "10031",
+      "concern_option_ids": [
+        "10039",
+        "10040"
+      ],
+      "start": "2026-10-31",
+      "due": "2026-11-06",
+      "assignee_verified": true,
+      "legacy_all_null": true,
+      "search_one_match": true,
+      "create_request_id_in_description": true
+    }
   },
   "writer": {
     "designated": "existing Jira Migration Work session",
