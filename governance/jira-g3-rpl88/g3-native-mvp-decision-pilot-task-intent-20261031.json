@@ -1,0 +1,95 @@
+{
+  "record_type": "JIRA_G3_NATIVE_MVP_OWNER_APPROVAL_AND_PRIMARY_TASK_PENDING_INTENT",
+  "schema_version": 1,
+  "as_of": "2026-10-31 KST",
+  "status": "PENDING_JIRA_CREATE",
+  "owner_approval": {
+    "source": "explicit approval in 2026-10-31 current user message ('승인하는데') of preceding Jira Native MVP scope and G3 Writer execution proposal",
+    "approval_class": "SCOPE_LIMITED_G3_PREPARATION_NOT_CUTOVER",
+    "native_user_interface": "JIRA_NATIVE_CONFIRMED",
+    "mvp_origin_aware_classification_search_aggregation": "EXCLUDED",
+    "target_exposure_ui_risk": "ACKNOWLEDGED_NOT_ENFORCED_BY_JIRA_NATIVE",
+    "reviewed_policy_source": {
+      "repo": "ranikun-labs/harness-foundation-docs",
+      "path": "docs/governance/jira-field-taxonomy.md",
+      "main_blob": "a14fb8c97142328949461d2b5580717fec0f2fb5"
+    }
+  },
+  "limited_exceptions": [
+    {
+      "kind": "NO_CLASSIFICATION_CONSUMER",
+      "object": "RPL Board #2 internal Filter 10001",
+      "observed_jql": "project = RPL ORDER BY cf[10019] ASC",
+      "exception": "NOT_APPLICABLE_BY_APPROVED_SCOPE",
+      "except_only": [
+        "manifest-aware reader link for this consumer",
+        "consumer-specific restore drill for this consumer"
+      ],
+      "source": "2026-10-31 Jira Migration Work inspection reused"
+    },
+    {
+      "kind": "NO_CLASSIFICATION_CONSUMER",
+      "object": "RPL existing due-date reminder Automation",
+      "observed_semantics": "non-Done issues with due date before current day, 10:00 KST",
+      "exception": "NOT_APPLICABLE_BY_APPROVED_SCOPE",
+      "except_only": [
+        "manifest-aware reader link for this consumer",
+        "consumer-specific restore drill for this consumer"
+      ],
+      "source": "2026-10-31 Jira Migration Work inspection reused"
+    }
+  ],
+  "explicit_non_exempt": [
+    "uninspected private filters and external consumers ACCESS_UNKNOWN",
+    "Feature/Task TARGET_EXPOSURE",
+    "per-issue Origin/Cutover/Recovery and G2 immutable preservation",
+    "unspecified Boards/Filters/Automations"
+  ],
+  "task_create": {
+    "CreateRequestId": "RPL-G3-NATIVE-PILOT-PRIMARY-20261031-01",
+    "ActivationRef": "OWNER_APPROVED_G3_NATIVE_MVP_WRITER_PREPARATION_20261031",
+    "Status": "pending",
+    "IssueKey": null,
+    "project": "RPL",
+    "issueTypeId": "10010",
+    "summary": "Jira Migration G3 — RPL-88 Pilot 정본 원장·Writer·복구 Gate",
+    "product_option_id": "10026",
+    "component_option_id": "10031",
+    "concern_option_ids": [
+      "10039",
+      "10040"
+    ],
+    "assignee_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+    "reporter_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+    "start_date": "2026-10-31",
+    "due_date": "2026-11-06",
+    "date_semantics": "administrative target dates, not approved release deadline",
+    "idempotency": "verify request ID and exact summary in JQL BEFORE one Jira create, and GET after; if outcome unknown reconcile before any retry"
+  },
+  "writer": {
+    "designated": "existing Jira Migration Work session",
+    "authenticated_jira_account": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+    "runtime_sole_writer_lock": "UNKNOWN; not proved by assignee or Git branch HEAD",
+    "approved_git_scope": "ranikun-labs/platform-services/audit/jira-g3-rpl88-pilot-20261030/governance/jira-g3-rpl88",
+    "other_writer_mutation": "NOT_AUTHORIZED"
+  },
+  "target_pilot": {
+    "IssueKey": "RPL-88",
+    "JiraIssueOwnership": "Carelog Architecture, NOT migration Primary",
+    "Origin": "legacy_migration",
+    "Phase": "verified",
+    "ReadAuthority": "legacy",
+    "WriteAuthority": "frozen",
+    "CutoverApprovalRef": null,
+    "TargetChangelogId": "10934"
+  },
+  "forbidden": [
+    "RPL-88 authority mutation or CutoverApprovalRef issuance",
+    "Legacy Hide/Delete",
+    "Deploy",
+    "other workstream modification",
+    "bulk Origin promotions",
+    "assert runtime lock without proof",
+    "rewrite G2 original backup"
+  ]
+}
