@@ -20,6 +20,17 @@
 2. 기존 `RPL-88`의 **분류 Pilot 1건 전용** 최종 `CutoverApprovalRef`, 실행 시작·종료 기간, 승인된 복구·중단 조건.
 3. Jira Migration **실제 실행 Primary Jira / Sole Writer Session / 승인된 Jira 인증 계정**, 그리고 Git 원장의 **정본 파일 경로·Revision·Writer 권한**. 현재 `RPL-88` 티켓 자체는 Carelog Architecture 작업이며 전체 Jira Migration 관리 Jira로 사용하거나 의미를 바꾸지 않는다. `RPL-133`은 PR #53 전용으로 DONE이므로 재오픈하지 않는다. 기존 Work 지정 의사는 있으나 다른 세션의 독점 잠금 상태는 UNKNOWN.
 
+## 2-A. 2026-10-31 직접 확인한 비공개 G2 원본 위치 (새 Evidence)
+
+- **Library 원본 위치:** `/하네스/jira-g2-active-batch1-20261019/jira-g2-active-batch1-20261019-verified.zip`. 비공개 Library의 파일에서 읽기 전용으로 확인했으며 공개 Repository로 원본 ZIP·이슈별 상세 값을 복사하지 않는다.
+- **ZIP SHA-256:** `5cde5f2a270f0af15786a429e852c2650e98b563d0193355dd39ac9351899ec3`; 모든 ZIP 멤버 CRC 검증 PASS.
+- **원본 상대 경로:** ZIP 내부 `jira-g2-active-batch1-20261019/manifest.json` (G2 verified **과거 기록**), `jira-g2-active-batch1-20261019/RPL-88.before.json`.
+- **원본 Manifest SHA-256:** `543ab37949720f2efa276e753fc143810fa0acd7835b7d62d83350886ef2c90a`. `state=G2_WRITE_VERIFIED_CUTOVER_NOT_AUTHORIZED`, `read_authority=legacy`, `write_authority=frozen`, `cutover_approval_ref=null`; RPL-88 멤버는 `legacy_migration / verified / legacy / frozen`, Changelog `10934`.
+- **RPL-88 Before 파일 SHA-256:** `552649ebdd4eb5289c56666933418511e4ec6a38195e35c034341df3792ca2c5`. 이 파일은 분류 및 Description 해시만 포함하므로 전체 ADF 복원 원본이 아니다.
+- **실제 차이:** 기존 G2 원본 **위치는 확인 완료**. 다만 **G3 쓰기가 가능한 단일 정본 Manifest의 정확한 파일 경로/권한과 운영 Reader 입력 경로는 여전히 미승인·미검증**이다. G2 ZIP을 수정/덮어쓰지 말고, Owner가 고른 비공개 버전 관리 단일 G3 원장에 필요한 한 건만 조건부 Commit할 것. 원장의 Revision은 실행 직전 재확인하며 SHA는 추측하지 않는다.
+- **동시성 주의:** 기존 원본 Manifest 자체가 Jira `updated` 시각을 CAS로 보장하지 않는다고 명시한다. 단순 조회 결과가 같다는 이유로 One Writer 독점·원자적 쓰기를 주장하지 않는다.
+
+
 ## 3. 실제 Cutover 실행 전 필수 기술 Gate (실패 시 STOP)
 
 1. 승인된 **단일 정본 Manifest의 RPL-88 기존 원장 위치와 현재 Revision**이 정확히 식별되고, 해당 Write가 다른 Writer에 의해 변경되지 않았음을 확인한다. `governance/jira-g3-rpl88/readiness.json`은 **감사 Projection**으로서 정본/운영 Reader의 입력이라고 단정하지 않는다.
