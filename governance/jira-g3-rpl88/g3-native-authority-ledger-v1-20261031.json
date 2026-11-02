@@ -1,7 +1,7 @@
 {
   "record_type": "JIRA_G3_SUPERVISED_SINGLE_AUTHORITY_LEDGER_CANDIDATE",
   "schema_version": 1,
-  "as_of": "2026-10-31 KST",
+  "as_of": "2026-11-02 KST",
   "status": "STAGED_NOT_OPERATIONALLY_ACTIVATED",
   "primary_jira": "RPL-134",
   "owner_approval_ref": "2026-10-31 direct Owner approval: Jira Native MVP scoped operation; see g3-native-mvp-decision-pilot-task-intent-20261031.json",
@@ -69,16 +69,192 @@
       "ConsumerIntegrationRef": null,
       "RestoreDrillRef": null,
       "CutoverEligibility": "NOT_APPROVED",
-      "description_restorable_from_g2_snapshot": false
+      "description_restorable_from_g2_snapshot": false,
+      "LegacyFieldIDs": {
+        "product": "customfield_10042",
+        "component": "customfield_10043",
+        "labels": "customfield_10044"
+      },
+      "Before": {
+        "legacy": {
+          "product": [
+            "carelog"
+          ],
+          "component": [
+            "documentation"
+          ],
+          "labels": [
+            "adr",
+            "architecture",
+            "contract"
+          ]
+        },
+        "target": {
+          "product": null,
+          "component": null,
+          "concern": null
+        },
+        "source": "G2 immutable before snapshot",
+        "snapshot_baseline_sha256": "ac0f857b2bdaf7dc414bd784f54223212516d78b280b235691f5d78eb6cd70b0"
+      },
+      "After": {
+        "legacy": {
+          "product": [
+            "carelog"
+          ],
+          "component": [
+            "documentation"
+          ],
+          "labels": [
+            "adr",
+            "architecture",
+            "contract"
+          ]
+        },
+        "target": {
+          "product": {
+            "value": "carelog",
+            "id": "10020"
+          },
+          "component": {
+            "value": "documentation",
+            "id": "10031"
+          },
+          "concern": [
+            {
+              "value": "architecture",
+              "id": "10044"
+            },
+            {
+              "value": "contract",
+              "id": "10045"
+            }
+          ]
+        },
+        "source": "G2 verified target-only update; cross-checked with connected Jira GET on 2026-11-02",
+        "jira_changelog_id": "10934"
+      },
+      "TargetValues": {
+        "product": {
+          "value": "carelog",
+          "id": "10020"
+        },
+        "component": {
+          "value": "documentation",
+          "id": "10031"
+        },
+        "concern": [
+          {
+            "value": "architecture",
+            "id": "10044"
+          },
+          {
+            "value": "contract",
+            "id": "10045"
+          }
+        ]
+      },
+      "TargetOwnerApprovalRef": "chat_2026-10-19_ㅇㅋㅇㅋ_승인할게_BATCH_SELECTION_ONLY",
+      "ActualWriteApprovalRef": "user_chat_2026-10-19_1337KST_senior_괜찮은거지_ㄱㄱㄱㄱ_exact_5_issue_write",
+      "ImpactPreservationRef": "RPL-88.before.json / legacy + parent + links + description_hash",
+      "ImpactSnapshot": {
+        "parent": null,
+        "links": [],
+        "description_markdown_sha256": "9698123f1640b9a713c09e2ba747d5ca480b348a4ca405cb7e0bbc1c44c793ee",
+        "description_utf16_length": 5375,
+        "source": "G2 immutable before snapshot",
+        "scope": "classification and selected immutable context only, not full ADF restoration"
+      },
+      "LegacyLabelUnmappedToTargetConcern": [
+        "adr"
+      ],
+      "G2OriginalBeforeUpdatedAt": "2026-08-13T16:08:15.179+0900",
+      "G2VerifiedAfterUpdatedAt": "2026-10-19T13:42:54.065+0900"
     }
   ],
+  "consumer_evidence": {
+    "approved_scope_ref": "RPL-134 Jira comment 10749 (2026-10-31; scope-limited consent)",
+    "inspected_report_ref": "Direct Jira Native UI observation record 2026-11-02; SHA256 c4b3e8b1ba6f5e4dd72009c6520981721fcbd24d83cfd886105a7bd45da2ba08",
+    "consumers": [
+      {
+        "identity": "RPL Board #2 / Filter 10001",
+        "board_id": "2",
+        "filter_id": "10001",
+        "filter_name": "RPL board한 개에 대한 필터",
+        "observed_jql": "project = RPL ORDER BY cf[10019] ASC",
+        "classification": "NO_CLASSIFICATION_CONSUMER",
+        "configuration_revision": "REVISION_NOT_EXPOSED",
+        "configuration_updated_at": "NOT_EXPOSED",
+        "owner": "박성환",
+        "reader_account": "Current authenticated Jira account; same display name as filter owner",
+        "reader_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+        "access_scope": {
+          "view": "Space Ranikun Platform (all)",
+          "edit": "private"
+        },
+        "subscriptions": "none",
+        "fresh_browser_get": "OBSERVED_2026-11-02",
+        "evidence_limit": "UI exposes no setting revision or modification timestamp; alternative evidence includes exact Filter ID/JQL/owner/view and edit scope/subscriptions, captured in the hashed observation record.",
+        "exception": "NOT_APPLICABLE_BY_APPROVED_SCOPE_CONSUMER_ONLY; owner scope approval referenced by RPL-134 Jira comment 10749",
+        "evidence_ref": "governance/jira-g3-rpl88/evidence/rpl134-consumer-observations-2026-11-02.json",
+        "evidence_sha256": "c4b3e8b1ba6f5e4dd72009c6520981721fcbd24d83cfd886105a7bd45da2ba08",
+        "jql_classification_analysis": "cf[10019] appears only as ORDER BY; not one of the six known classification field IDs. Exact cf[10019] name not independently mapped."
+      },
+      {
+        "identity": "RPL overdue-due-date Automation",
+        "automation_rule_id": "01a17d77-2213-767a-883c-755e9078f7a6",
+        "name": "RPL 기한 초과 업무 일일 점검",
+        "observed_jql": "project = RPL AND statusCategory != Done AND duedate < startOfDay() ORDER BY duedate ASC",
+        "schedule": "daily 10:00 AM (Jira UI display)",
+        "classification": "NO_CLASSIFICATION_CONSUMER",
+        "configuration_revision": "REVISION_NOT_EXPOSED",
+        "configuration_updated_display": "6 days ago (Automation list; exact timestamp not exposed)",
+        "owner": "박성환",
+        "reader_account": "Automation for Jira (rule actor); single-space Ranikun Platform scope",
+        "access_scope": {
+          "scope": "single space Ranikun Platform (RPL)",
+          "edit": "private"
+        },
+        "state": "ENABLED",
+        "trigger_settings": "user actions only may trigger this flow (default radio selected)",
+        "fresh_browser_get": "OBSERVED_2026-11-02",
+        "evidence_limit": "No exact configuration revision or timestamp exposed; no classification field occurs in trigger JQL or action conditions.",
+        "exception": "NOT_APPLICABLE_BY_APPROVED_SCOPE_CONSUMER_ONLY; owner scope approval referenced by RPL-134 Jira comment 10749"
+      }
+    ],
+    "uninspected_private_filters": "ACCESS_UNKNOWN",
+    "external_consumers": "ACCESS_UNKNOWN",
+    "feature_task_target_display": {
+      "classification": "TARGET_EXPOSURE",
+      "evidence_ref": "governance/jira-g3-rpl88/evidence/rpl134-consumer-observations-2026-11-02.json",
+      "evidence_sha256": "c4b3e8b1ba6f5e4dd72009c6520981721fcbd24d83cfd886105a7bd45da2ba08",
+      "preview_marker_on_RPL88": "NOT_VISIBLE_IN_NATIVE_ISSUE_VIEW",
+      "owner_acceptance_of_exact_display_risk": "NOT_INFERRED; separate explicit acceptance required unless already recorded elsewhere"
+    },
+    "observed_at": "2026-11-02",
+    "observation_evidence_ref": "governance/jira-g3-rpl88/evidence/rpl134-consumer-observations-2026-11-02.json",
+    "observation_evidence_sha256": "c4b3e8b1ba6f5e4dd72009c6520981721fcbd24d83cfd886105a7bd45da2ba08",
+    "target_exposure_evidence_ref": "governance/jira-g3-rpl88/evidence/rpl134-consumer-observations-2026-11-02.json",
+    "target_exposure_evidence_sha256": "c4b3e8b1ba6f5e4dd72009c6520981721fcbd24d83cfd886105a7bd45da2ba08"
+  },
   "verification": {
-    "jira_field_read": "LIVE_GET_REUSE",
-    "g2_hashes": "VERIFIED",
+    "jira_field_read": "LIVE_GET_READ_ONLY_2026-11-02",
+    "g2_hashes": "VERIFIED_LOCAL_ZIP_2026-11-02",
     "writer_lock": "UNKNOWN",
     "runtime_reader": false,
     "actual_restore_drill": false,
-    "authority_mutations": 0
+    "authority_mutations": 0,
+    "static_candidate_review": "LOCAL_SYNTHETIC_ONLY",
+    "independent_fixed_revision_review": "Fixed-HEAD verdicts are external evidence keyed by SHA; this self-referential ledger does not store a current verdict. Prior local and remote review results must be cited by their exact revision.",
+    "remote_git_cas": "Initial recovery commit 1290079e28797979b015a979c97c791e4f969eaf advanced from expected HEAD 722a7ef7048399989c3276af3aafc139893b528f with force=false; ref and ledger/evidence blobs were re-read. Subsequent updates require their own expected-HEAD CAS.",
+    "response_loss_reconciliation": "NOT_SIMULATED; write acknowledgements were received and post-write ref/blob readback passed. Lost-response recovery behavior remains unverified.",
+    "browser_settings_read": "LIVE_READ_ONLY_2026-11-02",
+    "filter_revision": "REVISION_NOT_EXPOSED",
+    "automation_revision": "REVISION_NOT_EXPOSED",
+    "feature_task_target_exposure": "LIVE_UI_OBSERVED_2026-11-02",
+    "consumer_observation_sha256": "c4b3e8b1ba6f5e4dd72009c6520981721fcbd24d83cfd886105a7bd45da2ba08",
+    "consumer_configuration_revision": "REVISION_NOT_EXPOSED_WITH_HASHED_ALTERNATIVE_EVIDENCE",
+    "native_preview_marker": "NOT_VISIBLE_ON_RPL-88"
   },
   "cutover_gate": {
     "status": "BLOCKED",
@@ -101,7 +277,16 @@
       "WriteAuthority": "target"
     },
     "atomic_update": "one writer must check expected branch HEAD and source file blob revision; abort on any mismatch; never overwrite concurrent changes",
-    "rollback": "restore only RPL-88 ledger record to verified/legacy/frozen using approved prior revision, compare Jira six classification fields; never derive Legacy Labels from Target Concern"
+    "rollback": "restore only RPL-88 ledger record to verified/legacy/frozen using approved prior revision, compare Jira six classification fields; never derive Legacy Labels from Target Concern",
+    "production_read_path": "NOT_OPERATIONALLY_ACTIVATED; no manifest-aware Jira Native consumer"
+  },
+  "source_revision": {
+    "repo": "ranikun-labs/platform-services",
+    "branch": "audit/jira-g3-rpl88-pilot-20261030",
+    "observed_head": "722a7ef7048399989c3276af3aafc139893b528f",
+    "observed_ledger_blob": "f6a17649fd710627f5b59b47d078de3a560a2eec",
+    "candidate_not_committed": false,
+    "local_evidence_revision": "2026-11-02 browser observations"
   },
   "forbidden": [
     "RPL-88 authority change before separate final approval",
