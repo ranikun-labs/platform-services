@@ -170,6 +170,59 @@
       ],
       "G2OriginalBeforeUpdatedAt": "2026-08-13T16:08:15.179+0900",
       "G2VerifiedAfterUpdatedAt": "2026-10-19T13:42:54.065+0900"
+    },
+    {
+      "IssueKey": "RPL-135",
+      "IssueTypeId": "10010",
+      "Origin": "unknown",
+      "Phase": "create_quarantined",
+      "ReadAuthority": "none",
+      "WriteAuthority": "frozen",
+      "TargetFieldIDs": {
+        "product": "customfield_10108",
+        "component": "customfield_10109",
+        "concern": "customfield_10110"
+      },
+      "TargetOptionIDs": {
+        "product": "10026",
+        "component": "10031",
+        "concern": "10039"
+      },
+      "TargetValues": {
+        "product": "platform-foundation",
+        "component": "documentation",
+        "concern": "migration"
+      },
+      "LegacyFieldIDs": {
+        "product": "customfield_10042",
+        "component": "customfield_10043",
+        "labels": "customfield_10044"
+      },
+      "ObservedLegacyValues": {
+        "product": null,
+        "component": null,
+        "labels": null
+      },
+      "OwnerApprovalRef": "Owner decision in the active Jira Migration Workstream, 2026-11-02; exact RPL-135 summary, fields, assignee, and dates were authorized before Create. No external Jira comment/reference was supplied.",
+      "JiraIssueURL": "https://ranikunlabs.atlassian.net/browse/RPL-135",
+      "JiraCreatedAt": "2026-11-02T17:36:51.510+0900",
+      "JiraReadbackEvidence": "Creator-side direct GET plus exact JQL re-query; a separate READ-ONLY reviewer GET confirmed the Target values, project, issue type, dates, assignee, and status.",
+      "CreateRequestId": null,
+      "CreateIntentRef": null,
+      "CreateActivationRef": null,
+      "OriginRegistrationStatus": "REGISTERED_AS_UNKNOWN_ONLY; not target_create",
+      "LegacySnapshotRef": "NOT_CAPTURED; post-create GET showed all three Legacy fields null. This is not a migration snapshot.",
+      "CutoverApprovalRef": null,
+      "RestoreDrill": "NOT_RUN; no authority transition or Jira field restoration attempted.",
+      "QuarantineReason": "No durable versioned pending Create Intent/CreateRequestId was registered before Jira Create and no target_create Origin Manifest was initialized after Create. Do not infer target_create from approval or stored Target values; do not create a retrospective Intent.",
+      "ReconciliationRequirement": "Existing authorized Jira Migration Maintainer must resolve only against an already-existing durable Create Intent/approved Origin evidence. If none exists, keep UNKNOWN_ORIGIN and request a narrow Owner/Governance decision before any change to this record's effective authority.",
+      "EvidenceScope": "Governance disposition only. Jira does not store ReadAuthority/WriteAuthority fields; Native UI does not enforce this quarantine automatically.",
+      "OriginStatus": "UNKNOWN_ORIGIN_QUARANTINED",
+      "OriginManifestStatus": "REGISTERED_AS_UNKNOWN_ONLY",
+      "TargetCreateOriginStatus": "NOT_INITIALIZED",
+      "JiraActor": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+      "JiraIssueCreated": true,
+      "PolicyCompliantTargetCreateSuccess": false
     }
   ],
   "consumer_evidence": {
@@ -295,5 +348,6 @@
     "Deploy",
     "bulk Origin promotion",
     "claim synthetic rollback is live E2E"
-  ]
+  ],
+  "closure_primary_jira": "RPL-135"
 }
