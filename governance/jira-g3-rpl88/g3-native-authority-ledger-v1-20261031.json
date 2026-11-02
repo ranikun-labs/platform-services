@@ -1,7 +1,7 @@
 {
   "record_type": "JIRA_G3_SUPERVISED_SINGLE_AUTHORITY_LEDGER_CANDIDATE",
   "schema_version": 1,
-  "as_of": "2026-11-02 KST (local proposal; Git revision not created)",
+  "as_of": "2026-11-02 KST",
   "status": "STAGED_NOT_OPERATIONALLY_ACTIVATED",
   "primary_jira": "RPL-134",
   "owner_approval_ref": "2026-10-31 direct Owner approval: Jira Native MVP scoped operation; see g3-native-mvp-decision-pilot-task-intent-20261031.json",
@@ -245,9 +245,9 @@
     "actual_restore_drill": false,
     "authority_mutations": 0,
     "static_candidate_review": "LOCAL_SYNTHETIC_ONLY",
-    "independent_fixed_revision_review": "PENDING_FOR_LOCAL_CANDIDATE_HASH",
-    "remote_git_cas": "NOT_RUN",
-    "response_loss_reconciliation": "NOT_RUN",
+    "independent_fixed_revision_review": "Fixed-HEAD verdicts are external evidence keyed by SHA; this self-referential ledger does not store a current verdict. Prior local and remote review results must be cited by their exact revision.",
+    "remote_git_cas": "Initial recovery commit 1290079e28797979b015a979c97c791e4f969eaf advanced from expected HEAD 722a7ef7048399989c3276af3aafc139893b528f with force=false; ref and ledger/evidence blobs were re-read. Subsequent updates require their own expected-HEAD CAS.",
+    "response_loss_reconciliation": "NOT_SIMULATED; write acknowledgements were received and post-write ref/blob readback passed. Lost-response recovery behavior remains unverified.",
     "browser_settings_read": "LIVE_READ_ONLY_2026-11-02",
     "filter_revision": "REVISION_NOT_EXPOSED",
     "automation_revision": "REVISION_NOT_EXPOSED",
@@ -285,7 +285,7 @@
     "branch": "audit/jira-g3-rpl88-pilot-20261030",
     "observed_head": "722a7ef7048399989c3276af3aafc139893b528f",
     "observed_ledger_blob": "f6a17649fd710627f5b59b47d078de3a560a2eec",
-    "candidate_not_committed": true,
+    "candidate_not_committed": false,
     "local_evidence_revision": "2026-11-02 browser observations"
   },
   "forbidden": [
