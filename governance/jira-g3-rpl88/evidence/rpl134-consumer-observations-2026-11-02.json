@@ -1,0 +1,92 @@
+{
+  "record_type": "JIRA_G3_G4_NATIVE_CONSUMER_READ_ONLY_OBSERVATION",
+  "observed_on": "2026-11-02",
+  "browser_surface": "Connected Chrome CDP Jira session; direct visible UI; no settings changed",
+  "source_revision_status": "Jira UI did not expose an immutable configuration revision for either consumer; record REVISION_NOT_EXPOSED.",
+  "filter": {
+    "consumer": "RPL Board #2 / Filter 10001",
+    "board_id": "2",
+    "filter_id": "10001",
+    "filter_name": "RPL board한 개에 대한 필터",
+    "verified_url": "https://ranikunlabs.atlassian.net/issues/?filter=10001",
+    "jql": "project = RPL ORDER BY cf[10019] ASC",
+    "owner": "박성환",
+    "reader_account": "current authenticated Jira account (same display name as owner)",
+    "reader_account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+    "view_access": "Space Ranikun Platform (all)",
+    "edit_access": "private",
+    "subscriptions": "none",
+    "description": "none",
+    "revision": "REVISION_NOT_EXPOSED",
+    "modified_at": "NOT_EXPOSED",
+    "classification": "NO_CLASSIFICATION_CONSUMER",
+    "jql_classification_analysis": "No known Legacy/Target classification field ID appears in the predicate or sort; cf[10019] appears only as ORDER BY key and its exact field name was not independently mapped in this observation.",
+    "impact": "Existing filter sees the RPL project list; no Legacy/Target selection/filter logic. Board/filter does not consume Origin or ReadAuthority.",
+    "change_or_restore": "NO_CHANGE_PASS for classification config; consumer-specific Reader/restore drill is NOT_APPLICABLE_BY_APPROVED_SCOPE per RPL-134 comment 10749, scoped only to this filter."
+  },
+  "automation": {
+    "consumer": "RPL overdue due-date reminder",
+    "rule_id": "01a17d77-2213-767a-883c-755e9078f7a6",
+    "name": "RPL 기한 초과 업무 일일 점검",
+    "verified_url": "https://ranikunlabs.atlassian.net/jira/software/projects/RPL/settings/automation#/rule/01a17d77-2213-767a-883c-755e9078f7a6/settings",
+    "owner": "박성환",
+    "actor": "Automation for Jira",
+    "scope": "single space: Ranikun Platform (RPL)",
+    "edit_access": "private",
+    "state": "ENABLED",
+    "schedule": "daily 10:00 AM",
+    "cross_automation_trigger_policy": "Only user actions may trigger this flow (default selected); this is a separate setting from its daily scheduled trigger.",
+    "jql": "project = RPL AND statusCategory != Done AND duedate < startOfDay() ORDER BY duedate ASC",
+    "condition": "lookupIssues.size > 0",
+    "action": "send email with lookupIssues.size count",
+    "revision": "REVISION_NOT_EXPOSED",
+    "modified_at_display": "6 days ago (exact timestamp not exposed)",
+    "classification": "NO_CLASSIFICATION_CONSUMER",
+    "impact": "The scheduled query, condition, and action use project/status/due-date/result count, not Legacy/Target classification fields or external Origin.",
+    "change_or_restore": "NO_CHANGE_PASS for classification config; consumer-specific Reader/restore drill is NOT_APPLICABLE_BY_APPROVED_SCOPE per RPL-134 comment 10749, scoped only to this rule."
+  },
+  "target_exposure": {
+    "classification": "TARGET_EXPOSURE",
+    "feature": {
+      "key": "RPL-64",
+      "type": "Feature (10009)",
+      "visible_target_fields": [
+        "Concern (Target)",
+        "Component (Target)",
+        "Product (Target)"
+      ],
+      "values": {
+        "Concern": [
+          "integration"
+        ],
+        "Component": "frontend",
+        "Product": "carelog"
+      }
+    },
+    "task": {
+      "key": "RPL-88",
+      "type": "Task (10010)",
+      "visible_target_fields": [
+        "Product (Target)",
+        "Component (Target)",
+        "Concern (Target)"
+      ],
+      "values": {
+        "Product": "carelog",
+        "Component": "documentation",
+        "Concern": [
+          "architecture",
+          "contract"
+        ]
+      },
+      "preview_badge": "not visible in Native issue view"
+    },
+    "risk": "A user can see Target values on a legacy-authority issue without the Native UI marking those values as non-authoritative preview. Taxonomy §8.2(1) requires this risk and owner acceptance to be explicit; approval for this exact UX risk is not inferred from the display alone."
+  },
+  "unknown_scope": {
+    "other_private_filters": "ACCESS_UNKNOWN",
+    "external_consumers": "ACCESS_UNKNOWN",
+    "global_absence_inferred": false
+  },
+  "approval_ref": "RPL-134 Jira comment 10749; exception limited to the two named NO_CLASSIFICATION_CONSUMER settings and their own Reader/restore-drill scope."
+}
