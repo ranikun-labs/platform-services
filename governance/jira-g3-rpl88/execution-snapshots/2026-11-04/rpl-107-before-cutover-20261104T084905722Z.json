@@ -1,0 +1,157 @@
+{
+  "record_type": "JIRA_G3_PRECUTOVER_SNAPSHOT",
+  "captured_at_utc": "2026-11-04T08:49:05.722Z",
+  "captured_at_kst": "2026-11-04T17:49:05.722+09:00",
+  "scope": "RPL-107 ledger-only authority transition; Jira issue fields/status/links/description remain unmodified.",
+  "issue": {
+    "key": "RPL-107",
+    "id": "10190",
+    "summary": "Shared Audit — Multi-Product Audit Foundation",
+    "issue_type_id": "10007",
+    "status": "할 일",
+    "updated": "2026-10-21T09:57:13.683+0900",
+    "parent": null,
+    "links": [
+      "Relates::RPL-20"
+    ]
+  },
+  "g2_context_drift": {
+    "summary_g2": "Shared Audit — Multi-Product Audit Foundation",
+    "summary_live": "Shared Audit — Multi-Product Audit Foundation",
+    "type_g2": "10007",
+    "type_live": "10007",
+    "status_g2": "할 일",
+    "status_live": "할 일",
+    "updated_g2": "2026-10-21T09:57:13.683+0900",
+    "updated_live": "2026-10-21T09:57:13.683+0900",
+    "parent_g2": null,
+    "parent_live": null,
+    "links_g2": [
+      "Relates::RPL-20"
+    ],
+    "links_live": [
+      "Relates::RPL-20"
+    ]
+  },
+  "origin": "legacy_migration",
+  "origin_basis": "G2 immutable prewrite snapshot contains non-empty Legacy Product/Component/Labels; this row belongs to the approved 13-row legacy migration batch.",
+  "g2_refs": {
+    "branch": "audit/jira-g2-full-118-20261023",
+    "commit": "530dd0f88e5819158362b620ca1591779a50cba5",
+    "final_path": "governance/jira-g2-full-118/final118-verification-20261023.json",
+    "final_blob": "aea968a4dca76194b0de96db6fe20c1c20648470",
+    "prewrite_path": "governance/jira-g2-full-118/prewrite-snapshot-20261023.json",
+    "prewrite_blob": "b49751a69b892f798d24a5aaa11d4888f90b0aac"
+  },
+  "g2_original_before": {
+    "updated": "2026-10-21T09:57:13.683+0900",
+    "legacy": {
+      "product": [
+        "Platform-Foundation",
+        "Shared-Platform"
+      ],
+      "component": [
+        "AI",
+        "Docs",
+        "Gateway",
+        "Identity",
+        "Infra"
+      ],
+      "labels": [
+        "architecture",
+        "audit",
+        "foundation",
+        "jetstream",
+        "shared-audit"
+      ]
+    },
+    "target": {
+      "product_id": "10025",
+      "component_id": "10028",
+      "concern_id": null
+    }
+  },
+  "g2_verified_after": {
+    "updated": "2026-10-21T09:57:13.683+0900",
+    "target": {
+      "product": {
+        "value": "audit",
+        "id": "10025"
+      },
+      "component": {
+        "value": "backend",
+        "id": "10028"
+      },
+      "concern": null
+    }
+  },
+  "live_jira_before": {
+    "legacy": {
+      "product": [
+        "Platform-Foundation",
+        "Shared-Platform"
+      ],
+      "component": [
+        "AI",
+        "Docs",
+        "Gateway",
+        "Identity",
+        "Infra"
+      ],
+      "labels": [
+        "architecture",
+        "audit",
+        "foundation",
+        "jetstream",
+        "shared-audit"
+      ]
+    },
+    "target": {
+      "product": {
+        "value": "audit",
+        "id": "10025"
+      },
+      "component": {
+        "value": "backend",
+        "id": "10028"
+      },
+      "concern": null
+    },
+    "target_changelog_id": "10953",
+    "target_changelog_created": "2026-10-21T09:57:13.683+0900"
+  },
+  "approved_target": {
+    "product": {
+      "value": "audit",
+      "id": "10025"
+    },
+    "component": {
+      "value": "backend",
+      "id": "10028"
+    },
+    "concern": null
+  },
+  "git_before_snapshot": {
+    "branch": "audit/jira-g3-rpl88-pilot-20261030",
+    "head": "0571b98bf91b44e31af0e01abe901d93474726ca",
+    "ledger_path": "governance/jira-g3-rpl88/g3-native-authority-ledger-v1-20261031.json",
+    "ledger_blob": "ac057c016a1f53f8466ba2c77dfb9415e78c2f58",
+    "issue_row_absent": true
+  },
+  "approvals": {
+    "cutover": "RPL-134 comment #10797",
+    "writer_recovery": "RPL-134 comment #10798"
+  },
+  "writer_recovery": {
+    "designated_writer": "this Jira Migration Work execution",
+    "owner_cleanup_attested": true,
+    "observed_branch_actions_in_progress": 0,
+    "existing_writer_task_identified": false,
+    "termination_proven": false,
+    "global_runtime_lock": "unavailable",
+    "residual_risk_accepted_for_supervised_serial_13_row_run": true,
+    "batch_recovery_evidence": "RPL-2 pre-cutover snapshot 0af7a2bb8d2342b41398525271873bd18536a0f4"
+  },
+  "mutation": "Git authority ledger only; no Jira write.",
+  "recovery": "Restore verified/legacy/frozen with a forward Git CAS commit and reread Jira six fields; G2 prewrite snapshot preserves original Legacy values."
+}
