@@ -1,0 +1,161 @@
+{
+  "record_type": "JIRA_G3_PRECUTOVER_SNAPSHOT",
+  "captured_at_utc": "2026-11-04T08:39:24.813Z",
+  "captured_at_kst": "2026-11-04T17:39:24.813+09:00",
+  "scope": "RPL-27 ledger-only authority transition; Jira issue fields, status, links, and description are not mutated.",
+  "issue": {
+    "key": "RPL-27",
+    "id": "10026",
+    "summary": "OAuth State에 Product Client Context와 path-only returnTo를 바인딩",
+    "issue_type": "작업",
+    "issue_type_id": "10010",
+    "status": "할 일",
+    "updated": "2026-10-26T12:11:24.506+0900",
+    "parent": null,
+    "links": [
+      "Blocks:RPL-16:",
+      "Blocks:RPL-25:",
+      "Relates:RPL-54:",
+      "Relates:RPL-55:"
+    ]
+  },
+  "g2_workflow_context": {
+    "status_drift": {
+      "g2": "진행 중",
+      "live": "할 일",
+      "g2_updated": "2026-10-21T11:28:31.619+0900",
+      "live_updated": "2026-10-26T12:11:24.506+0900",
+      "status_change_changelog": "11075"
+    },
+    "note": "G2 status is historical context only; current Jira status is preserved and not modified."
+  },
+  "origin": "legacy_migration",
+  "g2_refs": {
+    "branch": "audit/jira-g2-full-118-20261023",
+    "commit": "530dd0f88e5819158362b620ca1591779a50cba5",
+    "final_path": "governance/jira-g2-full-118/final118-verification-20261023.json",
+    "final_blob": "aea968a4dca76194b0de96db6fe20c1c20648470",
+    "prewrite_path": "governance/jira-g2-full-118/prewrite-snapshot-20261023.json",
+    "prewrite_blob": "b49751a69b892f798d24a5aaa11d4888f90b0aac"
+  },
+  "g2_original_before": {
+    "updated": "2026-10-21T11:28:31.619+0900",
+    "legacy": {
+      "product": [
+        "shared-platform"
+      ],
+      "component": [
+        "identity"
+      ],
+      "labels": [
+        "oauth-state",
+        "security"
+      ]
+    },
+    "target": {
+      "product_id": "10023",
+      "component_id": "10028",
+      "concern_id": null
+    }
+  },
+  "g2_verified_after": {
+    "updated": "2026-10-21T11:28:31.619+0900",
+    "legacy": {
+      "product": [
+        "shared-platform"
+      ],
+      "component": [
+        "identity"
+      ],
+      "labels": [
+        "oauth-state",
+        "security"
+      ]
+    },
+    "target": {
+      "product": {
+        "value": "identity",
+        "id": "10023"
+      },
+      "component": {
+        "value": "backend",
+        "id": "10028"
+      },
+      "concern": null
+    }
+  },
+  "live_jira_before": {
+    "legacy": {
+      "product": [
+        "shared-platform"
+      ],
+      "component": [
+        "identity"
+      ],
+      "labels": [
+        "oauth-state",
+        "security"
+      ]
+    },
+    "target": {
+      "product": {
+        "value": "identity",
+        "id": "10023"
+      },
+      "component": {
+        "value": "backend",
+        "id": "10028"
+      },
+      "concern": null
+    },
+    "status": "할 일",
+    "type_id": "10010",
+    "parent": null,
+    "links": [
+      "Blocks:RPL-16:",
+      "Blocks:RPL-25:",
+      "Relates:RPL-54:",
+      "Relates:RPL-55:"
+    ],
+    "updated": "2026-10-26T12:11:24.506+0900",
+    "target_changelog_id": "10970",
+    "target_changelog_created": "2026-10-21T11:28:31.619+0900"
+  },
+  "approved_target": {
+    "product": {
+      "value": "identity",
+      "id": "10023"
+    },
+    "component": {
+      "value": "backend",
+      "id": "10028"
+    },
+    "concern": null
+  },
+  "git_before_snapshot": {
+    "branch": "audit/jira-g3-rpl88-pilot-20261030",
+    "head": "9a29f35dcf7b4bcc7f11212e786b09b6447ec2ca",
+    "ledger_path": "governance/jira-g3-rpl88/g3-native-authority-ledger-v1-20261031.json",
+    "ledger_blob": "3c63b2d924285514d37f8fa251e97bb086e21ed0",
+    "issue_row_absent": true
+  },
+  "approvals": {
+    "cutover": "RPL-134 comment #10797",
+    "writer_recovery": "RPL-134 comment #10798"
+  },
+  "writer_recovery": {
+    "designated_writer": "this Jira Migration Work execution",
+    "owner_reported_other_branch_writers_agents_and_automations_cleared": true,
+    "observed_collaboration_tree": [
+      "/root: running"
+    ],
+    "observed_in_progress_github_actions_on_branch": 0,
+    "existing_writer_task_identified": false,
+    "existing_writer_termination_proven": false,
+    "global_runtime_lock": "unavailable",
+    "residual_risk": "Owner accepted only for this supervised serial 13-row run",
+    "batch_recovery_evidence": "governance/jira-g3-rpl88/execution-snapshots/2026-11-04/rpl-2-before-cutover-20261104T081911Z.json@0af7a2bb8d2342b41398525271873bd18536a0f4"
+  },
+  "mutation": "Create one G3 authority ledger row by Git conditional CAS; no Jira field write.",
+  "recovery": "Revert by forward Git commit to verified/legacy/frozen and reread Jira's six classification fields; G2 snapshot holds source Legacy values."
+}
