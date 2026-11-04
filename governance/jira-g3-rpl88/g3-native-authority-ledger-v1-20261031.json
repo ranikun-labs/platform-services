@@ -786,6 +786,120 @@
       },
       "G2OriginalBeforeUpdatedAt": "2026-10-21T09:57:04.381+0900",
       "G2VerifiedAfterUpdatedAt": "2026-10-21T09:57:04.381+0900"
+    },
+    {
+      "IssueKey": "RPL-27",
+      "IssueTypeId": "10010",
+      "Origin": "legacy_migration",
+      "Phase": "cutover",
+      "ReadAuthority": "target",
+      "WriteAuthority": "target",
+      "CutoverApprovalRef": "https://ranikunlabs.atlassian.net/browse/RPL-134?focusedCommentId=10797",
+      "SnapshotRef": "governance/jira-g3-rpl88/execution-snapshots/2026-11-04/rpl-27-before-cutover-20261104T083924813Z.json@dcee8ae0a7e64fdfea09e02c794ea3f8404433f5; G2=governance/jira-g2-full-118/prewrite-snapshot-20261023.json@b49751a69b892f798d24a5aaa11d4888f90b0aac",
+      "RollbackRef": "Pre-cutover ledger revision 89ef23fd5b3f0bc1b0bf33c51ef9e3f4961ae48e (RPL-27 absent); G2 snapshot governance/jira-g2-full-118/prewrite-snapshot-20261023.json@b49751a69b892f798d24a5aaa11d4888f90b0aac; execution snapshot governance/jira-g3-rpl88/execution-snapshots/2026-11-04/rpl-27-before-cutover-20261104T083924813Z.json@dcee8ae0a7e64fdfea09e02c794ea3f8404433f5. Recovery is a forward Git commit restoring verified/legacy/frozen authority; Jira fields remain unchanged.",
+      "TargetFieldIDs": {
+        "product": "customfield_10108",
+        "component": "customfield_10109",
+        "concern": "customfield_10110"
+      },
+      "TargetOptionIDs": {
+        "product": "10023",
+        "component": "10028",
+        "concern": null
+      },
+      "JiraChangelogId": "10970",
+      "VerifiedAt": "2026-10-21T11:28:31.619+0900",
+      "ConsumerIntegrationRef": null,
+      "RestoreDrillRef": "NOT_RUN; no Jira field mutation. Snapshot and ledger-only recovery basis are preserved.",
+      "CutoverEligibility": "APPROVED",
+      "description_restorable_from_g2_snapshot": false,
+      "LegacyFieldIDs": {
+        "product": "customfield_10042",
+        "component": "customfield_10043",
+        "labels": "customfield_10044"
+      },
+      "Before": {
+        "legacy": {
+          "product": [
+            "shared-platform"
+          ],
+          "component": [
+            "identity"
+          ],
+          "labels": [
+            "oauth-state",
+            "security"
+          ]
+        },
+        "target": {
+          "product": {
+            "value": "identity",
+            "id": "10023"
+          },
+          "component": {
+            "value": "backend",
+            "id": "10028"
+          },
+          "concern": null
+        },
+        "source": "G2 immutable prewrite snapshot plus immediate live Jira GET before G3 ledger-only authority transition",
+        "snapshot_blob": "b49751a69b892f798d24a5aaa11d4888f90b0aac"
+      },
+      "After": {
+        "legacy": {
+          "product": [
+            "shared-platform"
+          ],
+          "component": [
+            "identity"
+          ],
+          "labels": [
+            "oauth-state",
+            "security"
+          ]
+        },
+        "target": {
+          "product": {
+            "value": "identity",
+            "id": "10023"
+          },
+          "component": {
+            "value": "backend",
+            "id": "10028"
+          },
+          "concern": null
+        },
+        "source": "G3 Git authority transition; immediate Jira GET confirmed all six classification fields unchanged",
+        "jira_changelog_id": "10970"
+      },
+      "TargetValues": {
+        "product": {
+          "value": "identity",
+          "id": "10023"
+        },
+        "component": {
+          "value": "backend",
+          "id": "10028"
+        },
+        "concern": null
+      },
+      "TargetOwnerApprovalRef": "RPL-134 comment #10797; Owner 13-row approval",
+      "ImpactPreservationRef": "governance/jira-g3-rpl88/execution-snapshots/2026-11-04/rpl-27-before-cutover-20261104T083924813Z.json@dcee8ae0a7e64fdfea09e02c794ea3f8404433f5 / Legacy values, Parent none, four preserved links; Jira issue values/status not mutated",
+      "ImpactSnapshot": {
+        "parent": null,
+        "links": [
+          "Blocks:RPL-16:",
+          "Blocks:RPL-25:",
+          "Relates:RPL-54:",
+          "Relates:RPL-55:"
+        ],
+        "description_markdown_sha256": null,
+        "description_utf16_length": null,
+        "source": "G2 immutable prewrite snapshot and current Jira GET",
+        "scope": "classification and selected issue context only; Jira Description/ADF not modified"
+      },
+      "G2OriginalBeforeUpdatedAt": "2026-10-21T11:28:31.619+0900",
+      "G2VerifiedAfterUpdatedAt": "2026-10-21T11:28:31.619+0900"
     }
   ],
   "consumer_evidence": {
