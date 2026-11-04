@@ -85,8 +85,12 @@ public class IdentityPersistenceConfiguration {
     }
 
     @Bean
-    FlywayMigrationStrategy identityFlywayMigrationStrategy() {
-        return new IdentityLegacySchemaGuard()::migrate;
+    FlywayMigrationStrategy identityFlywayMigrationStrategy(IdentityRuntimeProperties properties) {
+        return flyway -> {
+            new IdentityLegacySchemaGuard().migrate(flyway);
+            IdentityRuntimeSchemaPrivileges.reconcile(
+                    flyway.getConfiguration().getDataSource(), properties.datasource().username());
+        };
     }
 
     @Bean

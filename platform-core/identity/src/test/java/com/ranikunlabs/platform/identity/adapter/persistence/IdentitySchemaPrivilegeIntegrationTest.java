@@ -7,7 +7,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.springframework.boot.flyway.autoconfigure.FlywayConfigurationCustomizer;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -46,7 +45,6 @@ class IdentitySchemaPrivilegeIntegrationTest {
             statement.execute("CREATE TABLE carelog.privilege_probe (id integer PRIMARY KEY, value text NOT NULL)");
             statement.execute("INSERT INTO carelog.privilege_probe VALUES (1, 'owner-data')");
             statement.execute("RESET ROLE");
-            statement.execute("GRANT USAGE ON SCHEMA identity TO " + RUNTIME_ROLE);
         }
     }
 
@@ -68,23 +66,14 @@ class IdentitySchemaPrivilegeIntegrationTest {
                 6379,
                 "identity:");
 
-        FlywayConfigurationCustomizer customizer = new IdentityPersistenceConfiguration()
-                .identityFlywayLocation(properties);
+        IdentityPersistenceConfiguration configuration = new IdentityPersistenceConfiguration();
         FluentConfiguration flywayConfiguration = Flyway.configure();
-        customizer.customize(flywayConfiguration);
+        configuration.identityFlywayLocation(properties).customize(flywayConfiguration);
         Flyway identityFlyway = flywayConfiguration.load();
 
-        assertThat(identityFlyway.migrate().migrationsExecuted).isEqualTo(2);
+        configuration.identityFlywayMigrationStrategy(properties).migrate(identityFlyway);
         identityFlyway.validate();
         assertThat(flywayHistoryOwner()).isEqualTo(MIGRATOR_ROLE);
-        try (Connection admin = adminConnection(); Statement statement = admin.createStatement()) {
-            statement.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "
-                    + "identity.platform_accounts, identity.external_identities, identity.password_credentials, "
-                    + "identity.refresh_token, identity.product_clients TO " + RUNTIME_ROLE);
-            statement.execute("GRANT USAGE ON SEQUENCE identity.external_identities_id_seq, "
-                    + "identity.refresh_token_refresh_token_id_seq, identity.product_clients_id_seq TO " + RUNTIME_ROLE);
-        }
-
         DataSource runtimeDataSource = new IdentityPersistenceConfiguration().dataSource(properties);
         try {
             UUID accountId = UUID.randomUUID();
