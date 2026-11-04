@@ -1126,6 +1126,121 @@
       },
       "G2OriginalBeforeUpdatedAt": "2026-10-21T12:08:24.634+0900",
       "G2VerifiedAfterUpdatedAt": "2026-10-21T12:08:24.634+0900"
+    },
+    {
+      "IssueKey": "RPL-51",
+      "IssueTypeId": "10007",
+      "Origin": "legacy_migration",
+      "Phase": "cutover",
+      "ReadAuthority": "target",
+      "WriteAuthority": "target",
+      "CutoverApprovalRef": "https://ranikunlabs.atlassian.net/browse/RPL-134?focusedCommentId=10797",
+      "SnapshotRef": "governance/jira-g3-rpl88/execution-snapshots/2026-11-04/rpl-51-before-cutover-20261104T084323026Z.json@a95a5ccda10a631b664830a8318f7ae790992a35; G2=governance/jira-g2-full-118/prewrite-snapshot-20261023.json@b49751a69b892f798d24a5aaa11d4888f90b0aac",
+      "RollbackRef": "Pre-cutover ledger revision d72001e6d9d8c93cf1659d3f563b1f6cef0c5b69 (RPL-51 absent); execution snapshot governance/jira-g3-rpl88/execution-snapshots/2026-11-04/rpl-51-before-cutover-20261104T084323026Z.json@a95a5ccda10a631b664830a8318f7ae790992a35; G2 prewrite governance/jira-g2-full-118/prewrite-snapshot-20261023.json@b49751a69b892f798d24a5aaa11d4888f90b0aac. Recovery is a forward CAS commit restoring verified/legacy/frozen; Jira remains unchanged.",
+      "TargetFieldIDs": {
+        "product": "customfield_10108",
+        "component": "customfield_10109",
+        "concern": "customfield_10110"
+      },
+      "TargetOptionIDs": {
+        "product": "10026",
+        "component": "10028",
+        "concern": null
+      },
+      "JiraChangelogId": "10974",
+      "VerifiedAt": "2026-10-21T12:09:09.963+0900",
+      "ConsumerIntegrationRef": null,
+      "RestoreDrillRef": "NOT_RUN; no Jira field mutation. Snapshot and ledger-only recovery basis are preserved.",
+      "CutoverEligibility": "APPROVED",
+      "description_restorable_from_g2_snapshot": false,
+      "LegacyFieldIDs": {
+        "product": "customfield_10042",
+        "component": "customfield_10043",
+        "labels": "customfield_10044"
+      },
+      "Before": {
+        "legacy": {
+          "product": [
+            "carelog",
+            "platform-foundation"
+          ],
+          "component": [
+            "backend",
+            "infra"
+          ],
+          "labels": [
+            "gateway",
+            "identity",
+            "migration",
+            "shared-platform"
+          ]
+        },
+        "target": {
+          "product": {
+            "value": "platform-foundation",
+            "id": "10026"
+          },
+          "component": {
+            "value": "backend",
+            "id": "10028"
+          },
+          "concern": null
+        },
+        "source": "G2 immutable prewrite snapshot plus immediate Jira GET",
+        "snapshot_blob": "b49751a69b892f798d24a5aaa11d4888f90b0aac"
+      },
+      "After": {
+        "legacy": {
+          "product": [
+            "carelog",
+            "platform-foundation"
+          ],
+          "component": [
+            "backend",
+            "infra"
+          ],
+          "labels": [
+            "gateway",
+            "identity",
+            "migration",
+            "shared-platform"
+          ]
+        },
+        "target": {
+          "product": {
+            "value": "platform-foundation",
+            "id": "10026"
+          },
+          "component": {
+            "value": "backend",
+            "id": "10028"
+          },
+          "concern": null
+        },
+        "source": "G3 Git authority transition; post-transition Jira GET confirmed six classification fields unchanged",
+        "jira_changelog_id": "10974"
+      },
+      "TargetValues": {
+        "product": {
+          "value": "platform-foundation",
+          "id": "10026"
+        },
+        "component": {
+          "value": "backend",
+          "id": "10028"
+        },
+        "concern": null
+      },
+      "TargetOwnerApprovalRef": "RPL-134 comment #10797; Owner 13-row approval",
+      "ImpactPreservationRef": "governance/jira-g3-rpl88/execution-snapshots/2026-11-04/rpl-51-before-cutover-20261104T084323026Z.json@a95a5ccda10a631b664830a8318f7ae790992a35 / Jira context captured; no Jira values/status altered",
+      "ImpactSnapshot": {
+        "parent": null,
+        "links": [],
+        "source": "G2 prewrite snapshot and live Jira GET",
+        "scope": "classification plus issue context; no Jira data restored or modified"
+      },
+      "G2OriginalBeforeUpdatedAt": "2026-10-21T12:09:09.963+0900",
+      "G2VerifiedAfterUpdatedAt": "2026-10-21T12:09:09.963+0900"
     }
   ],
   "consumer_evidence": {
