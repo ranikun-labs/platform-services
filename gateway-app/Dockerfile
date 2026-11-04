@@ -20,6 +20,11 @@ RUN --mount=type=secret,id=proxy_ca,required=false \
         proxy_authority="${proxy_authority##*@}"; \
         proxy_authority="${proxy_authority%%/*}"; \
         case "$proxy_authority" in \
+            \[*\]) proxy_host="$proxy_authority"; \
+                case "$proxy_url" in \
+                    https://*) proxy_port=443 ;; \
+                    *) proxy_port=80 ;; \
+                esac ;; \
             *:*) proxy_host="${proxy_authority%:*}"; proxy_port="${proxy_authority##*:}" ;; \
             *) proxy_host="$proxy_authority"; \
                 case "$proxy_url" in \
