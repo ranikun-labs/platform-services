@@ -1,0 +1,143 @@
+{
+  "record_type": "JIRA_G3_CUTOVER_PREWRITE_SNAPSHOT",
+  "schema_version": 1,
+  "captured_at_utc": "2026-11-04T08:19:11.066Z",
+  "captured_at_kst": "2026-11-04T17:19:11.066+09:00",
+  "scope": "RPL-2 only; first row of Owner-approved 13-row G3 authority cutover",
+  "issue": {
+    "key": "RPL-2",
+    "id": "10001",
+    "summary": "Kakao OAuth PKCE 공식 지원 범위 확정",
+    "issue_type": {
+      "name": "Research",
+      "id": "10013"
+    },
+    "status": "할 일",
+    "created": "2026-07-27T17:29:36.907+0900",
+    "updated": "2026-10-21T09:56:45.363+0900",
+    "parent": "RPL-1",
+    "issue_links": []
+  },
+  "origin": {
+    "value": "legacy_migration",
+    "evidence": [
+      "G2 full-118 prewrite snapshot captures RPL-2 as an existing issue with non-empty Legacy Product, Component, and custom Labels before Target-only processing.",
+      "RPL-2 is not included in G2 full-118 read-only reconciliation origin_unknown_keys [RPL-112, RPL-113, RPL-114]."
+    ],
+    "g2_unknown_origin_keys": [
+      "RPL-112",
+      "RPL-113",
+      "RPL-114"
+    ]
+  },
+  "g2_refs": {
+    "repo": "ranikun-labs/platform-services",
+    "branch": "audit/jira-g2-full-118-20261023",
+    "commit": "530dd0f88e5819158362b620ca1591779a50cba5",
+    "final_verification_path": "governance/jira-g2-full-118/final118-verification-20261023.json",
+    "final_verification_blob": "aea968a4dca76194b0de96db6fe20c1c20648470",
+    "prewrite_snapshot_path": "governance/jira-g2-full-118/prewrite-snapshot-20261023.json",
+    "prewrite_snapshot_blob": "b49751a69b892f798d24a5aaa11d4888f90b0aac",
+    "read_only_reconciliation_path": "governance/jira-g2-full-118/full-118-readonly-reconciliation-20261023.json",
+    "read_only_reconciliation_blob": "e8883a90aba46ab38cd4e4e8b4bf1e1b9fbc8cd0"
+  },
+  "g2_original_before": {
+    "updated": "2026-10-21T09:56:45.363+0900",
+    "legacy_product": [
+      "carelog",
+      "shared-platform"
+    ],
+    "legacy_component": [
+      "shared-identity"
+    ],
+    "legacy_custom_labels": [
+      "kakao",
+      "oauth",
+      "pkce",
+      "research"
+    ],
+    "target_product_option_id": "10023",
+    "target_component_option_id": "10031",
+    "target_concern": null
+  },
+  "live_jira_before": {
+    "actor": {
+      "display_name": "박성환",
+      "account_id": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
+    },
+    "fields": {
+      "customfield_10042": [
+        "carelog",
+        "shared-platform"
+      ],
+      "customfield_10043": [
+        "shared-identity"
+      ],
+      "customfield_10044": [
+        "kakao",
+        "oauth",
+        "pkce",
+        "research"
+      ],
+      "customfield_10108": {
+        "value": "identity",
+        "option_id": "10023"
+      },
+      "customfield_10109": {
+        "value": "documentation",
+        "option_id": "10031"
+      },
+      "customfield_10110": null
+    }
+  },
+  "approved_target": {
+    "product": {
+      "value": "identity",
+      "option_id": "10023"
+    },
+    "component": {
+      "value": "documentation",
+      "option_id": "10031"
+    },
+    "concern": []
+  },
+  "git_before_snapshot": {
+    "repo": "ranikun-labs/platform-services",
+    "branch": "audit/jira-g3-rpl88-pilot-20261030",
+    "head": "c50b792b29a1d20546b24933fd9b90419599216e",
+    "ledger_path": "governance/jira-g3-rpl88/g3-native-authority-ledger-v1-20261031.json",
+    "ledger_blob": "82b2374b62b37e551c5f599753b907cf3b282845"
+  },
+  "approvals": {
+    "cutover_approval": "https://ranikunlabs.atlassian.net/browse/RPL-134?focusedCommentId=10797",
+    "recovery_decision": "https://ranikunlabs.atlassian.net/browse/RPL-134?focusedCommentId=10798",
+    "expires_kst": "2026-11-06T23:59:00+09:00"
+  },
+  "writer_recovery": {
+    "designated_writer": "this Jira Migration Work execution",
+    "owner_designation_and_residual_risk_acceptance_ref": "RPL-134 comment #10798",
+    "current_collaboration_tree_visible_agents": [
+      "/root: running"
+    ],
+    "github_actions_in_progress_on_branch": 0,
+    "related_pr_41": "closed_merged",
+    "existing_writer_task_identified": false,
+    "existing_writer_termination_proven": false,
+    "global_runtime_lock": "not_available",
+    "residual_risk": "Owner accepted only for this supervised serial 13-row run"
+  },
+  "mutation_scope": {
+    "git_only_authority_transition": true,
+    "jira_issue_fields_mutated": false,
+    "hold_and_batch_excluded_rows_mutated": false,
+    "legacy_hide_delete_merge_deploy": false
+  },
+  "recovery": {
+    "before_state_ref": {
+      "head": "c50b792b29a1d20546b24933fd9b90419599216e",
+      "ledger_blob": "82b2374b62b37e551c5f599753b907cf3b282845"
+    },
+    "g2_snapshot_ref": "governance/jira-g2-full-118/prewrite-snapshot-20261023.json",
+    "rule": "On any field/snapshot/origin drift, CAS conflict, competing-writer signal, recovery failure, or ambiguous response, stop and re-read; no blind retry. Jira values remain unchanged."
+  }
+}
