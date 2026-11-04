@@ -1,0 +1,153 @@
+{
+  "record_type": "JIRA_G3_PRECUTOVER_SNAPSHOT",
+  "captured_at_utc": "2026-11-04T08:35:00.551Z",
+  "captured_at_kst": "2026-11-04T17:35:00.551+09:00",
+  "scope": "RPL-6 ledger-only authority transition; Jira issue fields, status, links, and description are not mutated.",
+  "issue": {
+    "key": "RPL-6",
+    "id": "10005",
+    "summary": "Redis·DB·Kakao Mock 통합 테스트 추가",
+    "issue_type": "작업",
+    "issue_type_id": "10010",
+    "status": "할 일",
+    "updated": "2026-10-21T09:57:04.381+0900",
+    "parent": "RPL-1",
+    "links": []
+  },
+  "origin": "legacy_migration",
+  "g2_refs": {
+    "branch": "audit/jira-g2-full-118-20261023",
+    "commit": "530dd0f88e5819158362b620ca1591779a50cba5",
+    "final_path": "governance/jira-g2-full-118/final118-verification-20261023.json",
+    "final_blob": "aea968a4dca76194b0de96db6fe20c1c20648470",
+    "prewrite_path": "governance/jira-g2-full-118/prewrite-snapshot-20261023.json",
+    "prewrite_blob": "b49751a69b892f798d24a5aaa11d4888f90b0aac"
+  },
+  "g2_original_before": {
+    "updated": "2026-10-21T09:57:04.381+0900",
+    "legacy": {
+      "product": [
+        "carelog",
+        "platform-foundation"
+      ],
+      "component": [
+        "backend"
+      ],
+      "labels": [
+        "auth",
+        "integration",
+        "oauth",
+        "redis",
+        "testing"
+      ]
+    },
+    "target": {
+      "product_id": "10023",
+      "component_id": "10028",
+      "concern_id": null
+    }
+  },
+  "g2_verified_after": {
+    "updated": "2026-10-21T09:57:04.381+0900",
+    "legacy": {
+      "product": [
+        "carelog",
+        "platform-foundation"
+      ],
+      "component": [
+        "backend"
+      ],
+      "labels": [
+        "auth",
+        "integration",
+        "oauth",
+        "redis",
+        "testing"
+      ]
+    },
+    "target": {
+      "product": {
+        "value": "identity",
+        "id": "10023"
+      },
+      "component": {
+        "value": "backend",
+        "id": "10028"
+      },
+      "concern": null
+    }
+  },
+  "live_jira_before": {
+    "legacy": {
+      "product": [
+        "carelog",
+        "platform-foundation"
+      ],
+      "component": [
+        "backend"
+      ],
+      "labels": [
+        "auth",
+        "integration",
+        "oauth",
+        "redis",
+        "testing"
+      ]
+    },
+    "target": {
+      "product": {
+        "value": "identity",
+        "id": "10023"
+      },
+      "component": {
+        "value": "backend",
+        "id": "10028"
+      },
+      "concern": null
+    },
+    "status": "할 일",
+    "type_id": "10010",
+    "parent": "RPL-1",
+    "links": [],
+    "updated": "2026-10-21T09:57:04.381+0900",
+    "target_changelog_id": "10952",
+    "target_changelog_created": "2026-10-21T09:57:04.381+0900"
+  },
+  "approved_target": {
+    "product": {
+      "value": "identity",
+      "id": "10023"
+    },
+    "component": {
+      "value": "backend",
+      "id": "10028"
+    },
+    "concern": null
+  },
+  "git_before_snapshot": {
+    "branch": "audit/jira-g3-rpl88-pilot-20261030",
+    "head": "36d885d92973628137cf61b15d221de55d8122ac",
+    "ledger_path": "governance/jira-g3-rpl88/g3-native-authority-ledger-v1-20261031.json",
+    "ledger_blob": "a883696c8d0dd145cb3a36c4bd73a45f8d471ca7",
+    "issue_row_absent": true
+  },
+  "approvals": {
+    "cutover": "RPL-134 comment #10797",
+    "writer_recovery": "RPL-134 comment #10798"
+  },
+  "writer_recovery": {
+    "designated_writer": "this Jira Migration Work execution",
+    "owner_reported_other_branch_writers_agents_and_automations_cleared": true,
+    "observed_collaboration_tree": [
+      "/root: running"
+    ],
+    "observed_in_progress_github_actions_on_branch": 0,
+    "existing_writer_task_identified": false,
+    "existing_writer_termination_proven": false,
+    "global_runtime_lock": "unavailable",
+    "residual_risk": "Owner accepted only for this supervised serial 13-row run",
+    "batch_recovery_evidence": "governance/jira-g3-rpl88/execution-snapshots/2026-11-04/rpl-2-before-cutover-20261104T081911Z.json@0af7a2bb8d2342b41398525271873bd18536a0f4"
+  },
+  "mutation": "Create one G3 authority ledger row by Git conditional CAS; no Jira field write.",
+  "recovery": "If authority metadata must be reverted, use a forward Git commit restoring the row to verified/legacy/frozen, then reread all six Jira classification fields. Source values are preserved in the G2 prewrite snapshot."
+}
