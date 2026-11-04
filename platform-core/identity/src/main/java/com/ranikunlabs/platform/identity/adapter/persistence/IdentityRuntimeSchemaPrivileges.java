@@ -2,6 +2,7 @@ package com.ranikunlabs.platform.identity.adapter.persistence;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -63,12 +64,18 @@ final class IdentityRuntimeSchemaPrivileges {
 
     private static List<String> sequences(Connection connection) throws SQLException {
         List<String> sequences = new ArrayList<>();
-        try (Statement statement = connection.createStatement();
-             ResultSet result = statement.executeQuery(
-                     "SELECT sequence_name FROM information_schema.sequences "
-                             + "WHERE sequence_schema = '" + IdentityDatabaseSchema.NAME + "'")) {
-            while (result.next()) {
-                sequences.add(result.getString(1));
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT sequence_ref.relname "
+                        + "FROM pg_catalog.pg_class AS sequence_ref "
+                        + "JOIN pg_catalog.pg_namespace AS schema_ref "
+                        + "ON schema_ref.oid = sequence_ref.relnamespace "
+                        + "WHERE schema_ref.nspname = ? AND sequence_ref.relkind = 'S' "
+                        + "ORDER BY sequence_ref.relname")) {
+            statement.setString(1, IdentityDatabaseSchema.NAME);
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    sequences.add(result.getString(1));
+                }
             }
         }
         return sequences;
