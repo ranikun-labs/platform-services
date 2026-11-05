@@ -29,6 +29,11 @@ JWT_SECRET = os.environ.get("PLATFORM_E2E_JWT_SECRET", "")
 LOGIN_ID = os.environ.get("PLATFORM_E2E_LOGIN_ID", "")
 PASSWORD = os.environ.get("PLATFORM_E2E_PASSWORD", "")
 FAKE_CODE = os.environ.get("PLATFORM_E2E_FAKE_KAKAO_CODE", "")
+RUN_TOKEN = os.environ.get("PLATFORM_E2E_RUN_TOKEN", "")
+SOURCE_COMMIT = os.environ.get("PLATFORM_E2E_SOURCE_COMMIT", "")
+SOURCE_TREE = os.environ.get("PLATFORM_E2E_SOURCE_TREE", "")
+CORE_IMAGE_ID = os.environ.get("PLATFORM_E2E_CORE_IMAGE_ID", "")
+GATEWAY_IMAGE_ID = os.environ.get("PLATFORM_E2E_GATEWAY_IMAGE_ID", "")
 ACCOUNT_ID = "00000000-0000-4000-8000-000000000024"
 AUTH_OK_MESSAGE = "요청에 성공하였습니다."
 CHECKS = []
@@ -392,10 +397,21 @@ def check_postgres_failure():
                     "gateway.identity.postgres_failure")
 
 
-def write_redacted_evidence(phase, result, error_type=None):
+def write_redacted_evidence(phase, result, error_type=None, evidence_dir=None, run_token=None):
+    token = run_token or RUN_TOKEN
+    if not re.fullmatch(r"[0-9a-f]{32}", token):
+        raise ValueError("E2E evidence run token is invalid")
+    output_dir = evidence_dir or os.environ.get("PLATFORM_E2E_EVIDENCE_DIR", "/evidence")
     evidence = {
+        "evidenceVersion": 3,
         "issue": 24,
-        "baseCommit": "9f04f44e5dfc88272fcf380f96524f5bfdc92b75",
+        "runToken": token,
+        "sourceCommit": SOURCE_COMMIT,
+        "sourceTree": SOURCE_TREE,
+        "images": {
+            "platformCoreImageId": CORE_IMAGE_ID,
+            "gatewayImageId": GATEWAY_IMAGE_ID,
+        },
         "phase": phase,
         "result": result,
         "recordedAtUtc": datetime.now(timezone.utc).isoformat(),
@@ -407,18 +423,37 @@ def write_redacted_evidence(phase, result, error_type=None):
     }
     if error_type:
         evidence["errorType"] = error_type
-    print(json.dumps(evidence, ensure_ascii=False, separators=(",", ":")))
-    evidence_dir = os.environ.get("PLATFORM_E2E_EVIDENCE_DIR", "/evidence")
+
+    path = os.path.join(output_dir, "issue-24-gateway-identity-" + phase + "-" + token + ".json")
+    temporary = path + "." + token + ".tmp"
+    temporary_created = False
     try:
-        os.makedirs(evidence_dir, exist_ok=True)
-        path = os.path.join(evidence_dir, "issue-24-gateway-identity-" + phase + ".json")
-        temporary = path + ".tmp"
-        with open(temporary, "w", encoding="utf-8") as output:
+        os.makedirs(output_dir, exist_ok=True)
+        file_descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        temporary_created = True
+        with os.fdopen(file_descriptor, "w", encoding="utf-8") as output:
             json.dump(evidence, output, ensure_ascii=False, indent=2)
             output.write("\n")
         os.replace(temporary, path)
     except OSError:
-        pass
+        if temporary_created:
+            try:
+                os.unlink(temporary)
+            except OSError:
+                pass
+        raise
+
+    print(json.dumps(evidence, ensure_ascii=False, separators=(",", ":")))
+    return path
+
+
+def persist_evidence(phase, result, error_type=None):
+    try:
+        write_redacted_evidence(phase, result, error_type)
+    except OSError as failure:
+        print("E2E evidence persistence failed (" + type(failure).__name__ + ")", file=sys.stderr)
+        return False
+    return True
 
 
 def main():
@@ -428,6 +463,13 @@ def main():
     phase = parser.parse_args().phase
     if not all((JWT_SECRET, LOGIN_ID, PASSWORD, FAKE_CODE)):
         print("E2E configuration missing", file=sys.stderr)
+        return 2
+    if (not re.fullmatch(r"[0-9a-f]{32}", RUN_TOKEN)
+            or not re.fullmatch(r"[0-9a-f]{40}", SOURCE_COMMIT)
+            or not re.fullmatch(r"[0-9a-f]{40}", SOURCE_TREE)
+            or not re.fullmatch(r"sha256:[0-9a-f]{64}", CORE_IMAGE_ID)
+            or not re.fullmatch(r"sha256:[0-9a-f]{64}", GATEWAY_IMAGE_ID)):
+        print("E2E source/image evidence binding missing or invalid", file=sys.stderr)
         return 2
     try:
         if phase == "functional":
@@ -447,9 +489,11 @@ def main():
     except Exception as failure:
         if not CHECKS or CHECKS[-1].get("result") != "FAIL":
             record("phase.exception", "FAIL", errorType=type(failure).__name__)
-        write_redacted_evidence(phase, "FAIL", type(failure).__name__)
+        if not persist_evidence(phase, "FAIL", type(failure).__name__):
+            return 3
         return 1
-    write_redacted_evidence(phase, "PASS")
+    if not persist_evidence(phase, "PASS"):
+        return 3
     return 0
 
 

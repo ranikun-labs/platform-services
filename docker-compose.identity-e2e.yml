@@ -59,10 +59,13 @@ services:
     networks: [identity-e2e]
 
   platform-core-app:
-    image: platform-core-identity-e2e:local
+    image: platform-core-identity-e2e:${PLATFORM_E2E_IMAGE_TAG:?PLATFORM_E2E_IMAGE_TAG is required}
     build:
       context: ./platform-core
       dockerfile: app/Dockerfile.e2e
+      labels:
+        org.opencontainers.image.revision: "${PLATFORM_E2E_SOURCE_COMMIT:?PLATFORM_E2E_SOURCE_COMMIT is required}"
+        com.ranikunlabs.e2e.source-tree: "${PLATFORM_E2E_SOURCE_TREE:?PLATFORM_E2E_SOURCE_TREE is required}"
       secrets:
         - proxy_ca
     environment:
@@ -108,10 +111,13 @@ services:
     networks: [identity-e2e]
 
   gateway-app:
-    image: platform-gateway-identity-e2e:local
+    image: platform-gateway-identity-e2e:${PLATFORM_E2E_IMAGE_TAG:?PLATFORM_E2E_IMAGE_TAG is required}
     build:
       context: ./gateway-app
       dockerfile: Dockerfile.e2e
+      labels:
+        org.opencontainers.image.revision: "${PLATFORM_E2E_SOURCE_COMMIT:?PLATFORM_E2E_SOURCE_COMMIT is required}"
+        com.ranikunlabs.e2e.source-tree: "${PLATFORM_E2E_SOURCE_TREE:?PLATFORM_E2E_SOURCE_TREE is required}"
       secrets:
         - proxy_ca
     environment:
@@ -164,9 +170,16 @@ services:
     entrypoint: ["python", "/e2e/gateway_identity_e2e.py"]
     volumes:
       - ./scripts/e2e:/e2e:ro
-      - ./docs/testing/evidence:/evidence:rw
+      - type: bind
+        source: ${PLATFORM_E2E_EVIDENCE_HOST_PATH:?PLATFORM_E2E_EVIDENCE_HOST_PATH is required}
+        target: /evidence
     environment:
       <<: *internal-network-proxy-bypass
+      PLATFORM_E2E_RUN_TOKEN: "${PLATFORM_E2E_RUN_TOKEN:?PLATFORM_E2E_RUN_TOKEN is required}"
+      PLATFORM_E2E_SOURCE_COMMIT: "${PLATFORM_E2E_SOURCE_COMMIT:?PLATFORM_E2E_SOURCE_COMMIT is required}"
+      PLATFORM_E2E_SOURCE_TREE: "${PLATFORM_E2E_SOURCE_TREE:?PLATFORM_E2E_SOURCE_TREE is required}"
+      PLATFORM_E2E_CORE_IMAGE_ID: "${PLATFORM_E2E_CORE_IMAGE_ID:-}"
+      PLATFORM_E2E_GATEWAY_IMAGE_ID: "${PLATFORM_E2E_GATEWAY_IMAGE_ID:-}"
       PLATFORM_E2E_GATEWAY_URL: http://gateway-app:8080
       PLATFORM_E2E_CORE_URL: http://platform-core-app:8081
       PLATFORM_E2E_FAKE_KAKAO_URL: http://fake-kakao:8099

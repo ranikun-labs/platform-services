@@ -1,0 +1,29 @@
+name: RPL-55 PR33 image-binding test evidence
+
+on:
+  push:
+    branches:
+      - codex/rpl55-pr33-test-only-20261105
+
+permissions:
+  contents: read
+
+jobs:
+  image-binding-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out pushed commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Verify checkout SHA
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Check shell syntax
+        run: bash -n scripts/test-gateway-identity-e2e.sh scripts/test-gateway-identity-image-binding.sh
+
+      - name: Run deterministic image-binding regression
+        run: ./scripts/test-gateway-identity-image-binding.sh
