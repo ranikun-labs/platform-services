@@ -13,6 +13,8 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.auditing.DateTimeProvider;
@@ -60,7 +62,9 @@ public class IdentityPersistenceConfiguration {
     }
 
     @Bean
-    FlywayConfigurationCustomizer identityFlywayLocation(IdentityRuntimeProperties properties) {
+    FlywayConfigurationCustomizer identityFlywayLocation(
+            IdentityRuntimeProperties properties,
+            Environment environment) {
         return configuration -> {
             configuration
                     .locations("classpath:db/migration")
@@ -80,8 +84,25 @@ public class IdentityPersistenceConfiguration {
                         migrationDatasource.url(),
                         migrationDatasource.username(),
                         migrationDatasource.password());
+            } else if (isProduction(environment)) {
+                throw new IllegalStateException(
+                        "Identity Flyway datasource URL, username, and password are required in production");
             }
         };
+    }
+
+    private static boolean isProduction(Environment environment) {
+        return environment.acceptsProfiles(Profiles.of("prod", "production"))
+                || isProductionMarker(environment.getProperty("PLATFORM_ENVIRONMENT"))
+                || isProductionMarker(environment.getProperty("platform.metrics.environment"));
+    }
+
+    private static boolean isProductionMarker(String value) {
+        if (value == null) {
+            return false;
+        }
+        String normalized = value.trim();
+        return "prod".equalsIgnoreCase(normalized) || "production".equalsIgnoreCase(normalized);
     }
 
     @Bean
