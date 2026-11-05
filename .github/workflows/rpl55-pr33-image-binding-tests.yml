@@ -1,4 +1,4 @@
-name: RPL-55 PR33 image-binding test evidence
+name: RPL-55 PR33 image-binding and isolated E2E evidence
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   image-binding-regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - name: Check out pushed commit
         uses: actions/checkout@v4
@@ -22,8 +22,55 @@ jobs:
       - name: Verify checkout SHA
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
+      - name: Verify exact candidate parent
+        run: test "$(git rev-parse HEAD^)" = "f9892129881e29d6d17fb5ee4f7057747d45142d"
+
+      - name: Verify hosted Docker runtime
+        run: |
+          docker version --format '{{.Server.Version}}'
+          docker compose version
+
+      - name: Validate Compose config without logging resolved environment
+        env:
+          CODEX_PROXY_CERT: /dev/null
+        run: |
+          export PLATFORM_E2E_SOURCE_COMMIT="$GITHUB_SHA"
+          export PLATFORM_E2E_SOURCE_TREE="$(git rev-parse 'HEAD^{tree}')"
+          export PLATFORM_E2E_COMPOSE_FILE_SHA256="$(sha256sum docker-compose.identity-e2e.yml | awk '{print $1}')"
+          export PLATFORM_E2E_RUN_TOKEN=00000000000000000000000000000000
+          export PLATFORM_E2E_IMAGE_TAG=config-check
+          export PLATFORM_E2E_EVIDENCE_HOST_PATH="$RUNNER_TEMP/issue24-config-check"
+          docker compose --project-name issue24-config-check \
+            --file docker-compose.identity-e2e.yml config -q
+
       - name: Check shell syntax
         run: bash -n scripts/test-gateway-identity-e2e.sh scripts/test-gateway-identity-image-binding.sh
 
       - name: Run deterministic image-binding regression
         run: ./scripts/test-gateway-identity-image-binding.sh
+
+      - name: Verify Python source syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source = Path("scripts/e2e/gateway_identity_e2e.py").read_text(encoding="utf-8")
+          compile(source, "scripts/e2e/gateway_identity_e2e.py", "exec")
+          print("Python source syntax: PASS")
+          PY
+
+      - name: Run isolated Gateway-to-Identity Docker E2E
+        env:
+          CODEX_PROXY_CERT: /dev/null
+        run: |
+          evidence_dir="$RUNNER_TEMP/rpl55-issue24-evidence"
+          mkdir -p "$evidence_dir"
+          PLATFORM_E2E_EVIDENCE_HOST_PATH="$evidence_dir" ./scripts/test-gateway-identity-e2e.sh
+
+      - name: Upload redacted E2E evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue24-gateway-identity-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/rpl55-issue24-evidence/*.json
+          if-no-files-found: warn
+          retention-days: 7

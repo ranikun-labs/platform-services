@@ -32,6 +32,7 @@ FAKE_CODE = os.environ.get("PLATFORM_E2E_FAKE_KAKAO_CODE", "")
 RUN_TOKEN = os.environ.get("PLATFORM_E2E_RUN_TOKEN", "")
 SOURCE_COMMIT = os.environ.get("PLATFORM_E2E_SOURCE_COMMIT", "")
 SOURCE_TREE = os.environ.get("PLATFORM_E2E_SOURCE_TREE", "")
+COMPOSE_FILE_SHA256 = os.environ.get("PLATFORM_E2E_COMPOSE_FILE_SHA256", "")
 CORE_IMAGE_ID = os.environ.get("PLATFORM_E2E_CORE_IMAGE_ID", "")
 GATEWAY_IMAGE_ID = os.environ.get("PLATFORM_E2E_GATEWAY_IMAGE_ID", "")
 ACCOUNT_ID = "00000000-0000-4000-8000-000000000024"
@@ -408,6 +409,7 @@ def write_redacted_evidence(phase, result, error_type=None, evidence_dir=None, r
         "runToken": token,
         "sourceCommit": SOURCE_COMMIT,
         "sourceTree": SOURCE_TREE,
+        "composeFileSha256": COMPOSE_FILE_SHA256,
         "images": {
             "platformCoreImageId": CORE_IMAGE_ID,
             "gatewayImageId": GATEWAY_IMAGE_ID,
@@ -467,6 +469,7 @@ def main():
     if (not re.fullmatch(r"[0-9a-f]{32}", RUN_TOKEN)
             or not re.fullmatch(r"[0-9a-f]{40}", SOURCE_COMMIT)
             or not re.fullmatch(r"[0-9a-f]{40}", SOURCE_TREE)
+            or not re.fullmatch(r"[0-9a-f]{64}", COMPOSE_FILE_SHA256)
             or not re.fullmatch(r"sha256:[0-9a-f]{64}", CORE_IMAGE_ID)
             or not re.fullmatch(r"sha256:[0-9a-f]{64}", GATEWAY_IMAGE_ID)):
         print("E2E source/image evidence binding missing or invalid", file=sys.stderr)

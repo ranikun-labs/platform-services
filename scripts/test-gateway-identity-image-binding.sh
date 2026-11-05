@@ -27,6 +27,7 @@ CHANGED_TREE=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 env -u PLATFORM_E2E_CORE_IMAGE_ID -u PLATFORM_E2E_GATEWAY_IMAGE_ID \
     PLATFORM_E2E_SOURCE_COMMIT="$SOURCE_COMMIT" \
     PLATFORM_E2E_SOURCE_TREE="$SOURCE_TREE" \
+    PLATFORM_E2E_COMPOSE_FILE_SHA256=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee \
     PLATFORM_E2E_RUN_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
     PLATFORM_E2E_IMAGE_TAG="${SOURCE_COMMIT}-config-check" \
     PLATFORM_E2E_EVIDENCE_HOST_PATH="$ROOT_DIR/docs/testing/evidence" \
@@ -290,6 +291,7 @@ os.environ.update({
     'PLATFORM_E2E_RUN_TOKEN': 'f' * 32,
     'PLATFORM_E2E_SOURCE_COMMIT': 'a' * 40,
     'PLATFORM_E2E_SOURCE_TREE': 'b' * 40,
+    'PLATFORM_E2E_COMPOSE_FILE_SHA256': 'e' * 64,
     'PLATFORM_E2E_CORE_IMAGE_ID': 'sha256:' + 'c' * 64,
     'PLATFORM_E2E_GATEWAY_IMAGE_ID': 'sha256:' + 'd' * 64,
     'PLATFORM_E2E_JWT_SECRET': 'synthetic-test-value',
@@ -314,6 +316,11 @@ with tempfile.TemporaryDirectory() as output_dir:
     for token, filename in zip(tokens, paths):
         evidence = json.loads(Path(filename).read_text())
         assert evidence['runToken'] == token
+        assert evidence['sourceCommit'] == 'a' * 40
+        assert evidence['sourceTree'] == 'b' * 40
+        assert evidence['composeFileSha256'] == 'e' * 64
+        assert evidence['images']['platformCoreImageId'] == 'sha256:' + 'c' * 64
+        assert evidence['images']['gatewayImageId'] == 'sha256:' + 'd' * 64
         assert 'baseCommit' not in evidence
 
     module.RUN_TOKEN = 'e' * 32

@@ -13,6 +13,8 @@ cleanup() {
     local status=$?
     local cleanup_status=0
     local step_status=0
+    trap - EXIT
+    trap '' INT TERM
     if [[ -n "$COMPOSE_FILE" ]]; then
         if "${COMPOSE[@]}" down --volumes --remove-orphans >/dev/null 2>&1; then
             :
@@ -58,7 +60,9 @@ cleanup() {
     fi
     exit "$status"
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 RUN_TOKEN="$(od -An -N16 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n')"
 if [[ ! "$RUN_TOKEN" =~ ^[0-9a-f]{32}$ ]]; then
@@ -102,11 +106,21 @@ git -C "$CHECKOUT_ROOT" archive --format=tar "$SOURCE_COMMIT" | tar -xf - -C "$S
 chmod -R a-w "$SOURCE_ROOT"
 COMPOSE_FILE="$SOURCE_ROOT/docker-compose.identity-e2e.yml"
 COMPOSE=(docker compose --project-name "$PROJECT_NAME" --file "$COMPOSE_FILE")
+COMPOSE_FILE_SHA256="$(sha256sum "$COMPOSE_FILE" | awk '{print $1}')"
+if [[ ! "$COMPOSE_FILE_SHA256" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "Unable to determine the captured Compose file SHA-256" >&2
+    exit 2
+fi
 
 export PLATFORM_E2E_RUN_TOKEN="$RUN_TOKEN"
-export PLATFORM_E2E_EVIDENCE_HOST_PATH="$CHECKOUT_ROOT/docs/testing/evidence"
+export PLATFORM_E2E_EVIDENCE_HOST_PATH="${PLATFORM_E2E_EVIDENCE_HOST_PATH:-$CHECKOUT_ROOT/docs/testing/evidence}"
+if [[ "$PLATFORM_E2E_EVIDENCE_HOST_PATH" != /* ]]; then
+    echo "E2E evidence path must be absolute" >&2
+    exit 2
+fi
 export PLATFORM_E2E_SOURCE_COMMIT="$SOURCE_COMMIT"
 export PLATFORM_E2E_SOURCE_TREE="$SOURCE_TREE"
+export PLATFORM_E2E_COMPOSE_FILE_SHA256="$COMPOSE_FILE_SHA256"
 export PLATFORM_E2E_IMAGE_TAG="${SOURCE_COMMIT}-${RUN_TOKEN}"
 CORE_IMAGE="platform-core-identity-e2e:$PLATFORM_E2E_IMAGE_TAG"
 GATEWAY_IMAGE="platform-gateway-identity-e2e:$PLATFORM_E2E_IMAGE_TAG"
