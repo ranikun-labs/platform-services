@@ -232,6 +232,7 @@
       "ReadAuthority": "target",
       "WriteAuthority": "target",
       "CutoverApprovalRef": "Owner approval in active ChatGPT Jira Migration Workstream message: RPL-3·RPL-47 두 건의 1차 Cutover 조건부 승인, 2026-11-04 KST; no external URL exposed by runtime",
+      "RetrospectiveAcceptanceRef": "https://ranikunlabs.atlassian.net/browse/RPL-134?focusedCommentId=10799",
       "SnapshotRef": "RPL-3.before.json in private G2 verified ZIP",
       "RollbackRef": "RPL-3.before.json in private G2 verified ZIP; rollback is ledger authority reversal to verified/legacy/frozen plus Jira six-field comparison",
       "TargetFieldIDs": {
@@ -348,6 +349,7 @@
       "ReadAuthority": "target",
       "WriteAuthority": "target",
       "CutoverApprovalRef": "Owner approval in active ChatGPT Jira Migration Workstream message: RPL-3·RPL-47 두 건의 1차 Cutover 조건부 승인, 2026-11-04 KST; no external URL exposed by runtime",
+      "RetrospectiveAcceptanceRef": "https://ranikunlabs.atlassian.net/browse/RPL-134?focusedCommentId=10799",
       "SnapshotRef": "RPL-47.before.json in private G2 verified ZIP",
       "RollbackRef": "RPL-47.before.json in private G2 verified ZIP; rollback is ledger authority reversal to verified/legacy/frozen plus Jira six-field comparison",
       "TargetFieldIDs": {
