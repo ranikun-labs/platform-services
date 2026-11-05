@@ -31,7 +31,6 @@ env -u PLATFORM_E2E_CORE_IMAGE_ID -u PLATFORM_E2E_GATEWAY_IMAGE_ID \
     PLATFORM_E2E_RUN_TOKEN=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
     PLATFORM_E2E_IMAGE_TAG="${SOURCE_COMMIT}-config-check" \
     PLATFORM_E2E_EVIDENCE_HOST_PATH="$ROOT_DIR/docs/testing/evidence" \
-    CODEX_PROXY_CERT=/dev/null \
     docker compose --project-name image-binding-config-test \
     --file "$ROOT_DIR/docker-compose.identity-e2e.yml" config --quiet
 

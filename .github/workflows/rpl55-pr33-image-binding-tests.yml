@@ -24,7 +24,7 @@ jobs:
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
       - name: Verify exact candidate parent
-        run: test "$(git rev-parse HEAD^)" = "6f59a994df206b729b6df431bc1433ae1af1a28d"
+        run: test "$(git rev-parse HEAD^)" = "47e709840467e69c6ecf89d4cc901f2d7c12f89d"
 
       - name: Verify hosted Docker runtime
         run: |
@@ -32,8 +32,6 @@ jobs:
           docker compose version
 
       - name: Validate Compose config without logging resolved environment
-        env:
-          CODEX_PROXY_CERT: /dev/null
         run: |
           export PLATFORM_E2E_SOURCE_COMMIT="$GITHUB_SHA"
           export PLATFORM_E2E_SOURCE_TREE="$(git rev-parse 'HEAD^{tree}')"
@@ -63,11 +61,7 @@ jobs:
         run: |
           evidence_dir="$RUNNER_TEMP/rpl55-issue24-evidence"
           mkdir -p "$evidence_dir"
-          proxy_ca_path="$evidence_dir/empty-proxy-ca.pem"
-          : > "$proxy_ca_path"
-          chmod 600 "$proxy_ca_path"
-          CODEX_PROXY_CERT="$proxy_ca_path" \
-            PLATFORM_E2E_EVIDENCE_HOST_PATH="$evidence_dir" \
+          PLATFORM_E2E_EVIDENCE_HOST_PATH="$evidence_dir" \
             ./scripts/test-gateway-identity-e2e.sh
 
       - name: Upload redacted E2E evidence
@@ -78,7 +72,3 @@ jobs:
           path: ${{ runner.temp }}/rpl55-issue24-evidence/*.json
           if-no-files-found: warn
           retention-days: 7
-
-      - name: Remove temporary empty build secret input
-        if: always()
-        run: rm -f "$RUNNER_TEMP/rpl55-issue24-evidence/empty-proxy-ca.pem"

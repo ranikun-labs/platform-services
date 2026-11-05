@@ -66,8 +66,6 @@ services:
       labels:
         org.opencontainers.image.revision: "${PLATFORM_E2E_SOURCE_COMMIT:?PLATFORM_E2E_SOURCE_COMMIT is required}"
         com.ranikunlabs.e2e.source-tree: "${PLATFORM_E2E_SOURCE_TREE:?PLATFORM_E2E_SOURCE_TREE is required}"
-      secrets:
-        - proxy_ca
     environment:
       <<: *internal-network-proxy-bypass
       PLATFORM_CORE_PORT: "8081"
@@ -118,8 +116,6 @@ services:
       labels:
         org.opencontainers.image.revision: "${PLATFORM_E2E_SOURCE_COMMIT:?PLATFORM_E2E_SOURCE_COMMIT is required}"
         com.ranikunlabs.e2e.source-tree: "${PLATFORM_E2E_SOURCE_TREE:?PLATFORM_E2E_SOURCE_TREE is required}"
-      secrets:
-        - proxy_ca
     environment:
       <<: *internal-network-proxy-bypass
       PLATFORM_GATEWAY_PORT: "8080"
@@ -195,7 +191,3 @@ services:
 networks:
   identity-e2e:
     internal: true
-
-secrets:
-  proxy_ca:
-    file: ${CODEX_PROXY_CERT:-/dev/null}
