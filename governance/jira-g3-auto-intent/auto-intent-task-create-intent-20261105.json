@@ -1,0 +1,58 @@
+{
+  "schema": "jira-native-fast-track-create-intent/v1",
+  "record_type": "PRIVATE_AUTO_INTENT_PRIMARY_TASK_CREATE",
+  "status": "pending",
+  "CreateRequestId": "RPL-PRIVATE-AUTO-INTENT-TASK-20261105-01",
+  "OwnerApprovalRef": "User explicit one supervised AUTO_INTENT RPL Task approved in 2026-11-04 conversation; 2026-11-05 direct delegation to this ChatGPT session to find and execute the approved safe creation path",
+  "OwnerApprovalScope": "Exactly one Task, Private AUTO_INTENT Policy/Adapter/Validator, RPL parent Epic RPL-112; no bypass of Origin, no Cutover, no Legacy removal, no other Jira writes",
+  "ActivationRef": "OWNER_APPROVED_PRIVATE_AUTO_INTENT_SINGLE_TASK_CREATE_20261105",
+  "EffectiveFrom": "2026-11-05",
+  "EffectiveTo": "2026-11-05",
+  "Timezone": "Asia/Seoul",
+  "ProjectKey": "RPL",
+  "IssueTypeId": "10010",
+  "IssueTypeName": "작업",
+  "ParentEpicKey": "RPL-112",
+  "Summary": "Private AUTO_INTENT — 개인 개발 요청 자동 인식 정책·Adapter·Validator 구현",
+  "PrimaryRepo": "aixion1506/ai-instructions",
+  "StartDate": "2026-11-04",
+  "DueDate": "2026-11-11",
+  "TargetProduct": {
+    "field": "customfield_10108",
+    "id": "10027",
+    "value": "dev-harness"
+  },
+  "TargetComponent": {
+    "field": "customfield_10109",
+    "id": "10032",
+    "value": "ai"
+  },
+  "ReporterAccountId": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+  "AssigneeAccountId": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+  "CustomPeopleAccountIds": [
+    "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
+  ],
+  "Concern": [],
+  "SoleWriter": "This ChatGPT session, Owner explicitly instructed direct execution on 2026-11-05; create one Jira issue sequentially; no other Writer is authorized to create this same CreateRequestId",
+  "RuntimeGlobalLock": "UNKNOWN_NOT_CLAIMED",
+  "IdempotencyRule": "Unique CreateRequestId and exact Summary, preflight search 0 results; call create once only; after ambiguous result do GET/JQL reconciliation and do not auto-retry",
+  "BeforeCreateEvidence": {
+    "origin_source_repo": "ranikun-labs/platform-services",
+    "origin_branch": "audit/jira-g3-auto-intent-task-20261105",
+    "intent_path": "governance/jira-g3-auto-intent/auto-intent-task-create-intent-20261105.json",
+    "parent_epic_verified": "RPL-112",
+    "jira_create_meta_checked": "2026-11-05",
+    "duplicate_search_count": 0,
+    "connected_jira_current_account_verified": true
+  },
+  "IssueKey": null,
+  "Origin": null,
+  "Phase": "pending",
+  "ReadAuthority": "none",
+  "WriteAuthority": "frozen",
+  "LegacySnapshotRef": "not_applicable",
+  "NextAction": "After confirmed durable git pending commit, query Jira again for duplicates, create exactly once via connected Jira, GET/JQL verify, then replace this file by SHA with create_ready Origin record; if ambiguity, quarantine and do not retry",
+  "exclusions": [
+    "No Jira G3 cutover, admin edits, bulk create, merge, deploy, legacy hide/delete, writer takeover of PR #84"
+  ]
+}
