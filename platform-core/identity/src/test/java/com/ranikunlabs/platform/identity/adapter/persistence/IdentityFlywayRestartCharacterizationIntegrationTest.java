@@ -76,7 +76,7 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
                 .isNotNull()
                 .hasStackTraceContaining("flyway_schema_history");
         SQLException sqlFailure = findSqlException(restartFailure);
-        assertThat(sqlFailure)
+        assertThat((Object) sqlFailure)
                 .as("restart is denied by PostgreSQL after the current same-role privilege reconciliation")
                 .isNotNull();
         assertThat(sqlFailure.getSQLState()).isEqualTo("42501");
