@@ -1,7 +1,7 @@
 {
   "schema": "jira-native-fast-track-create-intent/v1",
   "record_type": "PRIVATE_AUTO_INTENT_PRIMARY_TASK_CREATE",
-  "status": "pending",
+  "status": "verified_create_ready",
   "CreateRequestId": "RPL-PRIVATE-AUTO-INTENT-TASK-20261105-01",
   "OwnerApprovalRef": "User explicit one supervised AUTO_INTENT RPL Task approved in 2026-11-04 conversation; 2026-11-05 direct delegation to this ChatGPT session to find and execute the approved safe creation path",
   "OwnerApprovalScope": "Exactly one Task, Private AUTO_INTENT Policy/Adapter/Validator, RPL parent Epic RPL-112; no bypass of Origin, no Cutover, no Legacy removal, no other Jira writes",
@@ -45,14 +45,48 @@
     "duplicate_search_count": 0,
     "connected_jira_current_account_verified": true
   },
-  "IssueKey": null,
-  "Origin": null,
-  "Phase": "pending",
-  "ReadAuthority": "none",
-  "WriteAuthority": "frozen",
+  "IssueKey": "RPL-136",
+  "Origin": "target_create",
+  "Phase": "create_ready",
+  "ReadAuthority": "target",
+  "WriteAuthority": "target",
   "LegacySnapshotRef": "not_applicable",
-  "NextAction": "After confirmed durable git pending commit, query Jira again for duplicates, create exactly once via connected Jira, GET/JQL verify, then replace this file by SHA with create_ready Origin record; if ambiguity, quarantine and do not retry",
+  "NextAction": "Handoff RPL-136 to Private AUTO_INTENT designated sole Writer; this ledger evidence remains on isolated private audit branch, no merge/cutover implied",
   "exclusions": [
     "No Jira G3 cutover, admin edits, bulk create, merge, deploy, legacy hide/delete, writer takeover of PR #84"
-  ]
+  ],
+  "IssueId": "10285",
+  "IssueCreatedAt": "2026-11-05T13:44:45.228+09:00",
+  "CreateActivationRef": "OWNER_APPROVED_PRIVATE_AUTO_INTENT_SINGLE_TASK_CREATE_20261105",
+  "VerifiedAt": "2026-11-05 KST",
+  "OriginRegistrationStatus": "REGISTERED_IN_VERSIONED_PRIVATE_GIT_LEDGER",
+  "JiraCreateCallCount": 1,
+  "PendingEvidence": {
+    "commit_sha": "b32bcb26981852206a43a1466df7d997a7ab94f1",
+    "blob_sha": "f3d3d2e57ea32d746ee6acf7dd563e3f36967002",
+    "status_before_create": "pending"
+  },
+  "JiraVerification": {
+    "method": "LIVE_JIRA_GET_AND_TARGET_NATIVE_JQL",
+    "project": "RPL",
+    "issue_type_id": "10010",
+    "summary_matches": true,
+    "parent_epic": "RPL-112",
+    "create_request_id_in_description": true,
+    "target_product_id": "10027",
+    "target_component_id": "10032",
+    "concern": null,
+    "start": "2026-11-04",
+    "due": "2026-11-11",
+    "reporter_matches": true,
+    "assignee_matches": true,
+    "custom_people_matches": true,
+    "legacy_fields_all_null": true,
+    "jql_exact_target_count": 1,
+    "duplicate_summary_count": 1,
+    "read_authority_recorded_in_private_git": true
+  },
+  "NativeJiraUIOriginAwareEnforcement": "NOT_VERIFIED_NATIVE_UI_DOES_NOT_AUTOMATICALLY_ENFORCE_GIT_AUTHORITY",
+  "RuntimeExternalReaderOrCloudActivation": "NOT_RUN",
+  "WrittenBy": "Authenticated GitHub aixion1506; one-off ChatGPT supervised Jira Create 2026-11-05"
 }
