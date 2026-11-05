@@ -1,0 +1,63 @@
+{
+  "schema": "jira-native-fast-track-create-intent/v1",
+  "record_type": "PRIVATE_F4_POLICY_RECOVERY_PRIMARY_TASK_CREATE",
+  "status": "pending",
+  "CreateRequestId": "RPL-PRIVATE-F4-PREFLIGHT-RECOVERY-TASK-20261105-01",
+  "OwnerApprovalRef": "2026-11-05 user explicitly replied '2. 오너 승인' to the preceding proposal for one new Private F4 policy improvement Task; handle directly in the Instructions Optimization workstream.",
+  "OwnerApprovalScope": "Exactly one RPL Task under RPL-112 for Private F4 Preflight, Reviewer/Writer Recovery, Owner Decision Batch policy proposal and later separate source closure. No Public Runtime implementation, Governance change, Source Merge or installation.",
+  "ActivationRef": "OWNER_APPROVED_PRIVATE_F4_POLICY_TASK_CREATE_20261105",
+  "EffectiveFrom": "2026-11-05",
+  "EffectiveTo": "2026-11-05",
+  "Timezone": "Asia/Seoul",
+  "ProjectKey": "RPL",
+  "IssueTypeId": "10010",
+  "IssueTypeName": "작업",
+  "ParentEpicKey": "RPL-112",
+  "Summary": "F4 실행 전 차단 식별·Reviewer/Writer 복구·Owner 결정 일괄 처리 정책 보완",
+  "PrimaryRepo": "aixion1506/ai-instructions",
+  "StartDate": "2026-11-05",
+  "DueDate": "2026-11-12",
+  "TargetProduct": {
+    "field": "customfield_10108",
+    "id": "10027",
+    "value": "dev-harness"
+  },
+  "TargetComponent": {
+    "field": "customfield_10109",
+    "id": "10032",
+    "value": "ai"
+  },
+  "ReporterAccountId": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+  "AssigneeAccountId": "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4",
+  "CustomPeopleAccountIds": [
+    "712020:2c56c563-d9bc-4d80-922f-0758d25fc7d4"
+  ],
+  "Concern": [],
+  "SoleWriter": "Current ChatGPT Instructions Optimization session: supervised single Jira Create only. Future Private Source Writer ownership must be established independently.",
+  "RuntimeGlobalLock": "UNKNOWN_NOT_CLAIMED",
+  "IdempotencyRule": "Single CreateRequestId; exact-summary duplicate JQL returned 0; create once after durable pending commit, then Jira GET/JQL reconcile; do not retry ambiguous create.",
+  "BeforeCreateEvidence": {
+    "origin_source_repo": "ranikun-labs/platform-services",
+    "origin_branch": "audit/jira-g3-private-f4-policy-task-20261105",
+    "intent_path": "governance/jira-g3-private-f4-policy/f4-policy-task-create-intent-20261105.json",
+    "source_branch_base": "9f04f44e5dfc88272fcf380f96524f5bfdc92b75",
+    "parent_epic_verified": "RPL-112",
+    "jira_create_meta_checked": "2026-11-05",
+    "target_fields_verified": true,
+    "duplicate_search_count": 0,
+    "connected_jira_current_account_verified": true
+  },
+  "IssueKey": null,
+  "Origin": null,
+  "Phase": "pending",
+  "ReadAuthority": "none",
+  "WriteAuthority": "frozen",
+  "LegacySnapshotRef": "not_applicable",
+  "NextAction": "After durable Git pending commit, recheck duplicate JQL, then supervised single Jira Create and GET/JQL; register Origin=target_create and Phase=create_ready only on verified successful creation.",
+  "exclusions": [
+    "No Jira G3 Cutover/Admin/Legacy change",
+    "No Source Merge or Runtime install",
+    "No Private PR #6/oh-my-ai PR #89 changes",
+    "No other Jira issues updated"
+  ]
+}
