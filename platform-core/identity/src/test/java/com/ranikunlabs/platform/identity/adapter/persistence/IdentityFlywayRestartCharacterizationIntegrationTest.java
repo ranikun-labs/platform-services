@@ -59,16 +59,28 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
         IdentityPersistenceConfiguration configuration = new IdentityPersistenceConfiguration();
         var migrationStrategy = configuration.identityFlywayMigrationStrategy(properties);
 
-        migrationStrategy.migrate(flyway(properties));
+        try (FlywaySession firstStartup = flyway(properties)) {
+            migrationStrategy.migrate(firstStartup.flyway());
+        }
 
         assertThat(hasHistorySelectPrivilege(MIGRATOR_ROLE)).isFalse();
 
-        Throwable restartFailure = catchThrowable(() -> migrationStrategy.migrate(flyway(properties)));
+        Throwable restartFailure = catchThrowable(() -> {
+            try (FlywaySession restarted = flyway(properties)) {
+                migrationStrategy.migrate(restarted.flyway());
+            }
+        });
 
         assertThat(restartFailure)
                 .as("current same-role fallback characterization; role policy remains an Owner decision")
                 .isNotNull()
                 .hasStackTraceContaining("flyway_schema_history");
+        SQLException sqlFailure = findSqlException(restartFailure);
+        assertThat(sqlFailure)
+                .as("restart is denied by PostgreSQL after the current same-role privilege reconciliation")
+                .isNotNull();
+        assertThat(sqlFailure.getSQLState()).isEqualTo("42501");
+        assertThat(sqlFailure.getMessage()).contains("flyway_schema_history");
     }
 
     @Test
@@ -81,12 +93,18 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
         IdentityPersistenceConfiguration configuration = new IdentityPersistenceConfiguration();
         var migrationStrategy = configuration.identityFlywayMigrationStrategy(properties);
 
-        migrationStrategy.migrate(flyway(properties));
+        try (FlywaySession firstStartup = flyway(properties)) {
+            migrationStrategy.migrate(firstStartup.flyway());
+        }
 
         assertThat(hasHistorySelectPrivilege(MIGRATOR_ROLE)).isTrue();
         assertThat(hasHistorySelectPrivilege(RUNTIME_ROLE)).isFalse();
 
-        assertThatCode(() -> migrationStrategy.migrate(flyway(properties)))
+        assertThatCode(() -> {
+            try (FlywaySession restarted = flyway(properties)) {
+                migrationStrategy.migrate(restarted.flyway());
+            }
+        })
                 .as("restart with explicit Migrator credentials uses the same disposable PostgreSQL database")
                 .doesNotThrowAnyException();
 
@@ -112,11 +130,23 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
                 "identity:");
     }
 
-    private Flyway flyway(IdentityRuntimeProperties properties) {
+    private FlywaySession flyway(IdentityRuntimeProperties properties) {
         DataSource runtimeDataSource = new IdentityPersistenceConfiguration().dataSource(properties);
         FluentConfiguration flywayConfiguration = Flyway.configure().dataSource(runtimeDataSource);
         new IdentityPersistenceConfiguration().identityFlywayLocation(properties).customize(flywayConfiguration);
-        return flywayConfiguration.load();
+        return new FlywaySession(
+                flywayConfiguration.load(),
+                runtimeDataSource,
+                flywayConfiguration.getDataSource());
+    }
+
+    private SQLException findSqlException(Throwable failure) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SQLException sqlException) {
+                return sqlException;
+            }
+        }
+        return null;
     }
 
     private Connection adminConnection() throws SQLException {
@@ -129,6 +159,27 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
                      "SELECT has_table_privilege('" + role + "', 'identity.flyway_schema_history', 'SELECT')")) {
             assertThat(result.next()).isTrue();
             return result.getBoolean(1);
+        }
+    }
+
+    private record FlywaySession(Flyway flyway, DataSource runtimeDataSource, DataSource flywayDataSource)
+            implements AutoCloseable {
+
+        @Override
+        public void close() throws Exception {
+            try {
+                closeIfPossible(flywayDataSource);
+            } finally {
+                if (runtimeDataSource != flywayDataSource) {
+                    closeIfPossible(runtimeDataSource);
+                }
+            }
+        }
+
+        private static void closeIfPossible(DataSource dataSource) throws Exception {
+            if (dataSource instanceof AutoCloseable closeable) {
+                closeable.close();
+            }
         }
     }
 }
