@@ -24,7 +24,7 @@ jobs:
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
       - name: Verify exact candidate parent
-        run: test "$(git rev-parse HEAD^)" = "47e709840467e69c6ecf89d4cc901f2d7c12f89d"
+        run: test "$(git rev-parse HEAD^)" = "a38bf09da05482be44c3e15be7fcd309b9004152"
 
       - name: Verify hosted Docker runtime
         run: |

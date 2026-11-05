@@ -436,6 +436,10 @@ def write_redacted_evidence(phase, result, error_type=None, evidence_dir=None, r
         with os.fdopen(file_descriptor, "w", encoding="utf-8") as output:
             json.dump(evidence, output, ensure_ascii=False, indent=2)
             output.write("\n")
+        # Keep the temporary file private while it is being written. The
+        # finalized redacted JSON must be readable by the hosted runner that
+        # uploads it after the container exits.
+        os.chmod(temporary, 0o644)
         os.replace(temporary, path)
     except OSError:
         if temporary_created:

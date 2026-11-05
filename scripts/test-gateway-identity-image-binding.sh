@@ -322,6 +322,7 @@ import importlib.util
 import io
 import json
 import os
+import stat
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import sys
@@ -344,6 +345,14 @@ os.environ.update({
 spec = importlib.util.spec_from_file_location('gateway_identity_e2e_test', module_path)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
+original_json_dump = module.json.dump
+private_temp_modes = []
+def verify_private_temp(value, output, *args, **kwargs):
+    mode = stat.S_IMODE(os.fstat(output.fileno()).st_mode)
+    assert mode == 0o600
+    private_temp_modes.append(mode)
+    return original_json_dump(value, output, *args, **kwargs)
+module.json.dump = verify_private_temp
 module.CHECKS = [{'name': 'test.only', 'result': 'PASS'}]
 with tempfile.TemporaryDirectory() as output_dir:
     tokens = [f'{index:032x}' for index in range(1, 17)]
@@ -355,8 +364,11 @@ with tempfile.TemporaryDirectory() as output_dir:
             paths = list(pool.map(write, tokens))
     assert len(set(paths)) == len(tokens)
     assert len(list(Path(output_dir).glob('*.json'))) == len(tokens)
+    assert len(private_temp_modes) == len(tokens)
     for token, filename in zip(tokens, paths):
-        evidence = json.loads(Path(filename).read_text())
+        evidence_path = Path(filename)
+        assert stat.S_IMODE(evidence_path.stat().st_mode) == 0o644
+        evidence = json.loads(evidence_path.read_text())
         assert evidence['runToken'] == token
         assert evidence['sourceCommit'] == 'a' * 40
         assert evidence['sourceTree'] == 'b' * 40
@@ -387,6 +399,7 @@ with tempfile.TemporaryDirectory() as output_dir:
     failed_path = Path(output_dir) / ('issue-24-gateway-identity-valkey-failure-' + 'e' * 32 + '.json')
     assert not failed_path.exists()
     assert not Path(str(failed_path) + '.' + 'e' * 32 + '.tmp').exists()
+module.json.dump = original_json_dump
 print('concurrent evidence uniqueness and write-failure propagation: PASS')
 PY
 
