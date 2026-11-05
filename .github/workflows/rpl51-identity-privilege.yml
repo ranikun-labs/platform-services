@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/identity-owned-schema-issue23-20261016
+      - codex/rpl55-test-only-20261105
 
 permissions:
   contents: read
@@ -40,5 +41,5 @@ jobs:
           mkdir -p platform-core/identity/src/test/resources
           printf 'api.version=1.44\n' > platform-core/identity/src/test/resources/docker-java.properties
           grep -qx 'api.version=1.44' platform-core/identity/src/test/resources/docker-java.properties
-      - name: Run disposable PostgreSQL privilege test
-        run: ./gradlew -p platform-core :identity:test --no-daemon --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentitySchemaPrivilegeIntegrationTest
+      - name: Run disposable PostgreSQL privilege and restart tests
+        run: ./gradlew -p platform-core :identity:test --no-daemon --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentitySchemaPrivilegeIntegrationTest --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentityFlywayRestartCharacterizationIntegrationTest
