@@ -16,6 +16,7 @@ jobs:
       - name: Check out pushed commit
         uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           persist-credentials: false
           ref: ${{ github.sha }}
 
@@ -23,7 +24,7 @@ jobs:
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
       - name: Verify exact candidate parent
-        run: test "$(git rev-parse HEAD^)" = "f9892129881e29d6d17fb5ee4f7057747d45142d"
+        run: test "$(git rev-parse HEAD^)" = "cefad8cd601b81188f89fe8c92cb94d85e63a2d7"
 
       - name: Verify hosted Docker runtime
         run: |
