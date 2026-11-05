@@ -8,6 +8,9 @@ COMPOSE_FILE=""
 COMPOSE=()
 CORE_IMAGE=""
 GATEWAY_IMAGE=""
+CORE_IMAGE_CREATED=0
+GATEWAY_IMAGE_CREATED=0
+PINNED_IMAGE_ID=""
 
 cleanup() {
     local status=$?
@@ -24,8 +27,19 @@ cleanup() {
             cleanup_status=$step_status
         fi
     fi
-    if [[ -n "$CORE_IMAGE" && -n "$GATEWAY_IMAGE" ]]; then
-        if docker image rm "$CORE_IMAGE" "$GATEWAY_IMAGE" >/dev/null 2>&1; then
+    if ((CORE_IMAGE_CREATED == 1)); then
+        if docker image rm "$CORE_IMAGE" >/dev/null 2>&1; then
+            :
+        else
+            step_status=$?
+            printf 'E2E cleanup failed: image removal (exit %s)\n' "$step_status" >&2
+            if ((cleanup_status == 0)); then
+                cleanup_status=$step_status
+            fi
+        fi
+    fi
+    if ((GATEWAY_IMAGE_CREATED == 1)); then
+        if docker image rm "$GATEWAY_IMAGE" >/dev/null 2>&1; then
             :
         else
             step_status=$?
@@ -152,21 +166,33 @@ pin_image_to_run_tag() {
     # Retag by the immutable image ID, never by resolving a mutable source tag a
     # second time. The random per-run destination is unique across daemon users.
     docker image tag "$image_id" "$run_image" || return 1
+    if [[ "$run_image" == "$CORE_IMAGE" ]]; then
+        CORE_IMAGE_CREATED=1
+    elif [[ "$run_image" == "$GATEWAY_IMAGE" ]]; then
+        GATEWAY_IMAGE_CREATED=1
+    else
+        echo "E2E run tag is not an owned per-run image" >&2
+        return 1
+    fi
     pinned_id="$(inspect_bound_image_id "$run_image")" || return 1
     if [[ "$pinned_id" != "$image_id" ]]; then
         echo "E2E run tag resolved to a different image than the captured ID" >&2
         return 1
     fi
-    printf '%s\n' "$image_id"
+    PINNED_IMAGE_ID="$image_id"
 }
 
 if [[ "${PLATFORM_E2E_SKIP_BUILD:-0}" == "1" ]]; then
-    CORE_IMAGE_ID="$(pin_image_to_run_tag "$PREBUILT_CORE_IMAGE" "$CORE_IMAGE")"
-    GATEWAY_IMAGE_ID="$(pin_image_to_run_tag "$PREBUILT_GATEWAY_IMAGE" "$GATEWAY_IMAGE")"
+    pin_image_to_run_tag "$PREBUILT_CORE_IMAGE" "$CORE_IMAGE"
+    CORE_IMAGE_ID="$PINNED_IMAGE_ID"
+    pin_image_to_run_tag "$PREBUILT_GATEWAY_IMAGE" "$GATEWAY_IMAGE"
+    GATEWAY_IMAGE_ID="$PINNED_IMAGE_ID"
 else
     "${COMPOSE[@]}" build platform-core-app
-    "${COMPOSE[@]}" build gateway-app
+    CORE_IMAGE_CREATED=1
     CORE_IMAGE_ID="$(inspect_bound_image_id "$CORE_IMAGE")"
+    "${COMPOSE[@]}" build gateway-app
+    GATEWAY_IMAGE_CREATED=1
     GATEWAY_IMAGE_ID="$(inspect_bound_image_id "$GATEWAY_IMAGE")"
     # Keep a SHA-tagged cache for a future skip-build invocation. Runtime
     # services still use only the unique per-run tags above.

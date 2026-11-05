@@ -167,6 +167,14 @@ if [[ "${1:-}" == compose ]]; then
         : > "$FAKE_MUTATION_FLAG"
     fi
     log "$all"
+    if [[ "$all" == *" build platform-core-app"* && "${FAKE_FAIL_CORE_BUILD:-0}" == 1 ]]; then
+        echo 'simulated core image build failure' >&2
+        exit 55
+    fi
+    if [[ "$all" == *" build gateway-app"* && "${FAKE_FAIL_GATEWAY_BUILD:-0}" == 1 ]]; then
+        echo 'simulated gateway image build failure' >&2
+        exit 56
+    fi
     if [[ "$all" == *" ps --quiet platform-core-app"* ]]; then
         printf '%s\n' core-container
     elif [[ "$all" == *" ps --quiet gateway-app"* ]]; then
@@ -227,11 +235,46 @@ unset FAKE_MUTATE_LIVE_SOURCE
 echo 'captured-commit tree binding across simulated checkout advance: PASS'
 echo 'default build with unset IDs and immutable source snapshot: PASS'
 
+# A failed core build created no run image, so cleanup must not turn the
+# original build failure into a secondary missing-image cleanup failure.
+export FAKE_DOCKER_LOG="$TEMP_DIR/core-build-failure.log"
+set +e
+env -u PLATFORM_E2E_CORE_IMAGE_ID -u PLATFORM_E2E_GATEWAY_IMAGE_ID \
+    FAKE_FAIL_CORE_BUILD=1 PLATFORM_E2E_SKIP_BUILD=0 "$SCRIPT" \
+    >"$TEMP_DIR/core-build-failure.out" 2>&1
+status=$?
+set -e
+[[ "$status" -eq 55 ]]
+grep -Fq 'simulated core image build failure' "$TEMP_DIR/core-build-failure.out"
+if grep -Fq 'image rm ' "$FAKE_DOCKER_LOG"; then
+    echo 'cleanup tried to remove a core image that the failed build never created' >&2
+    exit 1
+fi
+echo 'failed core build remains primary and skips nonexistent image cleanup: PASS'
+
+# If only the gateway build fails, remove the already-created core run image
+# without trying to remove the gateway image that does not exist.
+export FAKE_DOCKER_LOG="$TEMP_DIR/gateway-build-failure.log"
+set +e
+env -u PLATFORM_E2E_CORE_IMAGE_ID -u PLATFORM_E2E_GATEWAY_IMAGE_ID \
+    FAKE_FAIL_GATEWAY_BUILD=1 PLATFORM_E2E_SKIP_BUILD=0 "$SCRIPT" \
+    >"$TEMP_DIR/gateway-build-failure.out" 2>&1
+status=$?
+set -e
+[[ "$status" -eq 56 ]]
+grep -Fq 'simulated gateway image build failure' "$TEMP_DIR/gateway-build-failure.out"
+grep -Fq 'image rm platform-core-identity-e2e:' "$FAKE_DOCKER_LOG"
+if grep -Fq 'image rm platform-gateway-identity-e2e:' "$FAKE_DOCKER_LOG"; then
+    echo 'cleanup tried to remove a gateway image that the failed build never created' >&2
+    exit 1
+fi
+echo 'partial build cleanup removes only the created image: PASS'
+
 # A second concurrent-shaped invocation receives a distinct daemon-wide token.
 export FAKE_DOCKER_LOG="$TEMP_DIR/skip.log"
 env -u PLATFORM_E2E_CORE_IMAGE_ID -u PLATFORM_E2E_GATEWAY_IMAGE_ID \
     PLATFORM_E2E_SKIP_BUILD=1 "$SCRIPT"
-TOKEN_B=22222222222222222222222222222222
+TOKEN_B=44444444444444444444444444444444
 [[ "$TOKEN_A" != "$TOKEN_B" ]]
 grep -Fq -- "--project-name platform-issue24-e2e-$TOKEN_B" "$FAKE_DOCKER_LOG"
 grep -Fq "image tag $CORE_ID platform-core-identity-e2e:${SOURCE_COMMIT}-${TOKEN_B}" "$FAKE_DOCKER_LOG"
