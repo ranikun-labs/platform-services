@@ -1,0 +1,33 @@
+name: RPL-55 PR30 cleanup test evidence
+
+on:
+  push:
+    branches:
+      - codex/rpl55-pr30-test-only-20261105
+
+permissions:
+  contents: read
+
+jobs:
+  gateway-prometheus-cleanup-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pushed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify checkout SHA
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Run Gateway Prometheus integration tests
+        run: ./gradlew -p gateway-app test --tests com.ranikunlabs.platform.gateway.GatewayPrometheusIntegrationTest
+
+      - name: Run Platform Core Prometheus integration tests
+        run: ./gradlew -p platform-core :app:test --tests com.ranikunlabs.platform.core.PlatformCorePrometheusIntegrationTest
