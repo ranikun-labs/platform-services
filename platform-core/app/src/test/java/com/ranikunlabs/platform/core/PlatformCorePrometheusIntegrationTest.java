@@ -279,10 +279,8 @@ class PlatformCorePrometheusIntegrationTest {
                 try {
                     executor.awaitTermination(cleanupNanos, TimeUnit.NANOSECONDS);
                 } catch (InterruptedException interruptedDuringCleanup) {
-                    if (requestFailure != null) {
-                        requestFailure.addSuppressed(interruptedDuringCleanup);
-                    }
-                    requestFailure = interruptedDuringCleanup;
+                    Thread.currentThread().interrupt();
+                    requestFailure = preservePrimaryFailure(requestFailure, interruptedDuringCleanup);
                 }
             }
         }
@@ -290,10 +288,7 @@ class PlatformCorePrometheusIntegrationTest {
         if (!executor.isTerminated()) {
             IllegalStateException cleanupFailure = new IllegalStateException(
                     "Prometheus HTTP worker did not terminate after request cancellation");
-            if (requestFailure != null) {
-                cleanupFailure.addSuppressed(requestFailure);
-            }
-            throw cleanupFailure;
+            requestFailure = preservePrimaryFailure(requestFailure, cleanupFailure);
         }
         if (requestFailure instanceof InterruptedException interrupted) {
             Thread.currentThread().interrupt();
@@ -307,6 +302,40 @@ class PlatformCorePrometheusIntegrationTest {
         }
         assertBeforeDeadline(deadline);
         return response;
+    }
+
+    private static Throwable preservePrimaryFailure(Throwable primaryFailure, Throwable cleanupFailure) {
+        if (primaryFailure == null) {
+            return cleanupFailure;
+        }
+        if (primaryFailure != cleanupFailure) {
+            primaryFailure.addSuppressed(cleanupFailure);
+        }
+        return primaryFailure;
+    }
+
+    @Test
+    void cleanupFailureRemainsSecondaryToPrimaryRequestFailure() {
+        IOException requestFailure = new IOException("HTTP request failed");
+        IllegalStateException cleanupFailure = new IllegalStateException("worker did not terminate");
+
+        Throwable result = preservePrimaryFailure(requestFailure, cleanupFailure);
+
+        assertThat((Object) result == requestFailure).isTrue();
+        assertThat(requestFailure.getSuppressed().length).isEqualTo(1);
+        assertThat(requestFailure.getSuppressed()[0] == cleanupFailure).isTrue();
+    }
+
+    @Test
+    void cleanupFailureRemainsSecondaryToPrimaryAssertionFailure() {
+        AssertionError assertionFailure = new AssertionError("HTTP response assertion failed");
+        IllegalStateException cleanupFailure = new IllegalStateException("worker did not terminate");
+
+        Throwable result = preservePrimaryFailure(assertionFailure, cleanupFailure);
+
+        assertThat((Object) result == assertionFailure).isTrue();
+        assertThat(assertionFailure.getSuppressed().length).isEqualTo(1);
+        assertThat(assertionFailure.getSuppressed()[0] == cleanupFailure).isTrue();
     }
 
     private static void assertBeforeDeadline(long deadline) throws HttpTimeoutException {
