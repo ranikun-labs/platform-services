@@ -11,10 +11,12 @@ permissions:
 jobs:
   gateway-prometheus-cleanup-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out pushed commit
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           ref: ${{ github.sha }}
 
       - name: Verify checkout SHA
