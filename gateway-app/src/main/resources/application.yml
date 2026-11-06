@@ -68,6 +68,8 @@ platform:
       - /api/v1/v3/api-docs
     internal-secret: ${PLATFORM_GATEWAY_INTERNAL_SECRET}
     jwt-verification-secret: ${PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET}
+    finance-trusted-context:
+      enabled: false
     oauth-rate-limit:
       trusted-proxy-hops: ${PLATFORM_GATEWAY_OAUTH_RATE_LIMIT_TRUSTED_PROXY_HOPS:1}
       authorization:

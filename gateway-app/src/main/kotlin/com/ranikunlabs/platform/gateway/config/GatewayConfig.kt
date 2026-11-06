@@ -12,7 +12,13 @@ data class GatewayConfig(
     val publicPaths: List<String> = emptyList(),
     @field:NotBlank val internalSecret: String = "",
     @field:NotBlank val jwtVerificationSecret: String = "",
+    @field:Valid val financeTrustedContext: FinanceTrustedContextConfig = FinanceTrustedContextConfig(),
     @field:Valid val oauthRateLimit: OAuthRateLimitConfig = OAuthRateLimitConfig()
+)
+
+data class FinanceTrustedContextConfig(
+    val enabled: Boolean = false,
+    val serviceSecret: String = ""
 )
 
 data class OAuthRateLimitConfig(
