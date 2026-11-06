@@ -2,6 +2,7 @@ package com.ranikunlabs.platform.gateway.filter
 
 import com.ranikunlabs.platform.gateway.blacklist.RedisBlacklistService
 import com.ranikunlabs.platform.gateway.config.GatewayConfig
+import io.jsonwebtoken.Claims
 import io.jsonwebtoken.JwtException
 import org.springframework.dao.DataAccessException
 import org.springframework.cloud.gateway.filter.GatewayFilterChain
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
+import java.util.UUID
 
 internal const val VERIFIED_IDENTITY_SUBJECT_ATTRIBUTE =
     "com.ranikunlabs.platform.gateway.verifiedIdentitySubject"
@@ -123,7 +125,7 @@ class JwtGlobalFilter(
             return exchange.response.setComplete()
         }
         if (financePath) {
-            if (claims.subject.isNullOrBlank()) {
+            if (claims.subject.isNullOrBlank() || !hasFinanceAccessMarkers(claims)) {
                 exchange.response.statusCode = HttpStatus.UNAUTHORIZED
                 return exchange.response.setComplete()
             }
@@ -150,6 +152,20 @@ class JwtGlobalFilter(
 
     private fun isInternalPath(path: String): Boolean =
         path == "/api/v1/internal" || path.startsWith("/api/v1/internal/")
+
+    private fun hasFinanceAccessMarkers(claims: Claims): Boolean {
+        val organizationId = claims["organizationId"] as? String ?: return false
+        val role = claims["role"] as? String ?: return false
+        val publicId = claims["publicId"] as? String ?: return false
+        return isUuid(organizationId) && role.isNotBlank() && isUuid(publicId)
+    }
+
+    private fun isUuid(value: String): Boolean = try {
+        UUID.fromString(value)
+        true
+    } catch (_: IllegalArgumentException) {
+        false
+    }
 
     private fun ServerWebExchange.withGatewaySecret(secret: String): ServerWebExchange = mutate()
         .request { it.headers { headers -> headers.set("X-Gateway-Secret", secret) } }

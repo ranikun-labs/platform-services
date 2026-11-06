@@ -78,6 +78,43 @@ class FinanceTrustedContextGatewayFilterTest {
     }
 
     @Test
+    fun `current and legacy refresh JWTs are rejected while opaque access subjects remain supported`() {
+        val currentRefresh = refreshToken(subjectA, includeJti = true)
+        val legacyRefresh = refreshToken(subjectA, includeJti = false)
+
+        listOf("current" to currentRefresh, "legacy" to legacyRefresh).forEach { (_, token) ->
+            assertThat(JwtVerifier(jwtSecret).verifyAndGetClaims(token).subject).isEqualTo(subjectA)
+            val (exchange, forwarded) = runFinanceRequest(token)
+
+            assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+            assertThat(forwarded).isEmpty()
+        }
+
+        val opaqueSubject = "opaque-subject-fixture"
+        val accessToken = validToken(opaqueSubject)
+        val (accessExchange, accessForwarded) = runFinanceRequest(accessToken)
+        assertThat(accessExchange.response.statusCode).isNull()
+        assertThat(accessForwarded).hasSize(1)
+        assertThat(accessForwarded.single().request.headers.getFirst(FinanceTrustedContextWire.SUBJECT_HEADER))
+            .isEqualTo(canonicalBase64Url(opaqueSubject))
+    }
+
+    @Test
+    fun `Finance access marker claims require UUID strings and a nonblank role`() {
+        val invalidMarkerTokens = listOf(
+            accessToken("opaque-subject-fixture", organizationIdClaim = "not-a-uuid"),
+            accessToken("opaque-subject-fixture", roleClaim = " \t "),
+            accessToken("opaque-subject-fixture", publicIdClaim = 17)
+        )
+
+        invalidMarkerTokens.forEach { token ->
+            val (exchange, forwarded) = runFinanceRequest(token)
+            assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+            assertThat(forwarded).isEmpty()
+        }
+    }
+
+    @Test
     fun `malformed Finance route is rejected without forwarding`() {
         val invalidRoute = MockServerWebExchange.from(
             MockServerHttpRequest.method(HttpMethod.POST, "/finance/journals/$subjectA").build()
@@ -276,6 +313,47 @@ class FinanceTrustedContextGatewayFilterTest {
         )
         return vector
     }
+
+    private fun runFinanceRequest(token: String): Pair<MockServerWebExchange, MutableList<ServerWebExchange>> {
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/finance/journals")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .build()
+        )
+        val forwarded = mutableListOf<ServerWebExchange>()
+        val financeChain = org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+            financeFilter.filter(verified, downstream(forwarded))
+        }
+        jwtFilter.filter(exchange, financeChain).block()
+        return exchange to forwarded
+    }
+
+    private fun refreshToken(subject: String, includeJti: Boolean): String {
+        val builder = Jwts.builder()
+            .subject(subject)
+            .issuedAt(Date(System.currentTimeMillis() - 60_000L))
+            .expiration(Date(4102444800000L))
+        if (includeJti) builder.id("33333333-3333-3333-3333-333333333333")
+        return builder
+            .signWith(Keys.hmacShaKeyFor(jwtSecret.toByteArray(StandardCharsets.UTF_8)))
+            .compact()
+    }
+
+    private fun accessToken(
+        subject: String,
+        organizationIdClaim: Any = organizationId,
+        roleClaim: Any = "MANAGER",
+        publicIdClaim: Any = publicId
+    ): String = Jwts.builder()
+        .subject(subject)
+        .claim("organizationId", organizationIdClaim)
+        .claim("role", roleClaim)
+        .claim("publicId", publicIdClaim)
+        .issuedAt(Date(System.currentTimeMillis() - 60_000L))
+        .expiration(Date(4102444800000L))
+        .signWith(Keys.hmacShaKeyFor(jwtSecret.toByteArray(StandardCharsets.UTF_8)))
+        .compact()
 
     private fun validToken(subject: String): String = Jwts.builder()
         .subject(subject)
