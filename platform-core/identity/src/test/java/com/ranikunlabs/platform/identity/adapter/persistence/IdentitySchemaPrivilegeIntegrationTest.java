@@ -6,6 +6,7 @@ import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.env.MockEnvironment;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import javax.sql.DataSource;
@@ -68,7 +69,8 @@ class IdentitySchemaPrivilegeIntegrationTest {
 
         IdentityPersistenceConfiguration configuration = new IdentityPersistenceConfiguration();
         FluentConfiguration flywayConfiguration = Flyway.configure();
-        configuration.identityFlywayLocation(properties).customize(flywayConfiguration);
+        configuration.identityFlywayLocation(properties, new MockEnvironment()
+                .withProperty("platform.metrics.environment", "test")).customize(flywayConfiguration);
         Flyway identityFlyway = flywayConfiguration.load();
 
         configuration.identityFlywayMigrationStrategy(properties).migrate(identityFlyway);
@@ -136,7 +138,8 @@ class IdentitySchemaPrivilegeIntegrationTest {
                 "identity:");
 
         assertThatThrownBy(() -> new IdentityPersistenceConfiguration()
-                .identityFlywayLocation(properties)
+                .identityFlywayLocation(properties, new MockEnvironment()
+                        .withProperty("platform.metrics.environment", "test"))
                 .customize(Flyway.configure()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("URL, username, and password together");

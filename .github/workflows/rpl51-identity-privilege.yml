@@ -1,16 +1,18 @@
-name: RPL-51 Identity PostgreSQL privilege candidate
+name: RPL-54 Combined Identity Flyway and PostgreSQL validation candidate
 
 on:
   push:
     branches:
       - feat/identity-owned-schema-issue23-20261016
+      - codex/rpl55-test-only-20261105
+      - validation/rpl54-combined-20261106
 
 permissions:
   contents: read
 
 jobs:
   identity-privilege:
-    name: IdentitySchemaPrivilegeIntegrationTest
+    name: Identity Flyway configuration, schema privilege, and restart tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -40,5 +42,5 @@ jobs:
           mkdir -p platform-core/identity/src/test/resources
           printf 'api.version=1.44\n' > platform-core/identity/src/test/resources/docker-java.properties
           grep -qx 'api.version=1.44' platform-core/identity/src/test/resources/docker-java.properties
-      - name: Run disposable PostgreSQL privilege test
-        run: ./gradlew -p platform-core :identity:test --no-daemon --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentitySchemaPrivilegeIntegrationTest
+      - name: Run Flyway configuration, PostgreSQL privilege, and restart tests
+        run: ./gradlew -p platform-core :identity:test --no-daemon --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentityFlywayDatasourceConfigurationTest --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentitySchemaPrivilegeIntegrationTest --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentityFlywayRestartCharacterizationIntegrationTest

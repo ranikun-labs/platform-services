@@ -8,9 +8,12 @@ history를 소유한다. V1/V2 SQL과 checksum은 유지한다. Flyway는 명시
 
 Identity runtime datasource와 선택적 Flyway datasource를 분리할 수 있다. Flyway
 URL/username/password가 모두 설정되면 migration은 해당 datasource를 사용하고,
-셋 다 비어 있으면 기존처럼 Identity datasource를 사용한다. 일부만 지정하면 설정
-오류로 시작을 중단한다. 이 연결점은 별도 자격증명을 지원할 뿐 Production role 이름,
-grant 또는 secret 전달 방식을 결정하지 않는다.
+셋 다 비어 있으면 local/dev/test에서는 기존처럼 Identity datasource를 사용한다.
+`PLATFORM_ENVIRONMENT` 또는 `platform.metrics.environment`가 `prod`/`production`이거나
+Spring `prod`/`production` profile이 활성화되면 세 값이 모두 필요하며, 누락 시 시작을
+중단해 Identity runtime datasource로 fallback하지 않는다. 일부만 지정하면 환경과
+관계없이 설정 오류로 시작을 중단한다. 이 연결점은 별도 자격증명을 지원할 뿐
+Production role 이름, grant 또는 secret 전달 방식을 결정하지 않는다.
 
 ## Local Compose
 
