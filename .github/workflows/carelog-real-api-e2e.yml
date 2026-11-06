@@ -69,11 +69,18 @@ jobs:
       - name: Install Carelog FE dependencies and Chromium
         working-directory: carelog-fe-e2e
         run: |
+          phase=corepack_enable
+          trap 'phase_exit=$?; trap - EXIT; printf "::notice::carelog_install_phase=%s exit=%s\n" "$phase" "$phase_exit" || :; exit "$phase_exit"' EXIT
           corepack enable
+          phase=corepack_prepare
           corepack prepare pnpm@11.15.1 --activate
+          phase=pnpm_install
           pnpm install --frozen-lockfile
+          phase=playwright_install
           pnpm exec playwright install --with-deps chromium
+          phase=frontend_typecheck
           pnpm typecheck
+          phase=frontend_validation
           TZ=Asia/Seoul pnpm exec vitest run
 
       - name: Recheck space before building G4 images
