@@ -1,0 +1,1 @@
+CREATE SCHEMA identity AUTHORIZATION platform_e2e;
