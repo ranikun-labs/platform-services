@@ -7,7 +7,7 @@ services:
       context: ./gateway-app
     environment:
       PLATFORM_GATEWAY_PORT: ${PLATFORM_GATEWAY_PORT:-8080}
-      PLATFORM_GATEWAY_REDIS_HOST: valkey
+      PLATFORM_GATEWAY_REDIS_HOST: redis
       PLATFORM_GATEWAY_REDIS_PORT: 6379
       PLATFORM_GATEWAY_REDIS_KEY_PREFIX: "platform:gateway:"
       # Dark default: keep auth on Carelog until the live Platform Identity gate passes.
@@ -45,7 +45,7 @@ services:
       PLATFORM_IDENTITY_FLYWAY_DATASOURCE_URL: ${PLATFORM_IDENTITY_FLYWAY_DATASOURCE_URL:-}
       PLATFORM_IDENTITY_FLYWAY_DATASOURCE_USERNAME: ${PLATFORM_IDENTITY_FLYWAY_DATASOURCE_USERNAME:-}
       PLATFORM_IDENTITY_FLYWAY_DATASOURCE_PASSWORD: ${PLATFORM_IDENTITY_FLYWAY_DATASOURCE_PASSWORD:-}
-      PLATFORM_IDENTITY_REDIS_HOST: valkey
+      PLATFORM_IDENTITY_REDIS_HOST: redis
       PLATFORM_IDENTITY_REDIS_PORT: 6379
       PLATFORM_IDENTITY_REDIS_KEY_PREFIX: "platform:identity:"
       PLATFORM_IDENTITY_AUTH_ENABLED: ${PLATFORM_IDENTITY_AUTH_ENABLED:-false}
@@ -125,7 +125,9 @@ services:
       retries: 10
       start_period: 5s
     networks:
-      - platform
+      platform:
+        aliases:
+          - redis
 
 volumes:
   platform-postgres-data:
