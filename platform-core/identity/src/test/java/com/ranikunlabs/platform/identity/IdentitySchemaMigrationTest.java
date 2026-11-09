@@ -21,6 +21,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -53,12 +55,17 @@ class IdentitySchemaMigrationTest {
     }
 
     @BeforeEach
-    void resetSchema() {
-        flyway().clean();
+    void resetSchema() throws SQLException {
+        flywayConfiguration().createSchemas(true).load().clean();
+        try (Connection connection = DriverManager.getConnection(
+                postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+             Statement statement = connection.createStatement()) {
+            statement.execute("CREATE SCHEMA IF NOT EXISTS " + IdentityDatabaseSchema.NAME);
+        }
     }
 
     @Test
-    void freshDatabaseCreatesOnlyEffectiveIdentitySchema() throws Exception {
+    void freshProvisionedIdentitySchemaCreatesOnlyEffectiveIdentityTables() throws Exception {
         var result = flyway().migrate();
 
         assertThat(result.success).isTrue();
@@ -123,6 +130,34 @@ class IdentitySchemaMigrationTest {
         }
 
         assertMigrationHasNoCarelogTableReferences();
+    }
+
+    @Test
+    void existingDevelopmentHistoryAndRowsSurviveTheSchemaProvisioningChange() throws Exception {
+        Flyway previousConfiguration = flywayConfiguration().createSchemas(true).load();
+        assertThat(previousConfiguration.migrate().migrationsExecuted).isEqualTo(2);
+
+        UUID accountId = UUID.randomUUID();
+        try (Connection connection = connection()) {
+            insertAccount(connection, accountId, "ACTIVE");
+        }
+        Map<String, Integer> checksumsBefore = migrationChecksums();
+
+        Flyway currentConfiguration = flyway();
+        currentConfiguration.validate();
+        assertThat(currentConfiguration.migrate().migrationsExecuted).isZero();
+        currentConfiguration.validate();
+
+        try (Connection connection = connection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT status FROM platform_accounts WHERE id = ?")) {
+            statement.setObject(1, accountId);
+            try (ResultSet result = statement.executeQuery()) {
+                assertThat(result.next()).isTrue();
+                assertThat(result.getString("status")).isEqualTo("ACTIVE");
+            }
+        }
+        assertThat(migrationChecksums()).containsExactlyEntriesOf(checksumsBefore);
     }
 
     @Test
@@ -237,8 +272,23 @@ class IdentitySchemaMigrationTest {
                 .locations("classpath:db/migration")
                 .schemas(IdentityDatabaseSchema.NAME)
                 .defaultSchema(IdentityDatabaseSchema.NAME)
-                .createSchemas(true)
+                .createSchemas(false)
                 .cleanDisabled(false);
+    }
+
+    private Map<String, Integer> migrationChecksums() throws SQLException {
+        Map<String, Integer> checksums = new LinkedHashMap<>();
+        try (Connection connection = DriverManager.getConnection(
+                postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+             Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery(
+                     "SELECT version, checksum FROM identity.flyway_schema_history "
+                             + "WHERE success ORDER BY installed_rank")) {
+            while (result.next()) {
+                checksums.put(result.getString("version"), result.getInt("checksum"));
+            }
+        }
+        return checksums;
     }
 
     private Connection connection() throws SQLException {

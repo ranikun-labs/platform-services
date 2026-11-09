@@ -44,9 +44,10 @@ public final class IdentityLegacySchemaGuard {
         String placeholders = String.join(", ", IdentityDatabaseSchema.TABLES.stream()
                 .map(table -> "?")
                 .toList());
-        String sql = "SELECT table_name FROM information_schema.tables "
-                + "WHERE table_schema = ? AND table_type = 'BASE TABLE' "
-                + "AND table_name IN (" + placeholders + ")";
+        String sql = "SELECT relation.relname FROM pg_catalog.pg_class relation "
+                + "JOIN pg_catalog.pg_namespace namespace_ref ON namespace_ref.oid = relation.relnamespace "
+                + "WHERE namespace_ref.nspname = ? AND relation.relkind IN ('r', 'p') "
+                + "AND relation.relname IN (" + placeholders + ")";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, PUBLIC_SCHEMA);
             int parameter = 2;
@@ -66,6 +67,7 @@ public final class IdentityLegacySchemaGuard {
         if (!tableExists(connection, PUBLIC_SCHEMA, LEGACY_HISTORY_TABLE)) {
             return false;
         }
+        // A visible catalog entry with unreadable history must block startup rather than look absent.
         try (PreparedStatement statement = connection.prepareStatement(
                 "SELECT version, description FROM public.flyway_schema_history")) {
             try (ResultSet result = statement.executeQuery()) {
@@ -82,7 +84,10 @@ public final class IdentityLegacySchemaGuard {
 
     private boolean tableExists(Connection connection, String schema, String table) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT 1 FROM information_schema.tables WHERE table_schema = ? AND table_name = ?")) {
+                "SELECT 1 FROM pg_catalog.pg_class relation "
+                        + "JOIN pg_catalog.pg_namespace namespace_ref ON namespace_ref.oid = relation.relnamespace "
+                        + "WHERE namespace_ref.nspname = ? AND relation.relname = ? "
+                        + "AND relation.relkind IN ('r', 'p', 'v', 'm', 'f')")) {
             statement.setString(1, schema);
             statement.setString(2, table);
             try (ResultSet result = statement.executeQuery()) {

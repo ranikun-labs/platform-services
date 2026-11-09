@@ -1,0 +1,590 @@
+{
+  "issue": 24,
+  "baseCommit": "9f04f44e5dfc88272fcf380f96524f5bfdc92b75",
+  "phase": "functional",
+  "result": "PASS",
+  "recordedAtUtc": "2026-10-16T11:20:47.051606+00:00",
+  "checks": [
+    {
+      "name": "identity.unauthorized.http",
+      "result": "PASS",
+      "httpStatus": 401,
+      "expected": 401
+    },
+    {
+      "name": "identity.unauthorized.contract_status",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "identity.unauthorized.error",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "identity.unauthorized.message",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "identity.unauthorized.path",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.unauthorized",
+      "result": "PASS",
+      "httpStatus": 401,
+      "expected": 401
+    },
+    {
+      "name": "gateway.forbidden",
+      "result": "PASS",
+      "httpStatus": 403,
+      "expected": 403
+    },
+    {
+      "name": "gateway.jwt.expired",
+      "result": "PASS",
+      "httpStatus": 401,
+      "expected": 401
+    },
+    {
+      "name": "gateway.jwt.tampered",
+      "result": "PASS",
+      "httpStatus": 401,
+      "expected": 401
+    },
+    {
+      "name": "gateway.identity.invalid_credentials.http",
+      "result": "PASS",
+      "httpStatus": 401,
+      "expected": 401
+    },
+    {
+      "name": "gateway.identity.invalid_credentials.envelope_status",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.identity.invalid_credentials.message",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.identity.invalid_credentials.no_data",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.identity.invalid_credentials.content_type",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.identity.login.http",
+      "result": "PASS",
+      "httpStatus": 200,
+      "expected": 200
+    },
+    {
+      "name": "gateway.identity.login.envelope_status",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.message",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.data_object",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.data_contract",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.content_type",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.access_token",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.refresh_token",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh.http",
+      "result": "PASS",
+      "httpStatus": 200,
+      "expected": 200
+    },
+    {
+      "name": "gateway.identity.refresh.envelope_status",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh.message",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh.data_object",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh.data_contract",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh.content_type",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh.refresh_rotated",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh_retry.http",
+      "result": "PASS",
+      "httpStatus": 404,
+      "expected": 404
+    },
+    {
+      "name": "gateway.identity.refresh_retry.envelope_status",
+      "result": "PASS",
+      "httpStatus": 404
+    },
+    {
+      "name": "gateway.identity.refresh_retry.message",
+      "result": "PASS",
+      "httpStatus": 404
+    },
+    {
+      "name": "gateway.identity.refresh_retry.no_data",
+      "result": "PASS",
+      "httpStatus": 404
+    },
+    {
+      "name": "gateway.identity.refresh_retry.content_type",
+      "result": "PASS",
+      "httpStatus": 404
+    },
+    {
+      "name": "gateway.identity.logout.valid_jwt",
+      "result": "PASS",
+      "httpStatus": 204
+    },
+    {
+      "name": "gateway.jwt.revoked",
+      "result": "PASS",
+      "httpStatus": 401,
+      "expected": 401
+    },
+    {
+      "name": "gateway.identity.login.http",
+      "result": "PASS",
+      "httpStatus": 200,
+      "expected": 200
+    },
+    {
+      "name": "gateway.identity.login.envelope_status",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.message",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.data_object",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.data_contract",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.content_type",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.access_token",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.login.refresh_token",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh_race.single_consumer",
+      "result": "PASS",
+      "httpStatus": null,
+      "expected": [
+        200,
+        404
+      ]
+    },
+    {
+      "name": "gateway.identity.refresh_race.retry.http",
+      "result": "PASS",
+      "httpStatus": 404,
+      "expected": 404
+    },
+    {
+      "name": "gateway.identity.refresh_race.retry.envelope_status",
+      "result": "PASS",
+      "httpStatus": 404
+    },
+    {
+      "name": "gateway.identity.refresh_race.retry.message",
+      "result": "PASS",
+      "httpStatus": 404
+    },
+    {
+      "name": "gateway.identity.refresh_race.retry.no_data",
+      "result": "PASS",
+      "httpStatus": 404
+    },
+    {
+      "name": "gateway.identity.refresh_race.retry.content_type",
+      "result": "PASS",
+      "httpStatus": 404
+    },
+    {
+      "name": "gateway.identity.refresh_race.winner.http",
+      "result": "PASS",
+      "httpStatus": 200,
+      "expected": 200
+    },
+    {
+      "name": "gateway.identity.refresh_race.winner.envelope_status",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh_race.winner.message",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh_race.winner.data_object",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh_race.winner.data_contract",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh_race.winner.content_type",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.identity.refresh_race.rotated",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.http",
+      "result": "PASS",
+      "httpStatus": 200,
+      "expected": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.envelope_status",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.message",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.data_object",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.data_contract",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.content_type",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.no_internal_state_fields",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.state_in_url",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.authorization.fake_provider",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "identity.oauth.state.ttl",
+      "result": "PASS",
+      "httpStatus": null,
+      "ttlSeconds": 300
+    },
+    {
+      "name": "fake_provider.counters.ready",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.oauth.state_getdel_race.single_consumer",
+      "result": "PASS",
+      "httpStatus": null,
+      "expected": [
+        401,
+        409
+      ]
+    },
+    {
+      "name": "gateway.oauth.state_getdel_race.replay.http",
+      "result": "PASS",
+      "httpStatus": 401,
+      "expected": 401
+    },
+    {
+      "name": "gateway.oauth.state_getdel_race.replay.envelope_status",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.oauth.state_getdel_race.replay.message",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.oauth.state_getdel_race.replay.no_data",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.oauth.state_getdel_race.replay.content_type",
+      "result": "PASS",
+      "httpStatus": 401
+    },
+    {
+      "name": "gateway.oauth.fake_provider.unlinked_account.http",
+      "result": "PASS",
+      "httpStatus": 409,
+      "expected": 409
+    },
+    {
+      "name": "gateway.oauth.fake_provider.unlinked_account.envelope_status",
+      "result": "PASS",
+      "httpStatus": 409
+    },
+    {
+      "name": "gateway.oauth.fake_provider.unlinked_account.message",
+      "result": "PASS",
+      "httpStatus": 409
+    },
+    {
+      "name": "gateway.oauth.fake_provider.unlinked_account.no_data",
+      "result": "PASS",
+      "httpStatus": 409
+    },
+    {
+      "name": "gateway.oauth.fake_provider.unlinked_account.content_type",
+      "result": "PASS",
+      "httpStatus": 409
+    },
+    {
+      "name": "fake_provider.counters.after_callback",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "fake_provider.single_token_exchange",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "fake_provider.single_user_info",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "identity.oauth.state.deleted_after_consume",
+      "result": "PASS",
+      "httpStatus": null
+    },
+    {
+      "name": "identity.oauth.state.getdel_command",
+      "result": "PASS",
+      "httpStatus": null,
+      "getdelCalls": 2
+    },
+    {
+      "name": "gateway.rate_limit.allowed_status_contract",
+      "result": "PASS",
+      "httpStatus": null
+    },
+    {
+      "name": "gateway.rate_limit.burst_then_deny",
+      "result": "PASS",
+      "httpStatus": null,
+      "allowed": 2,
+      "denied": 10
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.http",
+      "result": "PASS",
+      "httpStatus": 200,
+      "expected": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.envelope_status",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.message",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.data_object",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.data_contract",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.content_type",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.http",
+      "result": "PASS",
+      "httpStatus": 200,
+      "expected": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.envelope_status",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.message",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.data_object",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.data_contract",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.allowed_response.content_type",
+      "result": "PASS",
+      "httpStatus": 200
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.denied_response",
+      "result": "PASS",
+      "httpStatus": 429
+    },
+    {
+      "name": "gateway.rate_limit.valkey_lua_execution",
+      "result": "PASS",
+      "httpStatus": null,
+      "evalCalls": 1,
+      "evalshaCalls": 15
+    }
+  ],
+  "summary": {
+    "passed": 109,
+    "failed": 0
+  }
+}
