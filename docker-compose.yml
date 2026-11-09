@@ -121,7 +121,9 @@ services:
       retries: 10
       start_period: 5s
     networks:
-      - platform
+      platform:
+        aliases:
+          - redis
 
 volumes:
   platform-postgres-data:
