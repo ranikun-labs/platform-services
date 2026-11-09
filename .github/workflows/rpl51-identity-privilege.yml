@@ -1,0 +1,46 @@
+name: RPL-54 Combined Identity Flyway and PostgreSQL validation candidate
+
+on:
+  push:
+    branches:
+      - feat/identity-owned-schema-issue23-20261016
+      - codex/rpl55-test-only-20261105
+      - validation/rpl54-combined-20261106
+
+permissions:
+  contents: read
+
+jobs:
+  identity-privilege:
+    name: Identity Flyway configuration, schema privilege, and restart tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout pushed SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Verify pinned source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
+          printf "SOURCE_SHA=%s\n" "$actual"
+      - name: Report hosted Docker API
+        run: docker version --format 'Server={{.Server.Version}} API={{.Server.APIVersion}} Minimum={{.Server.MinAPIVersion}}'
+      - name: Apply isolated Docker API 1.44 compatibility for Testcontainers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p platform-core/identity/src/test/resources
+          printf 'api.version=1.44\n' > platform-core/identity/src/test/resources/docker-java.properties
+          grep -qx 'api.version=1.44' platform-core/identity/src/test/resources/docker-java.properties
+      - name: Run Flyway configuration, PostgreSQL privilege, and restart tests
+        run: ./gradlew -p platform-core :identity:test --no-daemon --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentityFlywayDatasourceConfigurationTest --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentitySchemaPrivilegeIntegrationTest --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentityFlywayRestartCharacterizationIntegrationTest
