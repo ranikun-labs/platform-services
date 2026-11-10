@@ -73,6 +73,11 @@ class SharedAiVerticalSliceIntegrationTest {
                 .andExpect(jsonPath("$.evidenceCategories[0]").value("STRUCTURED_PRODUCT_FACT"))
                 .andExpect(jsonPath("$.evidenceCategories[1]").value("RETRIEVED_CONTENT"))
                 .andExpect(jsonPath("$.evidenceCategories[2]").value("MODEL_INTERPRETATION"));
+
+        mockMvc.perform(post("/internal/shared-ai/v1/executions")
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isNotFound());
     }
 
     @RestController
