@@ -1,0 +1,82 @@
+name: Platform main source-bound E2E
+
+on:
+  push:
+    branches:
+      - candidate-platform-main-ci-1103
+permissions:
+  contents: read
+
+jobs:
+  combined-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out candidate source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Verify source identity
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse 'HEAD^^{tree}')" = 24d369a825c833cb8e15376f2fc40bf6ef807670
+          test "$(git diff --name-only HEAD^ HEAD)" = .github/workflows/rpl55-main-verification.yml
+          git rev-parse 'HEAD^{tree}'
+          docker version --format 'Server={{.Server.Version}}'
+          docker compose version
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Verify Gateway cleanup behavior
+        run: ./gradlew -p gateway-app test --no-daemon --tests com.ranikunlabs.platform.gateway.GatewayPrometheusIntegrationTest
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Verify Core cleanup behavior
+        run: ./gradlew -p platform-core :app:test --no-daemon --tests com.ranikunlabs.platform.core.PlatformCorePrometheusIntegrationTest
+
+      - name: Verify Identity migration and privileges
+        run: |
+          set -euo pipefail
+          property=platform-core/identity/src/test/resources/docker-java.properties
+          test ! -e "$property"
+          mkdir -p "$(dirname "$property")"
+          trap 'rm -f "$property"' EXIT
+          printf 'api.version=1.44\n' > "$property"
+          ./gradlew -p platform-core :identity:test --no-daemon \
+            --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentityFlywayDatasourceConfigurationTest \
+            --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentitySchemaPrivilegeIntegrationTest \
+            --tests com.ranikunlabs.platform.identity.adapter.persistence.IdentityFlywayRestartCharacterizationIntegrationTest
+
+      - name: Run source and image binding regression
+        run: ./scripts/test-gateway-identity-image-binding.sh
+
+      - name: Run isolated Gateway and Identity E2E
+        run: |
+          evidence_dir="$RUNNER_TEMP/platform-main-evidence"
+          mkdir -p "$evidence_dir"
+          PLATFORM_E2E_EVIDENCE_HOST_PATH="$evidence_dir" ./scripts/test-gateway-identity-e2e.sh
+
+      - name: Retain redacted evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-main-evidence-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/platform-main-evidence/*.json
+            gateway-app/build/test-results/test/TEST-*.xml
+            platform-core/app/build/test-results/test/TEST-*.xml
+            platform-core/identity/build/test-results/test/TEST-*.xml
+          if-no-files-found: warn
+          retention-days: 7
