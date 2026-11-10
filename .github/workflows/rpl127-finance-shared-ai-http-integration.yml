@@ -3,7 +3,7 @@ name: RPL-127 Finance to Shared AI HTTP Integration
 on:
   push:
     branches:
-      - recovery/f4-rpl126
+      - closeout/shared-ai-integration-20261110
 
 permissions:
   contents: read
@@ -44,8 +44,12 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          git merge-base --is-ancestor "34b5cca164b0acdb364dfb58c6648a9e400c3a47" HEAD
-          changed_paths="$(git diff --name-only 34b5cca164b0acdb364dfb58c6648a9e400c3a47 HEAD)"
+          integration_parent="638b96004d29a7b9a902573e6534f55be8296734"
+          test "$(git rev-parse HEAD^)" = "$integration_parent"
+          test "$(git rev-parse "$integration_parent^{tree}")" = "bbe6778c3786490674063aa7cfce782a329863b1"
+          git merge-base --is-ancestor "376d7e3678976cbd3707ce01818315b9643ef44b" HEAD
+          git merge-base --is-ancestor "31f68b5437bee8de889b9e704db0a35d57045ffd" HEAD
+          changed_paths="$(git diff --name-only "$integration_parent" HEAD)"
           test "$changed_paths" = ".github/workflows/rpl127-finance-shared-ai-http-integration.yml"
 
       - name: Download and verify pinned Finance source snapshot
@@ -80,6 +84,14 @@ jobs:
           ./gradlew -p platform-core :app:test --no-daemon --stacktrace --console=plain
           --tests com.ranikunlabs.platform.core.SharedAiHttpV1ContractIntegrationTest
           --tests com.ranikunlabs.platform.core.LocalTestSharedAiExecutionControllerActivationTest
+
+      - name: Prepare disposable Identity schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec "${{ job.services.postgres.id }}" \
+            psql -v ON_ERROR_STOP=1 -U integration_test -d platform \
+            -c 'CREATE SCHEMA IF NOT EXISTS identity AUTHORIZATION integration_test;'
 
       - name: Run Shared AI and Finance as separate JVMs
         shell: bash
