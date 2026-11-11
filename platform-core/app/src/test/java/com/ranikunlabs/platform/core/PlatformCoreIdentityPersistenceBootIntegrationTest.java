@@ -38,6 +38,9 @@ import com.ranikunlabs.platform.identity.application.port.productclient.ProductC
 import com.ranikunlabs.platform.identity.application.port.productclient.RegisteredProductClient;
 import com.ranikunlabs.platform.identity.core.Product;
 import com.ranikunlabs.platform.identity.core.ProductClientChannel;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +52,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
@@ -68,6 +72,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.http.HttpClient;
@@ -76,6 +81,8 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.DatabaseMetaData;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -101,6 +108,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
                 "server.port=0",
+                "PLATFORM_CORE_PORT=0",
+                "PLATFORM_CORE_MANAGEMENT_PORT=0",
+                "management.endpoints.web.exposure.include=health,info,prometheus",
+                "platform.metrics.environment=test",
                 "platform.identity.persistence.enabled=true",
                 "platform.identity.auth.enabled=true",
                 "platform.identity.redis-key-prefix=test:identity:",
@@ -151,6 +162,15 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
+
+    @Autowired
+    private Environment environment;
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -204,6 +224,177 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
         registry.add("platform.identity.datasource.password", POSTGRES::getPassword);
         registry.add("platform.identity.redis-host", REDIS::getHost);
         registry.add("platform.identity.redis-port", () -> REDIS.getMappedPort(6379));
+    }
+
+    @Test
+    void observesJpaJdbcMetadataAndPreservesPostgresResourceContracts() throws Exception {
+        assertThat(dataSource.getClass().getName())
+                .isEqualTo("com.ranikunlabs.platform.identity.adapter.persistence.InstrumentedHikariDataSource");
+
+        long queryCountBefore = timerCount("query", "success");
+        assertThat(entityManager.createNativeQuery("SELECT 1").getSingleResult().toString()).isEqualTo("1");
+        assertThat(timerCount("query", "success")).isGreaterThan(queryCountBefore);
+
+        Connection connection = dataSource.getConnection();
+        Class<?> pgConnectionType = Class.forName("org.postgresql.PGConnection");
+        assertThat(connection.isWrapperFor(pgConnectionType)).isTrue();
+        Object pgConnection = connection.unwrap(pgConnectionType);
+        assertThat(pgConnectionType.isInstance(pgConnection)).isTrue();
+        assertThat((Integer) pgConnectionType.getMethod("getBackendPID").invoke(pgConnection))
+                .isPositive();
+
+        long vendorSqlCountBefore = timerCount("query", "success");
+        Object copyManager = pgConnectionType.getMethod("getCopyAPI").invoke(pgConnection);
+        Class<?> copyManagerType = Class.forName("org.postgresql.copy.CopyManager");
+        long copiedBytes = (Long) copyManagerType
+                .getMethod("copyOut", String.class, java.io.OutputStream.class)
+                .invoke(copyManager, "COPY (SELECT 1) TO STDOUT", new ByteArrayOutputStream());
+        assertThat(copiedBytes).isPositive();
+        // Native vendor operations retain driver compatibility but are outside this JDBC timer boundary.
+        assertThat(timerCount("query", "success")).isEqualTo(vendorSqlCountBefore);
+
+        long wrappedSqlCountBefore = timerCount("query", "success");
+        try (Statement wrapped = connection.createStatement();
+             ResultSet selected = wrapped.executeQuery("SELECT 1")) {
+            assertThat(selected.next()).isTrue();
+        }
+        assertThat(timerCount("query", "success")).isGreaterThan(wrappedSqlCountBefore);
+
+        assertThat(connection.isWrapperFor(Connection.class)).isTrue();
+        assertThat(connection.unwrap(Connection.class)).isSameAs(connection);
+        assertThat(connection.equals(connection)).isTrue();
+        assertThat(connection.hashCode()).isEqualTo(connection.hashCode());
+
+        DatabaseMetaData metadata = connection.getMetaData();
+        assertThat(metadata.isWrapperFor(DatabaseMetaData.class)).isTrue();
+        assertThat(metadata.unwrap(DatabaseMetaData.class)).isSameAs(metadata);
+        assertThat(metadata.getConnection()).isSameAs(connection);
+        long metadataCountBefore = timerCount("metadata", "success");
+        try (ResultSet tables = metadata.getTables(null, IdentityDatabaseSchema.NAME, "%", new String[]{"TABLE"})) {
+            assertThat(tables.isClosed()).isFalse();
+        }
+        assertThat(timerCount("metadata", "success")).isGreaterThan(metadataCountBefore);
+
+        connection.setAutoCommit(false);
+        Statement statement = connection.createStatement();
+        assertThat(statement.getConnection()).isSameAs(connection);
+        ResultSet result = statement.executeQuery("SELECT 1");
+        assertThat(statement.isWrapperFor(Statement.class)).isTrue();
+        assertThat(statement.unwrap(Statement.class)).isSameAs(statement);
+        assertThat(result.getStatement()).isSameAs(statement);
+        assertThat(result.next()).isTrue();
+        assertThat(result.getInt(1)).isEqualTo(1);
+        connection.commit();
+        result.close();
+        assertThat(result.isClosed()).isTrue();
+        statement.close();
+        assertThat(statement.isClosed()).isTrue();
+
+        Statement closeOnCompletion = connection.createStatement();
+        closeOnCompletion.closeOnCompletion();
+        ResultSet completionResult = closeOnCompletion.executeQuery("SELECT 1");
+        completionResult.close();
+        assertThat(closeOnCompletion.isClosed()).isTrue();
+
+        try (PreparedStatement insert = connection.prepareStatement(
+                "CREATE TEMP TABLE jdbc_observation_probe (value integer)")) {
+            assertThat(insert.execute()).isFalse();
+        }
+        try (PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO jdbc_observation_probe (value) VALUES (?)")) {
+            insert.setInt(1, 3);
+            assertThat(insert.executeUpdate()).isEqualTo(1);
+        }
+        try (PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO jdbc_observation_probe (value) VALUES (?)")) {
+            insert.setInt(1, 1);
+            insert.addBatch();
+            insert.setInt(1, 2);
+            insert.addBatch();
+            assertThat(insert.executeBatch()).containsExactly(1, 1);
+        }
+
+        SQLException originalFailure;
+        try (PreparedStatement divisionByZero = connection.prepareStatement("SELECT 1 / ?")) {
+            divisionByZero.setInt(1, 0);
+            originalFailure = org.assertj.core.api.Assertions.catchThrowableOfType(
+                    divisionByZero::executeQuery, SQLException.class);
+        }
+        assertThat(originalFailure != null).isTrue();
+        assertThat(originalFailure.getClass().getName()).isEqualTo("org.postgresql.util.PSQLException");
+        assertThat(originalFailure.getSQLState()).isEqualTo("22012");
+
+        connection.rollback();
+        connection.close();
+        assertThat(connection.isClosed()).isTrue();
+        try (Connection reused = dataSource.getConnection()) {
+            assertThat(reused.getAutoCommit()).isTrue();
+        }
+
+        softEvictHikariConnections();
+        try (Connection replacement = dataSource.getConnection();
+             Statement check = replacement.createStatement();
+             ResultSet selected = check.executeQuery("SELECT 1")) {
+            assertThat(selected.next()).isTrue();
+        }
+
+        String scrape = scrapePrometheus();
+        assertThat(scrape)
+                .contains("hikaricp_connections_active")
+                .contains("ranikun_db_query_duration_seconds_bucket")
+                .contains("ranikun_db_query_duration_seconds_count")
+                .contains("ranikun_db_query_duration_seconds_sum")
+                .contains("service=\"platform-core\"")
+                .contains("environment=\"test\"")
+                .doesNotContain("SELECT", "sql=", "account_id=", "tenant_id=", "user_id=");
+        assertPrometheusSample(scrape, "ranikun_db_query_duration_seconds_bucket",
+                "operation=\"query\"", "outcome=\"success\"", "le=\"+Inf\"");
+        assertPrometheusSample(scrape, "ranikun_db_query_duration_seconds_sum",
+                "operation=\"query\"", "outcome=\"success\"");
+        assertPrometheusSample(scrape, "ranikun_db_query_duration_seconds_count",
+                "operation=\"query\"", "outcome=\"error\"");
+        assertPrometheusSample(scrape, "ranikun_db_query_duration_seconds_count",
+                "operation=\"batch\"", "outcome=\"success\"");
+        assertPrometheusSample(scrape, "ranikun_db_query_duration_seconds_count",
+                "operation=\"update\"", "outcome=\"success\"");
+        assertPrometheusSample(scrape, "ranikun_db_query_duration_seconds_count",
+                "operation=\"metadata\"", "outcome=\"success\"");
+    }
+
+    private long timerCount(String operation, String outcome) {
+        Timer timer = meterRegistry.find("ranikun.db.query.duration")
+                .tags("operation", operation, "outcome", outcome)
+                .timer();
+        return timer == null ? 0 : timer.count();
+    }
+
+    private void softEvictHikariConnections() throws Exception {
+        Object pool = dataSource.getClass().getMethod("getHikariPoolMXBean").invoke(dataSource);
+        assertThat(pool).isNotNull();
+        Class.forName("com.zaxxer.hikari.HikariPoolMXBean")
+                .getMethod("softEvictConnections")
+                .invoke(pool);
+    }
+
+    private String scrapePrometheus() throws Exception {
+        int port = environment.getRequiredProperty("local.management.port", Integer.class);
+        HttpResponse<String> response = HttpClient.newHttpClient().send(
+                HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/actuator/prometheus"))
+                        .timeout(Duration.ofSeconds(10))
+                        .GET()
+                        .build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+        return response.body();
+    }
+
+    private static void assertPrometheusSample(String scrape, String name, String... labels) {
+        String sample = scrape.lines()
+                .filter(line -> line.startsWith(name + "{"))
+                .filter(line -> java.util.Arrays.stream(labels).allMatch(line::contains))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Missing metric sample " + name));
+        assertThat(Double.parseDouble(sample.substring(sample.lastIndexOf(' ') + 1))).isPositive();
     }
 
     @Test
