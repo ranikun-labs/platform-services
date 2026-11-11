@@ -128,6 +128,46 @@ class FinanceTrustedContextGatewayFilterTest {
     }
 
     @Test
+    fun `only canonical journal detail PATCH reaches Finance after verified authentication`() {
+        val path = "/finance/journals/$subjectA"
+        assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.PATCH, path, path)).isTrue()
+        listOf(
+            HttpMethod.DELETE to path,
+            HttpMethod.PUT to path,
+            HttpMethod.PATCH to "/finance/journals",
+            HttpMethod.PATCH to "$path/extra",
+            HttpMethod.PATCH to "/finance/journals/not-a-uuid"
+        ).forEach { (method, candidate) ->
+            assertThat(FinanceTrustedContextWire.isSupportedRoute(method, candidate, candidate)).isFalse()
+        }
+        assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.PATCH, path, "$path%2Fextra")).isFalse()
+
+        val token = validToken(subjectA)
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.method(HttpMethod.PATCH, path)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .header("X-Finance-Subject", "attacker")
+                .build()
+        )
+        val forwarded = mutableListOf<ServerWebExchange>()
+        val chain = org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+            financeFilter.filter(verified, downstream(forwarded))
+        }
+        jwtFilter.filter(exchange, chain).block()
+        assertThat(forwarded).hasSize(1)
+        assertThat(forwarded.single().request.headers.getFirst(FinanceTrustedContextWire.SUBJECT_HEADER))
+            .isEqualTo(canonicalBase64Url(subjectA))
+        assertThat(forwarded.single().request.headers.getFirst(HttpHeaders.AUTHORIZATION)).isNull()
+
+        val unauthenticated = MockServerWebExchange.from(MockServerHttpRequest.method(HttpMethod.PATCH, path).build())
+        val rejected = mutableListOf<ServerWebExchange>()
+        financeFilter.filter(unauthenticated, downstream(rejected)).block()
+        assertThat(unauthenticated.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        assertThat(rejected).isEmpty()
+    }
+
+    @Test
     fun `empty Bearer and missing stable subject are unauthorized only on the Finance reference route`() {
         val emptyBearer = MockServerWebExchange.from(
             MockServerHttpRequest.get("/finance/journals")
@@ -252,6 +292,164 @@ class FinanceTrustedContextGatewayFilterTest {
             FinanceTrustedContextProfileGuard.validate(config.financeTrustedContext, enabledWithoutProfile)
         }.isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("explicit fixture profile")
+    }
+
+    @Test
+    fun `deleted list and individual delete restore preserve body and verified identity`() {
+        val routes = listOf(
+            HttpMethod.GET to "/finance/journals/deleted",
+            HttpMethod.POST to "/finance/journals/$subjectA/delete",
+            HttpMethod.POST to "/finance/journals/$subjectA/restore"
+        )
+        routes.forEach { (method, path) ->
+            val token = validToken(subjectA)
+            `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+            val body = if (method == HttpMethod.POST) "{\"expectedRevision\":7}" else ""
+            val exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.method(method, path)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .header("X-User-Id", subjectB)
+                    .header(FinanceTrustedContextWire.SUBJECT_HEADER, subjectB)
+                    .header("X-Finance-Attacker-Extra", "must-be-removed")
+                    .body(body)
+            )
+            val forwarded = mutableListOf<ServerWebExchange>()
+            jwtFilter.filter(exchange, org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+                financeFilter.filter(verified, downstream(forwarded))
+            }).block()
+
+            assertThat(exchange.response.statusCode).isNull()
+            assertThat(forwarded).hasSize(1)
+            val request = forwarded.single().request
+            assertThat(request.method).isEqualTo(method)
+            assertThat(request.uri.rawPath).isEqualTo(path)
+            val forwardedBody = org.springframework.core.io.buffer.DataBufferUtils.join(request.body)
+                .map { buffer ->
+                    try { StandardCharsets.UTF_8.decode(buffer.asByteBuffer()).toString() }
+                    finally { org.springframework.core.io.buffer.DataBufferUtils.release(buffer) }
+                }.defaultIfEmpty("").block()
+            assertThat(forwardedBody).isEqualTo(body)
+            assertThat(request.headers.getFirst(FinanceTrustedContextWire.SUBJECT_HEADER))
+                .isEqualTo(canonicalBase64Url(subjectA))
+            assertThat(request.headers).doesNotContainKeys(
+                HttpHeaders.AUTHORIZATION, "X-User-Id", "X-Finance-Attacker-Extra"
+            )
+        }
+    }
+
+    @Test
+    fun `delete restore and deleted list require authentication before forwarding`() {
+        listOf(
+            HttpMethod.GET to "/finance/journals/deleted",
+            HttpMethod.POST to "/finance/journals/$subjectA/delete",
+            HttpMethod.POST to "/finance/journals/$subjectA/restore"
+        ).forEach { (method, path) ->
+            val exchange = MockServerWebExchange.from(MockServerHttpRequest.method(method, path).build())
+            val forwarded = mutableListOf<ServerWebExchange>()
+            jwtFilter.filter(exchange, org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+                financeFilter.filter(verified, downstream(forwarded))
+            }).block()
+            assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+            assertThat(forwarded).isEmpty()
+        }
+    }
+
+    @Test
+    fun `journal lifecycle routes reject wrong methods noncanonical ids and encoded paths`() {
+        val invalid = listOf(
+            HttpMethod.POST to "/finance/journals/deleted",
+            HttpMethod.DELETE to "/finance/journals/$subjectA",
+            HttpMethod.DELETE to "/finance/journals/$subjectA/delete",
+            HttpMethod.GET to "/finance/journals/$subjectA/delete",
+            HttpMethod.PATCH to "/finance/journals/$subjectA/restore",
+            HttpMethod.PUT to "/finance/journals/$subjectA/restore",
+            HttpMethod.POST to "/finance/journals/not-a-uuid/delete",
+            HttpMethod.POST to "/finance/journals/${subjectA.uppercase()}/restore",
+            HttpMethod.POST to "/finance/journals/$subjectA/delete/",
+            HttpMethod.POST to "/finance/journals/$subjectA/restore/extra",
+            HttpMethod.POST to "/finance/journals//$subjectA/delete",
+            HttpMethod.POST to "/finance/journals/deleted/restore",
+            HttpMethod.POST to "/finance/journals/$subjectA/%64elete",
+            HttpMethod.GET to "/finance/journals/%64eleted"
+        )
+        invalid.forEach { (method, path) ->
+            val exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.method(method, java.net.URI.create(path)).build()
+            )
+            assertThat(exchange.request.uri.rawPath).isEqualTo(path)
+            val forwarded = mutableListOf<ServerWebExchange>()
+            financeFilter.filter(exchange, downstream(forwarded)).block()
+            assertThat(exchange.response.statusCode).describedAs("$method $path").isEqualTo(HttpStatus.FORBIDDEN)
+            assertThat(forwarded).isEmpty()
+        }
+        assertThat(FinanceTrustedContextWire.isSupportedRoute(
+            HttpMethod.POST, "/finance/journals/$subjectA/delete", "/finance/journals/$subjectA/%64elete"
+        )).isFalse()
+    }
+
+    @Test
+    fun `strict reference protects lifecycle and existing PATCH without Core token fallback`() {
+        val referenceKey = fixtureProperties.getProperty("platform.gateway.finance-reference.jwt.verification-key")
+        val referenceConfig = config.copy(
+            financeTrustedContext = config.financeTrustedContext.copy(enabled = false),
+            financeReference = com.ranikunlabs.platform.gateway.config.FinanceReferenceJwtConfig(
+                enabled = true,
+                jwt = com.ranikunlabs.platform.gateway.config.FinanceReferenceJwtKeyConfig(
+                    verificationKey = referenceKey
+                ),
+                issuer = com.ranikunlabs.platform.gateway.config.FinanceReferenceProfileGuard.EXPECTED_ISSUER,
+                audience = com.ranikunlabs.platform.gateway.config.FinanceReferenceProfileGuard.EXPECTED_AUDIENCE,
+                purpose = com.ranikunlabs.platform.gateway.config.FinanceReferenceProfileGuard.EXPECTED_PURPOSE,
+                clockSkewSeconds = 30,
+                maxTokenLifetimeSeconds = 300
+            )
+        )
+        val global = JwtGlobalFilter(
+            JwtVerifier(jwtSecret), RedisBlacklistService(redisTemplate), referenceConfig,
+            AuthPublicRequestMatcher(), OAuthPublicRequestMatcher()
+        )
+        val producer = FinanceTrustedContextGatewayFilter(referenceConfig, fixtureEnvironment())
+        val issuedAt = java.time.Instant.now().minusSeconds(1)
+        val token = Jwts.builder().subject(subjectA).issuer(referenceConfig.financeReference.issuer)
+            .audience().single(referenceConfig.financeReference.audience)
+            .claim("token_use", referenceConfig.financeReference.purpose)
+            .issuedAt(Date.from(issuedAt)).expiration(Date.from(issuedAt.plusSeconds(300)))
+            .signWith(Keys.hmacShaKeyFor(referenceKey.toByteArray(StandardCharsets.UTF_8)), Jwts.SIG.HS256)
+            .compact()
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+        val routes = listOf(
+            HttpMethod.GET to "/finance/journals/deleted",
+            HttpMethod.POST to "/finance/journals/$subjectA/delete",
+            HttpMethod.POST to "/finance/journals/$subjectA/restore",
+            HttpMethod.PATCH to "/finance/journals/$subjectA"
+        )
+        routes.forEach { (method, path) ->
+            val forwarded = mutableListOf<ServerWebExchange>()
+            val chain = org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+                producer.filter(verified, downstream(forwarded))
+            }
+            val exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.method(method, java.net.URI.create(path))
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .header(FinanceTrustedContextWire.SUBJECT_HEADER, subjectB).build()
+            )
+            global.filter(exchange, chain).block()
+            assertThat(exchange.response.statusCode).isNull()
+            assertThat(forwarded).hasSize(1)
+            assertThat(forwarded.single().request.headers.getFirst(FinanceTrustedContextWire.SUBJECT_HEADER))
+                .isEqualTo(canonicalBase64Url(subjectA))
+            assertThat(forwarded.single().request.headers).doesNotContainKey(HttpHeaders.AUTHORIZATION)
+
+            forwarded.clear()
+            val coreToken = MockServerWebExchange.from(
+                MockServerHttpRequest.method(method, java.net.URI.create(path))
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${validToken(subjectA)}").build()
+            )
+            global.filter(coreToken, chain).block()
+            assertThat(coreToken.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+            assertThat(forwarded).isEmpty()
+        }
     }
 
     private fun capture(verifiedSubject: String, forgedSubject: String): Map<String, String> {
