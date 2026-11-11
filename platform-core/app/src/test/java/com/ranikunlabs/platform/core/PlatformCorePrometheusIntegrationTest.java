@@ -53,6 +53,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 @SpringBootTest(
         classes = PlatformCoreApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
