@@ -160,7 +160,7 @@ internal object FinanceTrustedContextWire {
         if (path != rawPath) return false
         return when {
             path == JOURNALS_PATH -> method == HttpMethod.GET || method == HttpMethod.POST
-            path.startsWith("$JOURNALS_PATH/") && method == HttpMethod.GET ->
+            path.startsWith("$JOURNALS_PATH/") && (method == HttpMethod.GET || method == HttpMethod.PATCH) ->
                 journalId.matches(path.removePrefix("$JOURNALS_PATH/"))
             else -> false
         }
