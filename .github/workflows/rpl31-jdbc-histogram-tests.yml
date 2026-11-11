@@ -24,10 +24,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          candidate_parent="06cd8dd58fb23cc918b57341778e72b1ad926ab7"
+          candidate_parent="3bd2dbdcee7b61cc5bd062e1562fe8d283e3f25a"
           main_sha="8cb671a3153ad5111b89f20bf981b82e0030318f"
           source_pr31="96ae34e7fabf30ec470202ee06819e8fbf7ab7b8"
-          candidate_tree="12dd5ba936b4ea9df766ad030b7e07c7a66ed3fe"
+          candidate_tree="05e7389e18842aa966a8e939a524fb65f017c544"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(git rev-parse HEAD^)" = "$candidate_parent"
           test "$(git rev-parse "$candidate_parent^{tree}")" = "$candidate_tree"
