@@ -33,13 +33,14 @@ jobs:
         shell: bash
         env:
           EXPECTED_EVENT_SHA: ${{ github.sha }}
-          EXPECTED_CANDIDATE_HEAD: 84a18431f8dd352dbe263e16a7bd950593da3800
-          EXPECTED_CANDIDATE_TREE: 58f3d294d03d95abea80b2b4c95b62c50c201a60
-          EXPECTED_MAIN: a01acb676ba570675ff7d8ec84536c5a6126d592
+          EXPECTED_CANDIDATE_HEAD: e6e6e04bc955815b84358336bbbddf7b05ccd481
+          EXPECTED_CANDIDATE_TREE: 918e9b28c1769459d7ac58d267ade6f2a2a4ca6c
+          EXPECTED_MAIN: 47f88d603a6cc96ab037ad16f4a6b0d568bad0f9
           EXPECTED_MAIN_REF: refs/remotes/origin/main
           EXPECTED_PR47: 72a6b343b9972f5fb4304d913e9537a551af8530
           EXPECTED_PR48: 3a58576d5900190181911d26b9196fb645ea5958
           EXPECTED_PR52: fb6e45b26f959920c13440aa91ab91c588c8620e
+          EXPECTED_PR58: 9ff2d20955ee17144e56b13b007e196813920b12
           EXPECTED_WORKFLOW_PATH: .github/workflows/platform52-main-integration.yml
         run: |
           set -euo pipefail
@@ -51,6 +52,7 @@ jobs:
           git merge-base --is-ancestor "$EXPECTED_PR47" HEAD
           git merge-base --is-ancestor "$EXPECTED_PR48" HEAD
           git merge-base --is-ancestor "$EXPECTED_PR52" HEAD
+          git merge-base --is-ancestor "$EXPECTED_PR58" HEAD
           changed="$(git diff-tree --no-commit-id --name-only -r HEAD)"
           test "$changed" = "$EXPECTED_WORKFLOW_PATH"
           printf 'CANDIDATE_HEAD=%s\nCANDIDATE_TREE=%s\nEVENT_SHA=%s\n' \
@@ -61,3 +63,28 @@ jobs:
         run: >-
           ./gradlew -p gateway-app test --no-daemon
           --tests com.ranikunlabs.platform.gateway.filter.FinanceTrustedContextGatewayFilterTest
+          --tests com.ranikunlabs.platform.gateway.filter.FinanceReferenceJwtVerifierTest
+
+      - name: Set up Temurin JDK 21 for Platform Core
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run Platform Core persistence and Finance reference integration tests
+        shell: bash
+        run: >-
+          ./gradlew -p platform-core :app:test --no-daemon --stacktrace --console=plain
+          --tests com.ranikunlabs.platform.core.PlatformCorePrometheusIntegrationTest
+          --tests com.ranikunlabs.platform.core.PlatformCoreIdentityPersistenceBootIntegrationTest
+          --tests com.ranikunlabs.platform.core.PlatformCoreVendorUnwrapCompatibilityTest
+          --tests com.ranikunlabs.platform.core.PlatformCoreFinanceReferenceIdentityHikariIntegrationTest
+
+      - name: Run Finance reference Identity unit tests
+        shell: bash
+        run: >-
+          ./gradlew -p platform-core :identity:test --no-daemon --stacktrace --console=plain
+          --tests com.ranikunlabs.platform.identity.FinanceReferenceAccessServiceTest
+          --tests com.ranikunlabs.platform.identity.FinanceReferenceConfigurationGuardTest
+          --tests com.ranikunlabs.platform.identity.FinanceReferenceJwtAccessTokenIssuerTest
+          --tests com.ranikunlabs.platform.identity.adapter.http.FinanceReferenceAuthControllerTest
