@@ -30,7 +30,11 @@ class FinanceTrustedContextGatewayFilter(
 ) : GlobalFilter, Ordered {
 
     init {
-        FinanceTrustedContextProfileGuard.validate(gatewayConfig.financeTrustedContext, environment)
+        FinanceTrustedContextProfileGuard.validate(
+            gatewayConfig.financeTrustedContext,
+            environment,
+            gatewayConfig.financeReference.enabled
+        )
     }
 
     override fun filter(exchange: ServerWebExchange, chain: GatewayFilterChain): Mono<Void> {
@@ -89,11 +93,15 @@ class FinanceTrustedContextProfileGuard(
     environment: Environment
 ) {
     init {
-        validate(gatewayConfig.financeTrustedContext, environment)
+        validate(gatewayConfig.financeTrustedContext, environment, gatewayConfig.financeReference.enabled)
     }
 
     companion object {
-        fun validate(config: FinanceTrustedContextConfig, environment: Environment) {
+        fun validate(
+            config: FinanceTrustedContextConfig,
+            environment: Environment,
+            strictReferenceEnabled: Boolean = false
+        ) {
             val fixtureProfileActive = environment.activeProfiles.any {
                 it.equals(FINANCE_TRUSTED_CONTEXT_PROFILE, ignoreCase = true)
             }
@@ -107,8 +115,14 @@ class FinanceTrustedContextProfileGuard(
             require(!(fixtureProfileActive && (productionProfileActive || productionMarker))) {
                 "Finance trusted-context reference profile cannot run with a production marker."
             }
-            require(config.enabled == fixtureProfileActive) {
-                "Finance trusted-context reference must be enabled only by its explicit fixture profile."
+            if (strictReferenceEnabled) {
+                require(!config.enabled) {
+                    "Finance reference JWT mode cannot be combined with Core-marker compatibility mode."
+                }
+            } else {
+                require(config.enabled == fixtureProfileActive) {
+                    "Finance trusted-context reference must be enabled only by its explicit fixture profile."
+                }
             }
             if (config.enabled) {
                 FinanceTrustedContextWire.validateServiceSecret(config.serviceSecret)

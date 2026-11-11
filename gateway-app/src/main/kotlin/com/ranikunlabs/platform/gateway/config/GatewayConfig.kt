@@ -13,13 +13,35 @@ data class GatewayConfig(
     @field:NotBlank val internalSecret: String = "",
     @field:NotBlank val jwtVerificationSecret: String = "",
     @field:Valid val financeTrustedContext: FinanceTrustedContextConfig = FinanceTrustedContextConfig(),
-    @field:Valid val oauthRateLimit: OAuthRateLimitConfig = OAuthRateLimitConfig()
+    @field:Valid val oauthRateLimit: OAuthRateLimitConfig = OAuthRateLimitConfig(),
+    @field:Valid val financeReference: FinanceReferenceJwtConfig = FinanceReferenceJwtConfig()
 )
 
 data class FinanceTrustedContextConfig(
     val enabled: Boolean = false,
     val serviceSecret: String = ""
 )
+
+data class FinanceReferenceJwtConfig(
+    val enabled: Boolean = false,
+    @field:Valid val jwt: FinanceReferenceJwtKeyConfig = FinanceReferenceJwtKeyConfig(),
+    val issuer: String = "",
+    val audience: String = "",
+    val purpose: String = "",
+    @field:Min(0) val clockSkewSeconds: Int = 0,
+    @field:Min(0) val maxTokenLifetimeSeconds: Int = 0
+) {
+    override fun toString(): String =
+        "FinanceReferenceJwtConfig[enabled=$enabled, jwt=$jwt, issuer=$issuer, " +
+            "audience=$audience, purpose=$purpose, clockSkewSeconds=$clockSkewSeconds, " +
+            "maxTokenLifetimeSeconds=$maxTokenLifetimeSeconds]"
+}
+
+data class FinanceReferenceJwtKeyConfig(
+    val verificationKey: String = ""
+) {
+    override fun toString(): String = "FinanceReferenceJwtKeyConfig[verificationKey=REDACTED]"
+}
 
 data class OAuthRateLimitConfig(
     @field:Min(1) val trustedProxyHops: Int = 1,
