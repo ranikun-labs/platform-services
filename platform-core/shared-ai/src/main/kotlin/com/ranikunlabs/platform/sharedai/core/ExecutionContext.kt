@@ -42,13 +42,35 @@ data class ExecutionContext(
     val requestReference: String,
     val executionReference: String,
     val correlationReference: String?,
+    val contextVersion: String = CURRENT_CONTEXT_VERSION,
+    val authorityReference: String? = null,
 ) {
+    constructor(
+        scope: ExecutionScope,
+        principalReference: String,
+        requestReference: String,
+        executionReference: String,
+        correlationReference: String?,
+    ) : this(
+        scope,
+        principalReference,
+        requestReference,
+        executionReference,
+        correlationReference,
+        CURRENT_CONTEXT_VERSION,
+        null,
+    )
+
     init {
         require(principalReference.isNotBlank()) { "principalReference must not be blank" }
         require(requestReference.isNotBlank()) { "requestReference must not be blank" }
         require(executionReference.isNotBlank()) { "executionReference must not be blank" }
+        require(contextVersion.isNotBlank()) { "contextVersion must not be blank" }
         require(correlationReference == null || correlationReference.isNotBlank()) {
             "correlationReference must be null or non-blank"
+        }
+        require(authorityReference == null || authorityReference.isNotBlank()) {
+            "authorityReference must be null or non-blank"
         }
     }
 
@@ -60,6 +82,12 @@ data class ExecutionContext(
             requestReference,
             executionReference,
             correlationReference,
+            contextVersion,
+            authorityReference,
         )
+    }
+
+    companion object {
+        const val CURRENT_CONTEXT_VERSION = "1"
     }
 }
