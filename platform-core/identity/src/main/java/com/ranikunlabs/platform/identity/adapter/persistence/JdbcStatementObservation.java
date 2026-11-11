@@ -120,14 +120,21 @@ final class JdbcStatementObservation {
                 throw new SQLException("JDBC wrapper type must not be null");
             }
             if ("isWrapperFor".equals(method.getName())) {
-                return requestedType.isInstance(proxy);
+                return requestedType.isInstance(proxy) || delegateWrapper().isWrapperFor(requestedType);
             }
             if (requestedType.isInstance(proxy)) {
                 return proxy;
             }
-            // Returning a driver delegate here would let callers bypass every observation proxy.
-            throw new SQLException("Requested JDBC wrapper type is not exposed by the observing handle");
+            // Preserve the JDBC driver's supported vendor extensions. Calls made through this
+            // unwrapped handle are outside the observing proxy boundary.
+            Wrapper delegate = delegateWrapper();
+            if (delegate.isWrapperFor(requestedType)) {
+                return delegate.unwrap(requestedType);
+            }
+            throw new SQLException("Requested JDBC wrapper type is not supported by the delegate");
         }
+
+        abstract Wrapper delegateWrapper();
 
         abstract Object invokeJdbc(Method method, Object[] arguments) throws Throwable;
     }
@@ -146,6 +153,11 @@ final class JdbcStatementObservation {
                     Connection.class.getClassLoader(),
                     new Class<?>[]{Connection.class},
                     this));
+        }
+
+        @Override
+        Wrapper delegateWrapper() {
+            return delegate;
         }
 
         @Override
@@ -221,6 +233,11 @@ final class JdbcStatementObservation {
                     : delegate instanceof PreparedStatement ? PreparedStatement.class : Statement.class;
             setProxy(Proxy.newProxyInstance(
                     statementType.getClassLoader(), new Class<?>[]{statementType}, this));
+        }
+
+        @Override
+        Wrapper delegateWrapper() {
+            return delegate;
         }
 
         @Override
@@ -314,6 +331,11 @@ final class JdbcStatementObservation {
         }
 
         @Override
+        Wrapper delegateWrapper() {
+            return delegate;
+        }
+
+        @Override
         Object invokeJdbc(Method method, Object[] arguments) throws Throwable {
             if ("getStatement".equals(method.getName()) && method.getParameterCount() == 0) {
                 if (statement != null) {
@@ -349,6 +371,11 @@ final class JdbcStatementObservation {
             this.registry = registry;
             setProxy(Proxy.newProxyInstance(
                     DatabaseMetaData.class.getClassLoader(), new Class<?>[]{DatabaseMetaData.class}, this));
+        }
+
+        @Override
+        Wrapper delegateWrapper() {
+            return delegate;
         }
 
         @Override

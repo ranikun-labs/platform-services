@@ -124,9 +124,8 @@ class PlatformCorePrometheusIntegrationTest {
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> connection.unwrap(String.class))
                 .isInstanceOf(SQLException.class);
         Class<?> h2VendorConnection = Class.forName("org.h2.jdbc.JdbcConnection");
-        assertThat(connection.isWrapperFor(h2VendorConnection)).isFalse();
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> connection.unwrap(h2VendorConnection))
-                .isInstanceOf(SQLException.class);
+        assertThat(connection.isWrapperFor(h2VendorConnection)).isTrue();
+        assertThat(h2VendorConnection.isInstance(connection.unwrap(h2VendorConnection))).isTrue();
         assertThat(connection.equals(connection)).isTrue();
         assertThat(connection.hashCode()).isEqualTo(connection.hashCode());
         try (Connection peer = dataSource.getConnection()) {

@@ -72,6 +72,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.http.HttpClient;
@@ -235,6 +236,30 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
         assertThat(timerCount("query", "success")).isGreaterThan(queryCountBefore);
 
         Connection connection = dataSource.getConnection();
+        Class<?> pgConnectionType = Class.forName("org.postgresql.PGConnection");
+        assertThat(connection.isWrapperFor(pgConnectionType)).isTrue();
+        Object pgConnection = connection.unwrap(pgConnectionType);
+        assertThat(pgConnectionType.isInstance(pgConnection)).isTrue();
+        assertThat((Integer) pgConnectionType.getMethod("getBackendPID").invoke(pgConnection))
+                .isPositive();
+
+        long vendorSqlCountBefore = timerCount("query", "success");
+        Object copyManager = pgConnectionType.getMethod("getCopyAPI").invoke(pgConnection);
+        Class<?> copyManagerType = Class.forName("org.postgresql.copy.CopyManager");
+        long copiedBytes = (Long) copyManagerType
+                .getMethod("copyOut", String.class, java.io.OutputStream.class)
+                .invoke(copyManager, "COPY (SELECT 1) TO STDOUT", new ByteArrayOutputStream());
+        assertThat(copiedBytes).isPositive();
+        // Native vendor operations retain driver compatibility but are outside this JDBC timer boundary.
+        assertThat(timerCount("query", "success")).isEqualTo(vendorSqlCountBefore);
+
+        long wrappedSqlCountBefore = timerCount("query", "success");
+        try (Statement wrapped = connection.createStatement();
+             ResultSet selected = wrapped.executeQuery("SELECT 1")) {
+            assertThat(selected.next()).isTrue();
+        }
+        assertThat(timerCount("query", "success")).isGreaterThan(wrappedSqlCountBefore);
+
         assertThat(connection.isWrapperFor(Connection.class)).isTrue();
         assertThat(connection.unwrap(Connection.class)).isSameAs(connection);
         assertThat(connection.equals(connection)).isTrue();
