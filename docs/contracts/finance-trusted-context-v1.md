@@ -4,7 +4,7 @@ This is a non-production Gateway-to-Finance fixture reference for RPL-51/RPL-34,
 
 The Gateway uses only the opaque `sub` returned by the existing `JwtVerifier` after signature verification and a successful Redis blacklist check. On the Finance reference path, it also requires the current Core access-claim shape: `organizationId` and `publicId` must be UUID strings, and `role` must be a nonblank string. These three claims are checked only to reject the current and legacy Core refresh-token shapes; their values do not supply a Finance identity, are not forwarded, and are not used for Finance authorization. The `sub` remains opaque to preserve this D1 contract, so this is not the Core `validateAccessToken` implementation, which also requires a UUID subject. The fixture test uses a public dummy JWT key and mocked `blacklist=false`; it does not prove a real issuer, live account, or successful user login.
 
-For the exact routes `GET /finance/journals`, `POST /finance/journals`, and `GET /finance/journals/{lowercase-canonical-UUID}`, the reference emits exactly one value for each of these headers:
+For the exact routes `GET /finance/journals`, `POST /finance/journals`, and `GET /finance/journals/{lowercase-canonical-UUID}`, plus the Gateway trust-filter-only route `PATCH /finance/journals/{lowercase-canonical-UUID}`, the reference emits exactly one value for each of these headers:
 
 | Header | Value |
 | --- | --- |

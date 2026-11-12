@@ -128,6 +128,46 @@ class FinanceTrustedContextGatewayFilterTest {
     }
 
     @Test
+    fun `only canonical journal detail PATCH reaches Finance after verified authentication`() {
+        val path = "/finance/journals/$subjectA"
+        assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.PATCH, path, path)).isTrue()
+        listOf(
+            HttpMethod.DELETE to path,
+            HttpMethod.PUT to path,
+            HttpMethod.PATCH to "/finance/journals",
+            HttpMethod.PATCH to "$path/extra",
+            HttpMethod.PATCH to "/finance/journals/not-a-uuid"
+        ).forEach { (method, candidate) ->
+            assertThat(FinanceTrustedContextWire.isSupportedRoute(method, candidate, candidate)).isFalse()
+        }
+        assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.PATCH, path, "$path%2Fextra")).isFalse()
+
+        val token = validToken(subjectA)
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.method(HttpMethod.PATCH, path)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .header("X-Finance-Subject", "attacker")
+                .build()
+        )
+        val forwarded = mutableListOf<ServerWebExchange>()
+        val chain = org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+            financeFilter.filter(verified, downstream(forwarded))
+        }
+        jwtFilter.filter(exchange, chain).block()
+        assertThat(forwarded).hasSize(1)
+        assertThat(forwarded.single().request.headers.getFirst(FinanceTrustedContextWire.SUBJECT_HEADER))
+            .isEqualTo(canonicalBase64Url(subjectA))
+        assertThat(forwarded.single().request.headers.getFirst(HttpHeaders.AUTHORIZATION)).isNull()
+
+        val unauthenticated = MockServerWebExchange.from(MockServerHttpRequest.method(HttpMethod.PATCH, path).build())
+        val rejected = mutableListOf<ServerWebExchange>()
+        financeFilter.filter(unauthenticated, downstream(rejected)).block()
+        assertThat(unauthenticated.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        assertThat(rejected).isEmpty()
+    }
+
+    @Test
     fun `empty Bearer and missing stable subject are unauthorized only on the Finance reference route`() {
         val emptyBearer = MockServerWebExchange.from(
             MockServerHttpRequest.get("/finance/journals")

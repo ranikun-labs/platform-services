@@ -28,18 +28,23 @@ class JwtGlobalFilter(
     private val oauthPublicRequestMatcher: OAuthPublicRequestMatcher
 ) : GlobalFilter, Ordered {
 
+    private val financeReferenceJwtVerifier = FinanceReferenceJwtVerifier(gatewayConfig)
+
     override fun filter(exchange: ServerWebExchange, chain: GatewayFilterChain): Mono<Void> {
         val request = exchange.request
         val path = request.uri.path
         val sanitizedExchange = exchange.withoutTrustedHeaders()
         val financePath = FinanceTrustedContextWire.isFinanceJournalNamespace(path)
+        val strictFinanceReference = financePath && gatewayConfig.financeReference.enabled
 
         if (isInternalPath(path)) {
             exchange.response.statusCode = HttpStatus.FORBIDDEN
             return exchange.response.setComplete()
         }
 
-        if (financePath && !gatewayConfig.financeTrustedContext.enabled) {
+        if (financePath && !gatewayConfig.financeTrustedContext.enabled
+            && !gatewayConfig.financeReference.enabled
+        ) {
             exchange.response.statusCode = HttpStatus.NOT_FOUND
             return exchange.response.setComplete()
         }
@@ -59,7 +64,11 @@ class JwtGlobalFilter(
 
         val rawAccessToken = authorization.removePrefix("Bearer ")
         val claims = try {
-            jwtVerifier.verifyAndGetClaims(rawAccessToken)
+            if (strictFinanceReference) {
+                financeReferenceJwtVerifier.verifyAndGetClaims(rawAccessToken)
+            } else {
+                jwtVerifier.verifyAndGetClaims(rawAccessToken)
+            }
         } catch (exception: JwtException) {
             exchange.response.statusCode = HttpStatus.UNAUTHORIZED
             return exchange.response.setComplete()
@@ -75,16 +84,24 @@ class JwtGlobalFilter(
                     result.isOnError && result.throwable is DataAccessException ->
                         identityVerificationUnavailable(exchange)
                     result.isOnError -> Mono.error(result.throwable!!)
-                    result.isOnNext -> continueAfterBlacklist(
-                        exchange, sanitizedExchange, chain, claims, result.get(), financePath = true
-                    )
+                    result.isOnNext -> {
+                        val blacklisted: Boolean = result.get()
+                            ?: return@flatMap identityVerificationUnavailable(exchange)
+                        continueAfterBlacklist(
+                            exchange, sanitizedExchange, chain, claims, blacklisted,
+                            financePath = true, strictFinanceReference = strictFinanceReference
+                        )
+                    }
                     else -> identityVerificationUnavailable(exchange)
                 }
             }
         }
 
         return blacklistService.isBlacklisted(rawAccessToken).flatMap { blacklisted ->
-            continueAfterBlacklist(exchange, sanitizedExchange, chain, claims, blacklisted, financePath = false)
+            continueAfterBlacklist(
+                exchange, sanitizedExchange, chain, claims, blacklisted,
+                financePath = false, strictFinanceReference = false
+            )
         }
     }
 
@@ -118,13 +135,21 @@ class JwtGlobalFilter(
         chain: GatewayFilterChain,
         claims: io.jsonwebtoken.Claims,
         blacklisted: Boolean,
-        financePath: Boolean
+        financePath: Boolean,
+        strictFinanceReference: Boolean
     ): Mono<Void> {
         if (blacklisted) {
             exchange.response.statusCode = HttpStatus.UNAUTHORIZED
             return exchange.response.setComplete()
         }
         if (financePath) {
+            if (strictFinanceReference) {
+                if (claims.subject.isNullOrBlank()) {
+                    exchange.response.statusCode = HttpStatus.UNAUTHORIZED
+                    return exchange.response.setComplete()
+                }
+                return chain.filter(sanitizedExchange.withVerifiedIdentitySubject(claims.subject))
+            }
             if (claims.subject.isNullOrBlank() || !hasFinanceAccessMarkers(claims)) {
                 exchange.response.statusCode = HttpStatus.UNAUTHORIZED
                 return exchange.response.setComplete()

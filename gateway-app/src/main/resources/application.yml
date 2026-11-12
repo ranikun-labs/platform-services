@@ -70,6 +70,16 @@ platform:
     jwt-verification-secret: ${PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET}
     finance-trusted-context:
       enabled: false
+      service-secret: ${PLATFORM_GATEWAY_FINANCE_TRUSTED_CONTEXT_SERVICE_SECRET:}
+    finance-reference:
+      enabled: ${PLATFORM_GATEWAY_FINANCE_REFERENCE_ENABLED:false}
+      jwt:
+        verification-key: ${PLATFORM_GATEWAY_FINANCE_REFERENCE_JWT_VERIFICATION_KEY:}
+      issuer: ${PLATFORM_GATEWAY_FINANCE_REFERENCE_ISSUER:}
+      audience: ${PLATFORM_GATEWAY_FINANCE_REFERENCE_AUDIENCE:}
+      purpose: ${PLATFORM_GATEWAY_FINANCE_REFERENCE_PURPOSE:}
+      clock-skew-seconds: ${PLATFORM_GATEWAY_FINANCE_REFERENCE_CLOCK_SKEW_SECONDS:0}
+      max-token-lifetime-seconds: ${PLATFORM_GATEWAY_FINANCE_REFERENCE_MAX_TOKEN_LIFETIME_SECONDS:0}
     oauth-rate-limit:
       trusted-proxy-hops: ${PLATFORM_GATEWAY_OAUTH_RATE_LIMIT_TRUSTED_PROXY_HOPS:1}
       authorization:
