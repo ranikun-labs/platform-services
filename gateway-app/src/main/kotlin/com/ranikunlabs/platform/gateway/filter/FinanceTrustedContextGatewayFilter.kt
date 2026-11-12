@@ -160,6 +160,15 @@ internal object FinanceTrustedContextWire {
         if (path != rawPath) return false
         return when {
             path == JOURNALS_PATH -> method == HttpMethod.GET || method == HttpMethod.POST
+            path == "$JOURNALS_PATH/deleted" -> method == HttpMethod.GET
+            path.startsWith("$JOURNALS_PATH/") && method == HttpMethod.POST -> {
+                val entryPath = path.removePrefix("$JOURNALS_PATH/")
+                when {
+                    entryPath.endsWith("/delete") -> journalId.matches(entryPath.removeSuffix("/delete"))
+                    entryPath.endsWith("/restore") -> journalId.matches(entryPath.removeSuffix("/restore"))
+                    else -> false
+                }
+            }
             path.startsWith("$JOURNALS_PATH/") && (method == HttpMethod.GET || method == HttpMethod.PATCH) ->
                 journalId.matches(path.removePrefix("$JOURNALS_PATH/"))
             else -> false
