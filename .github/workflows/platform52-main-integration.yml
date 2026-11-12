@@ -1,0 +1,90 @@
+name: "Platform #52 current-main Gateway filter candidate"
+
+on:
+  push:
+    branches:
+      - closeout/platform52-main-verify-local
+    paths:
+      - .github/workflows/platform52-main-integration.yml
+
+permissions:
+  contents: read
+
+jobs:
+  gateway-filter-target:
+    name: Gateway trusted-context filter target
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out the pushed candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Temurin JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Verify exact candidate parent, tree, ancestry, and workflow-only commit
+        shell: bash
+        env:
+          EXPECTED_EVENT_SHA: ${{ github.sha }}
+          EXPECTED_CANDIDATE_HEAD: e6e6e04bc955815b84358336bbbddf7b05ccd481
+          EXPECTED_CANDIDATE_TREE: 918e9b28c1769459d7ac58d267ade6f2a2a4ca6c
+          EXPECTED_MAIN: 47f88d603a6cc96ab037ad16f4a6b0d568bad0f9
+          EXPECTED_MAIN_REF: refs/remotes/origin/main
+          EXPECTED_PR47: 72a6b343b9972f5fb4304d913e9537a551af8530
+          EXPECTED_PR48: 3a58576d5900190181911d26b9196fb645ea5958
+          EXPECTED_PR52: fb6e45b26f959920c13440aa91ab91c588c8620e
+          EXPECTED_PR58: 9ff2d20955ee17144e56b13b007e196813920b12
+          EXPECTED_WORKFLOW_PATH: .github/workflows/platform52-main-integration.yml
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_EVENT_SHA"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_CANDIDATE_HEAD"
+          test "$(git rev-parse "${EXPECTED_CANDIDATE_HEAD}^{tree}")" = "$EXPECTED_CANDIDATE_TREE"
+          test "$(git rev-parse "$EXPECTED_MAIN_REF")" = "$EXPECTED_MAIN"
+          git merge-base --is-ancestor "$EXPECTED_MAIN" HEAD
+          git merge-base --is-ancestor "$EXPECTED_PR47" HEAD
+          git merge-base --is-ancestor "$EXPECTED_PR48" HEAD
+          git merge-base --is-ancestor "$EXPECTED_PR52" HEAD
+          git merge-base --is-ancestor "$EXPECTED_PR58" HEAD
+          changed="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+          test "$changed" = "$EXPECTED_WORKFLOW_PATH"
+          printf 'CANDIDATE_HEAD=%s\nCANDIDATE_TREE=%s\nEVENT_SHA=%s\n' \
+            "$EXPECTED_CANDIDATE_HEAD" "$EXPECTED_CANDIDATE_TREE" "$EXPECTED_EVENT_SHA"
+
+      - name: Run focused Gateway filter tests
+        shell: bash
+        run: >-
+          ./gradlew -p gateway-app test --no-daemon
+          --tests com.ranikunlabs.platform.gateway.filter.FinanceTrustedContextGatewayFilterTest
+          --tests com.ranikunlabs.platform.gateway.filter.FinanceReferenceJwtVerifierTest
+
+      - name: Set up Temurin JDK 21 for Platform Core
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run Platform Core persistence and Finance reference integration tests
+        shell: bash
+        run: >-
+          ./gradlew -p platform-core :app:test --no-daemon --stacktrace --console=plain
+          --tests com.ranikunlabs.platform.core.PlatformCorePrometheusIntegrationTest
+          --tests com.ranikunlabs.platform.core.PlatformCoreIdentityPersistenceBootIntegrationTest
+          --tests com.ranikunlabs.platform.core.PlatformCoreVendorUnwrapCompatibilityTest
+          --tests com.ranikunlabs.platform.core.PlatformCoreFinanceReferenceIdentityHikariIntegrationTest
+
+      - name: Run Finance reference Identity unit tests
+        shell: bash
+        run: >-
+          ./gradlew -p platform-core :identity:test --no-daemon --stacktrace --console=plain
+          --tests com.ranikunlabs.platform.identity.FinanceReferenceAccessServiceTest
+          --tests com.ranikunlabs.platform.identity.FinanceReferenceConfigurationGuardTest
+          --tests com.ranikunlabs.platform.identity.FinanceReferenceJwtAccessTokenIssuerTest
+          --tests com.ranikunlabs.platform.identity.adapter.http.FinanceReferenceAuthControllerTest
