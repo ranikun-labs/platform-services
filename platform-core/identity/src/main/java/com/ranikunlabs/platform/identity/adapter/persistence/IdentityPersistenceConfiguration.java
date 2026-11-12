@@ -55,6 +55,7 @@ public class IdentityPersistenceConfiguration {
     DataSource dataSource(IdentityRuntimeProperties properties) {
         IdentityRuntimeProperties.Datasource datasource = properties.datasource();
         return DataSourceBuilder.create()
+                .type(InstrumentedHikariDataSource.class)
                 .url(datasource.url())
                 .username(datasource.username())
                 .password(datasource.password())
