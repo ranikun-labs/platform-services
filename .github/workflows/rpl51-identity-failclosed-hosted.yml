@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   identity-failclosed:
-    if: github.event.pull_request.head.ref == 'codex/rpl54-prod-migrator-failclosed-20261105' || github.event.pull_request.head.ref == 'rpl51-journal-lifecycle-integration-20261111'
+    if: github.event.pull_request.head.ref == 'codex/rpl54-prod-migrator-failclosed-20261105' || github.event.pull_request.head.ref == 'rpl51-journal-lifecycle-integration-20261111' || github.event.pull_request.head.ref == 'closeout/platform59-current-main-20261112'
     name: Fail-closed configuration and PostgreSQL privilege tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
