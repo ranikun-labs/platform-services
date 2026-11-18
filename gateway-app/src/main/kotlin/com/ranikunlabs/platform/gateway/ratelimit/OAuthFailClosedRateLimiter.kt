@@ -37,9 +37,23 @@ class OAuthFailClosedRateLimiter(
                 values.apply { addAll(result) }
             }
             .map { values ->
+                if (values.size != 2) {
+                    throw IllegalStateException("Unexpected Redis rate limiter response")
+                }
+
+                val allowed = values[0]
+                val remainingTokens = values[1]
+                if (
+                    allowed !in 0L..1L ||
+                    remainingTokens < 0L ||
+                    remainingTokens > config.burstCapacity.toLong()
+                ) {
+                    throw IllegalStateException("Invalid Redis rate limiter response")
+                }
+
                 RateLimiter.Response(
-                    values[0] == 1L,
-                    delegate.getHeaders(config, values[1])
+                    allowed == 1L,
+                    delegate.getHeaders(config, remainingTokens)
                 )
             }
             .onErrorMap { cause ->

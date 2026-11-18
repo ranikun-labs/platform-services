@@ -97,7 +97,54 @@ class OAuthFailClosedRateLimiterTest {
             .hasCause(redisFailure)
     }
 
-    private fun capturingLimiter(): CapturedLimiter {
+    @Test
+    fun `accepts valid Redis response values at the documented boundaries`() {
+        val validResponses = listOf(
+            listOf(1L, 10L) to true,
+            listOf(0L, 0L) to false
+        )
+
+        validResponses.forEach { (result, isAllowed) ->
+            val fixture = capturingLimiter(result)
+            val response = fixture.limiter
+                .isAllowed("kakao-oauth-authorization", "203.0.113.10")
+                .block()!!
+
+            assertThat(response.isAllowed).isEqualTo(isAllowed)
+            assertThat(response.headers).containsEntry(
+                "X-RateLimit-Remaining",
+                result[1].toString()
+            )
+        }
+    }
+
+    @Test
+    fun `maps malformed and out of contract Redis script responses to the fail closed signal`() {
+        val invalidResponses = listOf(
+            emptyList(),
+            listOf(1L),
+            listOf(1L, 9L, 0L),
+            listOf(-1L, 0L),
+            listOf(2L, 0L),
+            listOf(1L, -1L),
+            listOf(1L, 11L)
+        )
+
+        invalidResponses.forEach { result ->
+            val fixture = capturingLimiter(result)
+            val failure = catchThrowable {
+                fixture.limiter
+                    .isAllowed("kakao-oauth-authorization", "203.0.113.10")
+                    .block()
+            }
+
+            assertThat(failure)
+                .describedAs("Redis script result $result")
+                .isInstanceOf(OAuthRateLimitInfrastructureException::class.java)
+        }
+    }
+
+    private fun capturingLimiter(result: List<Long>? = null): CapturedLimiter {
         val delegate = RedisRateLimiter(5, 10)
         delegate.config["kakao-oauth-authorization"] = RedisRateLimiter.Config()
             .setReplenishRate(5)
@@ -112,8 +159,14 @@ class OAuthFailClosedRateLimiterTest {
         val keys = mutableListOf<List<String>>()
         doAnswer { invocation ->
             @Suppress("UNCHECKED_CAST")
-            keys += invocation.getArgument<List<String>>(1)
-            Flux.just(listOf(1L, 9L))
+            val executedKeys = invocation.getArgument<List<String>>(1)
+            keys += executedKeys
+            val response = result ?: if (executedKeys.first().contains("kakao-oauth-exchange")) {
+                listOf(1L, 5L)
+            } else {
+                listOf(1L, 9L)
+            }
+            Flux.just(response)
         }.`when`(redisTemplate)
             .execute(eq(script), anyList<String>(), anyList<Any>())
 
