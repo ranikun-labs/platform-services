@@ -78,15 +78,33 @@ jobs:
           if suite.tag != "testsuite" or suite.get("name") != expected_suite:
               raise SystemExit("Unexpected or missing JUnit suite")
 
-          tests = int(suite.get("tests", "0"))
-          skipped = int(suite.get("skipped", "0"))
-          failures = int(suite.get("failures", "0"))
-          errors = int(suite.get("errors", "0"))
+          count_attributes = ("tests", "skipped", "failures", "errors")
+          if any(attribute not in suite.attrib for attribute in count_attributes):
+              raise SystemExit("JUnit suite is missing required count attributes")
+          try:
+              tests, skipped, failures, errors = (
+                  int(suite.attrib[attribute]) for attribute in count_attributes
+              )
+          except ValueError as error:
+              raise SystemExit("JUnit suite has a nonnumeric count") from error
+
           if tests < 8 or skipped or failures or errors:
               raise SystemExit(
                   f"JUnit counts invalid: tests={tests}, skipped={skipped}, "
                   f"failures={failures}, errors={errors}"
               )
+          test_cases = suite.findall("testcase")
+          if len(test_cases) != tests:
+              raise SystemExit(
+                  f"JUnit testcase count mismatch: declared={tests}, "
+                  f"elements={len(test_cases)}"
+              )
+          for test_case in test_cases:
+              if test_case.get("classname") != expected_suite:
+                  raise SystemExit("JUnit testcase belongs to an unexpected class")
+              if any(test_case.find(element) is not None for element in ("skipped", "failure", "error")):
+                  raise SystemExit("JUnit testcase has a skipped or failed outcome")
+
           print(
               f"JUnit suite PASS: tests={tests}, skipped={skipped}, "
               f"failures={failures}, errors={errors}"
