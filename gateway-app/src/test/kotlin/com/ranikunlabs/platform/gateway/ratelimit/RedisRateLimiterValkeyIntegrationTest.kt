@@ -27,6 +27,7 @@ class RedisRateLimiterValkeyIntegrationTest {
     private lateinit var connectionFactory: LettuceConnectionFactory
     private lateinit var redisTemplate: ReactiveStringRedisTemplate
     private lateinit var rateLimiter: RedisRateLimiter
+    private lateinit var failClosedRateLimiter: OAuthFailClosedRateLimiter
 
     @BeforeEach
     fun setUp() {
@@ -49,8 +50,9 @@ class RedisRateLimiterValkeyIntegrationTest {
         rateLimiter = RedisRateLimiter(redisTemplate, script, configurationService)
         rateLimiter.config[ROUTE_ID] = RedisRateLimiter.Config()
             .setReplenishRate(1)
-            .setBurstCapacity(2)
-            .setRequestedTokens(1)
+            .setBurstCapacity(100)
+            .setRequestedTokens(50)
+        failClosedRateLimiter = OAuthFailClosedRateLimiter(rateLimiter, redisTemplate, script)
     }
 
     @AfterEach
@@ -59,10 +61,10 @@ class RedisRateLimiterValkeyIntegrationTest {
     }
 
     @Test
-    fun `gateway rate limiter Lua script consumes burst then denies excess requests`() {
-        val first = rateLimiter.isAllowed(ROUTE_ID, CLIENT_ID).block(Duration.ofSeconds(5))
-        val second = rateLimiter.isAllowed(ROUTE_ID, CLIENT_ID).block(Duration.ofSeconds(5))
-        val third = rateLimiter.isAllowed(ROUTE_ID, CLIENT_ID).block(Duration.ofSeconds(5))
+    fun `fail closed wrapper accepts the Gateway Lua tuple and denies excess requests`() {
+        val first = failClosedRateLimiter.isAllowed(ROUTE_ID, CLIENT_ID).block(Duration.ofSeconds(5))
+        val second = failClosedRateLimiter.isAllowed(ROUTE_ID, CLIENT_ID).block(Duration.ofSeconds(5))
+        val third = failClosedRateLimiter.isAllowed(ROUTE_ID, CLIENT_ID).block(Duration.ofSeconds(5))
 
         assertThat(first?.isAllowed).isTrue()
         assertThat(second?.isAllowed).isTrue()

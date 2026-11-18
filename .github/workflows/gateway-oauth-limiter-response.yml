@@ -1,0 +1,134 @@
+name: Gateway OAuth rate limiter response contract
+
+on:
+  push:
+    branches:
+      - gateway-rate-limit-malformed-response-20261118
+    paths:
+      - .github/workflows/gateway-oauth-limiter-response.yml
+      - gateway-app/src/main/kotlin/com/ranikunlabs/platform/gateway/ratelimit/OAuthFailClosedRateLimiter.kt
+      - gateway-app/src/test/kotlin/com/ranikunlabs/platform/gateway/ratelimit/OAuthFailClosedRateLimiterTest.kt
+      - gateway-app/src/test/kotlin/com/ranikunlabs/platform/gateway/ratelimit/OAuthRedisDownHttpIntegrationTest.kt
+      - gateway-app/src/test/kotlin/com/ranikunlabs/platform/gateway/ratelimit/RedisRateLimiterValkeyIntegrationTest.kt
+      - gateway-app/src/test/kotlin/com/ranikunlabs/platform/gateway/filter/OAuthRateLimitFailureClosedFilterTest.kt
+      - gateway-app/build.gradle.kts
+      - build.gradle.kts
+      - settings.gradle.kts
+      - gradle/**
+      - gradlew
+
+permissions:
+  contents: read
+
+jobs:
+  gateway-oauth-rate-limit:
+    name: Gateway OAuth fail-closed tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out exact pushed SHA
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Temurin JDK 17
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Verify exact source SHA and branch
+        shell: bash
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$EXPECTED_HEAD_SHA"
+          test "$GITHUB_REF" = "refs/heads/gateway-rate-limit-malformed-response-20261118"
+          printf 'SOURCE_SHA=%s\n' "$actual"
+
+      - name: Report hosted Docker API
+        run: docker version --format 'Server={{.Server.Version}} API={{.Server.APIVersion}} Minimum={{.Server.MinAPIVersion}}'
+
+      - name: Apply isolated Docker API compatibility for Testcontainers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p gateway-app/src/test/resources
+          printf 'api.version=1.44\n' > gateway-app/src/test/resources/docker-java.properties
+          grep -qx 'api.version=1.44' gateway-app/src/test/resources/docker-java.properties
+
+      - name: Run OAuth limiter and Gateway fail-closed tests
+        shell: bash
+        run: >-
+          ./gradlew --no-daemon --stacktrace --console=plain :gateway-app:test
+          --tests com.ranikunlabs.platform.gateway.ratelimit.OAuthFailClosedRateLimiterTest
+          --tests com.ranikunlabs.platform.gateway.filter.OAuthRateLimitFailureClosedFilterTest
+          --tests com.ranikunlabs.platform.gateway.ratelimit.OAuthRedisDownHttpIntegrationTest
+          --tests com.ranikunlabs.platform.gateway.ratelimit.RedisRateLimiterValkeyIntegrationTest
+
+      - name: Verify expected JUnit suites and outcomes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          reports = {
+              "com.ranikunlabs.platform.gateway.ratelimit.OAuthFailClosedRateLimiterTest": 7,
+              "com.ranikunlabs.platform.gateway.filter.OAuthRateLimitFailureClosedFilterTest": 2,
+              "com.ranikunlabs.platform.gateway.ratelimit.OAuthRedisDownHttpIntegrationTest": 2,
+              "com.ranikunlabs.platform.gateway.ratelimit.RedisRateLimiterValkeyIntegrationTest": 1,
+          }
+          for suite_name, expected_tests in reports.items():
+              report = Path(
+                  "gateway-app/build/test-results/test/TEST-" + suite_name + ".xml"
+              )
+              if not report.is_file() or report.stat().st_size == 0:
+                  raise SystemExit(f"Missing JUnit report: {report}")
+              suite = ET.parse(report).getroot()
+              if suite.tag != "testsuite" or suite.get("name") != suite_name:
+                  raise SystemExit(f"Unexpected JUnit suite in {report}")
+              count_attributes = ("tests", "skipped", "failures", "errors")
+              if any(attribute not in suite.attrib for attribute in count_attributes):
+                  raise SystemExit(f"JUnit report missing count attributes: {report}")
+              try:
+                  tests, skipped, failures, errors = (
+                      int(suite.attrib[attribute]) for attribute in count_attributes
+                  )
+              except ValueError as error:
+                  raise SystemExit(f"Nonnumeric JUnit count in {report}") from error
+              cases = suite.findall("testcase")
+              if tests != expected_tests or len(cases) != expected_tests:
+                  raise SystemExit(
+                      f"Unexpected JUnit count for {suite_name}: "
+                      f"declared={tests}, cases={len(cases)}, expected={expected_tests}"
+                  )
+              if skipped or failures or errors:
+                  raise SystemExit(
+                      f"JUnit suite failed: {suite_name}: tests={tests}, "
+                      f"skipped={skipped}, failures={failures}, errors={errors}"
+                  )
+              for case in cases:
+                  if case.get("classname") != suite_name:
+                      raise SystemExit(f"Unexpected testcase class in {report}")
+                  if any(case.find(tag) is not None for tag in ("skipped", "failure", "error")):
+                      raise SystemExit(f"Non-passing testcase in {report}")
+              print(f"JUnit suite PASS: {suite_name}: tests={tests}, skipped=0, failures=0, errors=0")
+          PY
+
+      - name: Preserve targeted JUnit reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gateway-oauth-limiter-junit-${{ github.sha }}
+          path: |
+            gateway-app/build/test-results/test/TEST-com.ranikunlabs.platform.gateway.ratelimit.OAuthFailClosedRateLimiterTest.xml
+            gateway-app/build/test-results/test/TEST-com.ranikunlabs.platform.gateway.filter.OAuthRateLimitFailureClosedFilterTest.xml
+            gateway-app/build/test-results/test/TEST-com.ranikunlabs.platform.gateway.ratelimit.OAuthRedisDownHttpIntegrationTest.xml
+            gateway-app/build/test-results/test/TEST-com.ranikunlabs.platform.gateway.ratelimit.RedisRateLimiterValkeyIntegrationTest.xml
+          if-no-files-found: warn
+          retention-days: 7
