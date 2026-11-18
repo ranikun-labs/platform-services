@@ -100,7 +100,8 @@ class OAuthFailClosedRateLimiterTest {
     @Test
     fun `accepts valid Redis response values at the documented boundaries`() {
         val validResponses = listOf(
-            listOf(1L, 10L) to true,
+            listOf(1L, 9L) to true,
+            listOf(1L, 0L) to true,
             listOf(0L, 0L) to false
         )
 
@@ -120,14 +121,22 @@ class OAuthFailClosedRateLimiterTest {
 
     @Test
     fun `maps malformed and out of contract Redis script responses to the fail closed signal`() {
-        val invalidResponses = listOf(
+        val invalidResponses: List<List<*>> = listOf(
             emptyList(),
             listOf(1L),
             listOf(1L, 9L, 0L),
             listOf(-1L, 0L),
             listOf(2L, 0L),
             listOf(1L, -1L),
-            listOf(1L, 11L)
+            listOf(1L, 11L),
+            listOf(1L, 10L),
+            listOf(0L, 1L),
+            listOf(1.0, 9L),
+            listOf(1L, 9.0),
+            listOf(1.5, 9L),
+            listOf(1L, 9.5),
+            listOf(1.toInt(), 9L),
+            listOf("1", 9L)
         )
 
         invalidResponses.forEach { result ->
@@ -144,7 +153,31 @@ class OAuthFailClosedRateLimiterTest {
         }
     }
 
-    private fun capturingLimiter(result: List<Long>? = null): CapturedLimiter {
+    @Test
+    fun `requires exactly one Redis result tuple`() {
+        val invalidEmissions = listOf(
+            emptyList<List<*>>(),
+            listOf(listOf(1L, 9L), listOf(0L, 0L))
+        )
+
+        invalidEmissions.forEach { emissions ->
+            val fixture = capturingLimiter(emissions = emissions)
+            val failure = catchThrowable {
+                fixture.limiter
+                    .isAllowed("kakao-oauth-authorization", "203.0.113.10")
+                    .block()
+            }
+
+            assertThat(failure)
+                .describedAs("Redis result emissions $emissions")
+                .isInstanceOf(OAuthRateLimitInfrastructureException::class.java)
+        }
+    }
+
+    private fun capturingLimiter(
+        result: List<*>? = null,
+        emissions: List<List<*>>? = null
+    ): CapturedLimiter {
         val delegate = RedisRateLimiter(5, 10)
         delegate.config["kakao-oauth-authorization"] = RedisRateLimiter.Config()
             .setReplenishRate(5)
@@ -166,7 +199,7 @@ class OAuthFailClosedRateLimiterTest {
             } else {
                 listOf(1L, 9L)
             }
-            Flux.just(response)
+            Flux.fromIterable(emissions ?: listOf(response))
         }.`when`(redisTemplate)
             .execute(eq(script), anyList<String>(), anyList<Any>())
 

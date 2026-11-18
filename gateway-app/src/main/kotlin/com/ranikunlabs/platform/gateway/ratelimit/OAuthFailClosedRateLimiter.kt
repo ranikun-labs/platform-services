@@ -33,20 +33,32 @@ class OAuthFailClosedRateLimiter(
         )
 
         return redisTemplate.execute(redisScript, keys, args)
-            .reduce(ArrayList<Long>()) { values, result ->
-                values.apply { addAll(result) }
-            }
-            .map { values ->
+            .single()
+            .map { result ->
+                val values = result as List<*>
                 if (values.size != 2) {
                     throw IllegalStateException("Unexpected Redis rate limiter response")
                 }
 
-                val allowed = values[0]
-                val remainingTokens = values[1]
+                val rawAllowed = values[0]
+                val rawRemainingTokens = values[1]
+                if (rawAllowed !is Long || rawRemainingTokens !is Long) {
+                    throw IllegalStateException("Invalid Redis rate limiter response types")
+                }
+
+                val allowed = rawAllowed
+                val remainingTokens = rawRemainingTokens
+                val burstCapacity = config.burstCapacity.toLong()
+                val requestedTokens = config.requestedTokens.toLong()
                 if (
                     allowed !in 0L..1L ||
                     remainingTokens < 0L ||
-                    remainingTokens > config.burstCapacity.toLong()
+                    remainingTokens > burstCapacity ||
+                    (allowed == 1L && (
+                        requestedTokens > burstCapacity ||
+                            remainingTokens > burstCapacity - requestedTokens
+                        )) ||
+                    (allowed == 0L && remainingTokens >= requestedTokens)
                 ) {
                     throw IllegalStateException("Invalid Redis rate limiter response")
                 }
