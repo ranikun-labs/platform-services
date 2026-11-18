@@ -63,6 +63,36 @@ jobs:
           ./gradlew -p platform-core :identity:test --no-daemon --stacktrace --console=plain
           --tests com.ranikunlabs.platform.identity.adapter.jdbc.JdbcIdentitySnapshotReconcilerIntegrationTest
 
+      - name: Verify expected JUnit suite and test counts
+        shell: bash
+        run: |
+          set -euo pipefail
+          report="platform-core/identity/build/test-results/test/TEST-com.ranikunlabs.platform.identity.adapter.jdbc.JdbcIdentitySnapshotReconcilerIntegrationTest.xml"
+          test -s "$report"
+          python3 - "$report" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          expected_suite = "com.ranikunlabs.platform.identity.adapter.jdbc.JdbcIdentitySnapshotReconcilerIntegrationTest"
+          suite = ET.parse(sys.argv[1]).getroot()
+          if suite.tag != "testsuite" or suite.get("name") != expected_suite:
+              raise SystemExit("Unexpected or missing JUnit suite")
+
+          tests = int(suite.get("tests", "0"))
+          skipped = int(suite.get("skipped", "0"))
+          failures = int(suite.get("failures", "0"))
+          errors = int(suite.get("errors", "0"))
+          if tests < 8 or skipped or failures or errors:
+              raise SystemExit(
+                  f"JUnit counts invalid: tests={tests}, skipped={skipped}, "
+                  f"failures={failures}, errors={errors}"
+              )
+          print(
+              f"JUnit suite PASS: tests={tests}, skipped={skipped}, "
+              f"failures={failures}, errors={errors}"
+          )
+          PY
+
       - name: Preserve targeted JUnit report
         if: always()
         uses: actions/upload-artifact@v4
