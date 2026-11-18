@@ -50,8 +50,8 @@ class RedisRateLimiterValkeyIntegrationTest {
         rateLimiter = RedisRateLimiter(redisTemplate, script, configurationService)
         rateLimiter.config[ROUTE_ID] = RedisRateLimiter.Config()
             .setReplenishRate(1)
-            .setBurstCapacity(2)
-            .setRequestedTokens(1)
+            .setBurstCapacity(100)
+            .setRequestedTokens(50)
         failClosedRateLimiter = OAuthFailClosedRateLimiter(rateLimiter, redisTemplate, script)
     }
 
