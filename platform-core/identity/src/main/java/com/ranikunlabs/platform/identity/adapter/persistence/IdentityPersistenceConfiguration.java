@@ -13,6 +13,8 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.auditing.DateTimeProvider;
@@ -53,6 +55,7 @@ public class IdentityPersistenceConfiguration {
     DataSource dataSource(IdentityRuntimeProperties properties) {
         IdentityRuntimeProperties.Datasource datasource = properties.datasource();
         return DataSourceBuilder.create()
+                .type(InstrumentedHikariDataSource.class)
                 .url(datasource.url())
                 .username(datasource.username())
                 .password(datasource.password())
@@ -60,17 +63,56 @@ public class IdentityPersistenceConfiguration {
     }
 
     @Bean
-    FlywayConfigurationCustomizer identityFlywayLocation() {
-        return configuration -> configuration
-                .locations("classpath:db/migration")
-                .schemas(IdentityDatabaseSchema.NAME)
-                .defaultSchema(IdentityDatabaseSchema.NAME)
-                .createSchemas(true);
+    FlywayConfigurationCustomizer identityFlywayLocation(
+            IdentityRuntimeProperties properties,
+            Environment environment) {
+        return configuration -> {
+            configuration
+                    .locations("classpath:db/migration")
+                    .schemas(IdentityDatabaseSchema.NAME)
+                    .defaultSchema(IdentityDatabaseSchema.NAME)
+                    // Schema provisioning belongs to the database owner. Flyway must not need
+                    // CREATE privilege on the application database or create service schemas.
+                    .createSchemas(false);
+
+            IdentityRuntimeProperties.FlywayDatasource migrationDatasource = properties.flywayDatasource();
+            if (migrationDatasource != null && migrationDatasource.hasAnyValue()) {
+                if (!migrationDatasource.isComplete()) {
+                    throw new IllegalStateException(
+                            "Identity Flyway datasource requires URL, username, and password together");
+                }
+                configuration.dataSource(
+                        migrationDatasource.url(),
+                        migrationDatasource.username(),
+                        migrationDatasource.password());
+            } else if (isProduction(environment)) {
+                throw new IllegalStateException(
+                        "Identity Flyway datasource URL, username, and password are required in production");
+            }
+        };
+    }
+
+    private static boolean isProduction(Environment environment) {
+        return environment.acceptsProfiles(Profiles.of("prod", "production"))
+                || isProductionMarker(environment.getProperty("PLATFORM_ENVIRONMENT"))
+                || isProductionMarker(environment.getProperty("platform.metrics.environment"));
+    }
+
+    private static boolean isProductionMarker(String value) {
+        if (value == null) {
+            return false;
+        }
+        String normalized = value.trim();
+        return "prod".equalsIgnoreCase(normalized) || "production".equalsIgnoreCase(normalized);
     }
 
     @Bean
-    FlywayMigrationStrategy identityFlywayMigrationStrategy() {
-        return new IdentityLegacySchemaGuard()::migrate;
+    FlywayMigrationStrategy identityFlywayMigrationStrategy(IdentityRuntimeProperties properties) {
+        return flyway -> {
+            new IdentityLegacySchemaGuard().migrate(flyway);
+            IdentityRuntimeSchemaPrivileges.reconcile(
+                    flyway.getConfiguration().getDataSource(), properties.datasource().username());
+        };
     }
 
     @Bean

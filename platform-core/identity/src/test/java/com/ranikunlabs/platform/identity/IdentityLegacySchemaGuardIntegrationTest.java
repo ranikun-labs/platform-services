@@ -113,6 +113,37 @@ class IdentityLegacySchemaGuardIntegrationTest {
         assertThat(tableExists("public", "unrelated_table")).isTrue();
     }
 
+    @Test
+    void restrictedMigratorStillDetectsLegacyIdentityTablesWithoutPublicSchemaAccess() throws SQLException {
+        createRestrictedMigratorRole();
+        try (Connection connection = connection(); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE public.platform_accounts (id uuid PRIMARY KEY)");
+        }
+
+        assertThatThrownBy(() -> new IdentityLegacySchemaGuard().migrate(restrictedMigratorFlyway()))
+                .isInstanceOf(IdentityLegacySchemaDetectedException.class);
+
+        assertThat(publicTableSelectDenied()).isTrue();
+        assertIdentitySchemaAbsent();
+        dropRestrictedMigratorRole();
+    }
+
+    @Test
+    void restrictedMigratorFailsClosedWhenLegacyHistoryExistsButCannotBeRead() throws SQLException {
+        createRestrictedMigratorRole();
+        try (Connection connection = connection(); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE public.flyway_schema_history (version varchar(50), description varchar(200))");
+        }
+
+        assertThatThrownBy(() -> new IdentityLegacySchemaGuard().migrate(restrictedMigratorFlyway()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Unable to verify legacy Shared Identity persistence");
+
+        assertThat(tableExists("public", IdentityDatabaseSchema.FLYWAY_HISTORY_TABLE)).isTrue();
+        assertIdentitySchemaAbsent();
+        dropRestrictedMigratorRole();
+    }
+
     private void buildLegacyPublicState() throws SQLException {
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
@@ -146,6 +177,46 @@ class IdentityLegacySchemaGuardIntegrationTest {
                 .createSchemas(true)
                 .cleanDisabled(false)
                 .load();
+    }
+
+    private Flyway restrictedMigratorFlyway() {
+        return Flyway.configure()
+                .dataSource(POSTGRES.getJdbcUrl(), "identity_guard_migrator_test", "guard_test_password")
+                .locations("classpath:db/migration")
+                .schemas(IdentityDatabaseSchema.NAME)
+                .defaultSchema(IdentityDatabaseSchema.NAME)
+                .createSchemas(false)
+                .load();
+    }
+
+    private void createRestrictedMigratorRole() throws SQLException {
+        try (Connection connection = connection(); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE ROLE identity_guard_migrator_test LOGIN PASSWORD 'guard_test_password'");
+            statement.execute("REVOKE ALL ON SCHEMA public FROM identity_guard_migrator_test");
+        }
+    }
+
+    private void dropRestrictedMigratorRole() throws SQLException {
+        try (Connection connection = connection(); Statement statement = connection.createStatement()) {
+            statement.execute("DROP ROLE identity_guard_migrator_test");
+        }
+    }
+
+    private boolean publicTableSelectDenied() throws SQLException {
+        try (Connection connection = DriverManager.getConnection(
+                POSTGRES.getJdbcUrl(), "identity_guard_migrator_test", "guard_test_password");
+             Statement statement = connection.createStatement()) {
+            return hasSqlState(statement, "SELECT 1 FROM public.platform_accounts", "42501");
+        }
+    }
+
+    private boolean hasSqlState(Statement statement, String sql, String expectedState) throws SQLException {
+        try {
+            statement.executeQuery(sql);
+            return false;
+        } catch (SQLException exception) {
+            return expectedState.equals(exception.getSQLState());
+        }
     }
 
     private void startIdentityApplication() {

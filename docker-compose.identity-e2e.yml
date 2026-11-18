@@ -1,0 +1,193 @@
+name: platform-issue24-identity-e2e
+
+x-internal-network-proxy-bypass: &internal-network-proxy-bypass
+  HTTP_PROXY: ""
+  HTTPS_PROXY: ""
+  ALL_PROXY: ""
+  http_proxy: ""
+  https_proxy: ""
+  all_proxy: ""
+  NO_PROXY: "*"
+  no_proxy: "*"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: platform_e2e
+      POSTGRES_USER: platform_e2e
+      POSTGRES_PASSWORD: issue24-local-postgres-password
+    volumes:
+      - ./scripts/e2e/postgres-init.sql:/docker-entrypoint-initdb.d/10-identity-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    networks: [identity-e2e]
+
+  valkey:
+    image: valkey/valkey:9.1.2-alpine@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11
+    command:
+      - valkey-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --maxmemory
+      - 96mb
+      - --maxmemory-policy
+      - noeviction
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    networks: [identity-e2e]
+
+  fake-kakao:
+    image: python:3.12-alpine
+    command: ["python", "/e2e/fake_kakao.py"]
+    environment: *internal-network-proxy-bypass
+    volumes:
+      - ./scripts/e2e:/e2e:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8099/__e2e/health', timeout=1)"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    networks: [identity-e2e]
+
+  platform-core-app:
+    image: platform-core-identity-e2e:${PLATFORM_E2E_IMAGE_TAG:?PLATFORM_E2E_IMAGE_TAG is required}
+    build:
+      context: ./platform-core
+      dockerfile: app/Dockerfile.e2e
+      labels:
+        org.opencontainers.image.revision: "${PLATFORM_E2E_SOURCE_COMMIT:?PLATFORM_E2E_SOURCE_COMMIT is required}"
+        com.ranikunlabs.e2e.source-tree: "${PLATFORM_E2E_SOURCE_TREE:?PLATFORM_E2E_SOURCE_TREE is required}"
+    environment:
+      <<: *internal-network-proxy-bypass
+      PLATFORM_CORE_PORT: "8081"
+      PLATFORM_CORE_MANAGEMENT_PORT: "9092"
+      PLATFORM_IDENTITY_AUTH_ENABLED: "true"
+      PLATFORM_IDENTITY_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/platform_e2e?connectTimeout=2&socketTimeout=5"
+      PLATFORM_IDENTITY_DATASOURCE_USERNAME: platform_e2e
+      PLATFORM_IDENTITY_DATASOURCE_PASSWORD: issue24-local-postgres-password
+      PLATFORM_IDENTITY_REDIS_HOST: valkey
+      PLATFORM_IDENTITY_REDIS_PORT: "6379"
+      PLATFORM_IDENTITY_REDIS_KEY_PREFIX: "platform:identity:"
+      PLATFORM_IDENTITY_PRODUCT_CLAIMS_ENABLED: "true"
+      PLATFORM_IDENTITY_PRODUCT_CLAIMS_BASE_URL: http://fake-kakao:8099
+      PLATFORM_IDENTITY_PRODUCT_CLAIMS_SERVICE_SECRET: issue24-e2e-synthetic-claims-secret-material
+      PLATFORM_IDENTITY_JWT_SECRET_KEY: issue24-e2e-synthetic-jwt-secret-material-32-bytes
+      PLATFORM_IDENTITY_JWT_ACCESS_TOKEN_VALIDITY: "900000"
+      PLATFORM_IDENTITY_JWT_REFRESH_TOKEN_VALIDITY: "3600000"
+      PLATFORM_IDENTITY_KAKAO_CLIENT_ID: issue24-synthetic-client
+      PLATFORM_IDENTITY_KAKAO_CLIENT_SECRET: issue24-synthetic-client-secret
+      PLATFORM_IDENTITY_KAKAO_AUTHORIZATION_URI: http://fake-kakao:8099/oauth/authorize
+      PLATFORM_IDENTITY_KAKAO_TOKEN_URI: http://fake-kakao:8099/oauth/token
+      PLATFORM_IDENTITY_KAKAO_USER_INFO_URI: http://fake-kakao:8099/v2/user/me
+      PLATFORM_IDENTITY_OAUTH_KAKAO_WEB_REDIRECT_URI: http://identity-e2e.invalid/oauth/kakao/callback
+      PLATFORM_IDENTITY_OAUTH_KAKAO_MOBILE_REDIRECT_URI: http://identity-e2e.invalid/oauth/kakao/callback
+      PLATFORM_IDENTITY_OAUTH_ALLOWED_RETURN_ORIGINS: http://identity-e2e.invalid
+      OAUTH_STATE_TTL: 5m
+      PLATFORM_ENVIRONMENT: issue24-e2e
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      fake-kakao:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_CORE_MANAGEMENT_PORT}/actuator/health/readiness || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+      start_period: 10s
+    networks: [identity-e2e]
+
+  gateway-app:
+    image: platform-gateway-identity-e2e:${PLATFORM_E2E_IMAGE_TAG:?PLATFORM_E2E_IMAGE_TAG is required}
+    build:
+      context: ./gateway-app
+      dockerfile: Dockerfile.e2e
+      labels:
+        org.opencontainers.image.revision: "${PLATFORM_E2E_SOURCE_COMMIT:?PLATFORM_E2E_SOURCE_COMMIT is required}"
+        com.ranikunlabs.e2e.source-tree: "${PLATFORM_E2E_SOURCE_TREE:?PLATFORM_E2E_SOURCE_TREE is required}"
+    environment:
+      <<: *internal-network-proxy-bypass
+      PLATFORM_GATEWAY_PORT: "8080"
+      PLATFORM_GATEWAY_MANAGEMENT_PORT: "9091"
+      PLATFORM_GATEWAY_REDIS_HOST: valkey
+      PLATFORM_GATEWAY_REDIS_PORT: "6379"
+      PLATFORM_GATEWAY_REDIS_KEY_PREFIX: "platform:gateway:"
+      SPRING_DATA_REDIS_TIMEOUT: 2s
+      PLATFORM_GATEWAY_AUTH_URI: http://platform-core-app:8081
+      PLATFORM_GATEWAY_CARELOG_BE_URI: http://unused-carelog.invalid:8080
+      PLATFORM_GATEWAY_CARELOG_RAG_URI: http://unused-rag.invalid:8080
+      PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET: issue24-e2e-synthetic-jwt-secret-material-32-bytes
+      PLATFORM_GATEWAY_INTERNAL_SECRET: issue24-e2e-synthetic-gateway-secret
+      PLATFORM_GATEWAY_OAUTH_RATE_LIMIT_TRUSTED_PROXY_HOPS: "1"
+      PLATFORM_GATEWAY_OAUTH_RATE_LIMIT_AUTHORIZATION_REPLENISH_RATE: "1"
+      PLATFORM_GATEWAY_OAUTH_RATE_LIMIT_AUTHORIZATION_BURST_CAPACITY: "2"
+      PLATFORM_GATEWAY_OAUTH_RATE_LIMIT_EXCHANGE_REPLENISH_RATE: "1"
+      PLATFORM_GATEWAY_OAUTH_RATE_LIMIT_EXCHANGE_BURST_CAPACITY: "2"
+      PLATFORM_ENVIRONMENT: issue24-e2e
+    depends_on:
+      platform-core-app:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${PLATFORM_GATEWAY_MANAGEMENT_PORT}/actuator/health/readiness || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+      start_period: 10s
+    networks: [identity-e2e]
+
+  identity-e2e-seed:
+    image: postgres:16-alpine
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - >-
+        until pg_isready -h postgres -U platform_e2e -d platform_e2e; do sleep 1; done;
+        psql -v ON_ERROR_STOP=1 -h postgres -U platform_e2e -d platform_e2e -f /e2e/seed.sql
+    environment:
+      PGPASSWORD: issue24-local-postgres-password
+    volumes:
+      - ./scripts/e2e:/e2e:ro
+    networks: [identity-e2e]
+
+  identity-e2e-runner:
+    image: python:3.12-alpine
+    entrypoint: ["python", "/e2e/gateway_identity_e2e.py"]
+    volumes:
+      - ./scripts/e2e:/e2e:ro
+      - type: bind
+        source: ${PLATFORM_E2E_EVIDENCE_HOST_PATH:?PLATFORM_E2E_EVIDENCE_HOST_PATH is required}
+        target: /evidence
+    environment:
+      <<: *internal-network-proxy-bypass
+      PLATFORM_E2E_RUN_TOKEN: "${PLATFORM_E2E_RUN_TOKEN:?PLATFORM_E2E_RUN_TOKEN is required}"
+      PLATFORM_E2E_SOURCE_COMMIT: "${PLATFORM_E2E_SOURCE_COMMIT:?PLATFORM_E2E_SOURCE_COMMIT is required}"
+      PLATFORM_E2E_SOURCE_TREE: "${PLATFORM_E2E_SOURCE_TREE:?PLATFORM_E2E_SOURCE_TREE is required}"
+      PLATFORM_E2E_COMPOSE_FILE_SHA256: "${PLATFORM_E2E_COMPOSE_FILE_SHA256:?PLATFORM_E2E_COMPOSE_FILE_SHA256 is required}"
+      PLATFORM_E2E_CORE_IMAGE_ID: "${PLATFORM_E2E_CORE_IMAGE_ID:-}"
+      PLATFORM_E2E_GATEWAY_IMAGE_ID: "${PLATFORM_E2E_GATEWAY_IMAGE_ID:-}"
+      PLATFORM_E2E_GATEWAY_URL: http://gateway-app:8080
+      PLATFORM_E2E_CORE_URL: http://platform-core-app:8081
+      PLATFORM_E2E_FAKE_KAKAO_URL: http://fake-kakao:8099
+      PLATFORM_E2E_VALKEY_HOST: valkey
+      PLATFORM_E2E_VALKEY_PORT: "6379"
+      PLATFORM_E2E_JWT_SECRET: issue24-e2e-synthetic-jwt-secret-material-32-bytes
+      PLATFORM_E2E_LOGIN_ID: issue24-e2e-user
+      PLATFORM_E2E_PASSWORD: Password123!
+      PLATFORM_E2E_FAKE_KAKAO_CODE: issue24-synthetic-oauth-code
+    networks: [identity-e2e]
+
+networks:
+  identity-e2e:
+    internal: true

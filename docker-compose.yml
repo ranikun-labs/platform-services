@@ -7,7 +7,7 @@ services:
       context: ./gateway-app
     environment:
       PLATFORM_GATEWAY_PORT: ${PLATFORM_GATEWAY_PORT:-8080}
-      PLATFORM_GATEWAY_REDIS_HOST: valkey
+      PLATFORM_GATEWAY_REDIS_HOST: redis
       PLATFORM_GATEWAY_REDIS_PORT: 6379
       PLATFORM_GATEWAY_REDIS_KEY_PREFIX: "platform:gateway:"
       # Dark default: keep auth on Carelog until the live Platform Identity gate passes.
@@ -42,7 +42,10 @@ services:
       PLATFORM_IDENTITY_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PLATFORM_POSTGRES_DB:-platform}
       PLATFORM_IDENTITY_DATASOURCE_USERNAME: ${PLATFORM_POSTGRES_USER:-platform}
       PLATFORM_IDENTITY_DATASOURCE_PASSWORD: ${PLATFORM_POSTGRES_PASSWORD:?PLATFORM_POSTGRES_PASSWORD must be set}
-      PLATFORM_IDENTITY_REDIS_HOST: valkey
+      PLATFORM_IDENTITY_FLYWAY_DATASOURCE_URL: ${PLATFORM_IDENTITY_FLYWAY_DATASOURCE_URL:-}
+      PLATFORM_IDENTITY_FLYWAY_DATASOURCE_USERNAME: ${PLATFORM_IDENTITY_FLYWAY_DATASOURCE_USERNAME:-}
+      PLATFORM_IDENTITY_FLYWAY_DATASOURCE_PASSWORD: ${PLATFORM_IDENTITY_FLYWAY_DATASOURCE_PASSWORD:-}
+      PLATFORM_IDENTITY_REDIS_HOST: redis
       PLATFORM_IDENTITY_REDIS_PORT: 6379
       PLATFORM_IDENTITY_REDIS_KEY_PREFIX: "platform:identity:"
       PLATFORM_IDENTITY_AUTH_ENABLED: ${PLATFORM_IDENTITY_AUTH_ENABLED:-false}
@@ -84,6 +87,7 @@ services:
       POSTGRES_PASSWORD: ${PLATFORM_POSTGRES_PASSWORD:?PLATFORM_POSTGRES_PASSWORD must be set}
     volumes:
       - platform-postgres-data:/var/lib/postgresql/data
+      - ./platform-core/identity/docker/10-identity-schema.sql:/docker-entrypoint-initdb.d/10-identity-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -121,7 +125,9 @@ services:
       retries: 10
       start_period: 5s
     networks:
-      - platform
+      platform:
+        aliases:
+          - redis
 
 volumes:
   platform-postgres-data:

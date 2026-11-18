@@ -28,11 +28,30 @@ sum(rate(http_server_requests_seconds_count[5m]))
 
 Both platform counters use only the fixed service/environment tags and count each request once.
 
-## JVM, Hikari, and JDBC scope
+## JVM, Hikari, and JDBC duration
 
-The Boot-managed Prometheus registry exports JVM memory, GC, thread, and process meters. When the Core Identity datasource is enabled, Boot's Hikari binder exports the live pool gauges; validate them against a started Core pool before treating them as measured values.
+The Boot-managed Prometheus registry exports JVM memory, GC, thread, and process meters. The Core Identity pool is an `InstrumentedHikariDataSource`, a Hikari subtype, so Boot's Hikari binder continues to publish live pool gauges. The wrapper sits on connections borrowed from that pool; Hikari still owns connection state, transaction reset, close, and eviction.
 
-Core statement-duration instrumentation remains **UNKNOWN**. The JDBC code inspected for this change uses `DriverManager` and direct `Connection`/`PreparedStatement` calls; it has no existing `JdbcTemplate` observation path. Those calls do not acquire statement-duration observations from adding the Prometheus registry. No datasource wrapper, statement proxy, or SQL interceptor was introduced. Revisit SQL duration only after a supported and safe observation boundary is available.
+The Core exports `ranikun_db_query_duration_seconds_bucket`, `_count`, and `_sum`. Timers cover the duration of `Statement.execute`, `executeQuery`, `executeUpdate`, `executeLargeUpdate`, `executeBatch`, and `executeLargeBatch` calls, plus `DatabaseMetaData` methods that return a `ResultSet`. Metadata timing includes any driver work performed inside that call and stops before the application consumes result rows. Preparation, result iteration, commit, and rollback have no SQL duration timer.
+
+The only JDBC-specific labels are bounded `operation` values (`query`, `update`, `batch`, `execute`, `metadata`) and `outcome` values (`success`, `error`). Common labels remain the fixed `service` and allowlisted `environment`; Alloy adds the EC2 `instance` target label. SQL text, parameters, SQLSTATE, driver exception text, URL, account, user, and tenant data are never read into a meter tag.
+
+Connection, Statement, PreparedStatement, CallableStatement, ResultSet, and DatabaseMetaData handles borrowed from the application `DataSource` are wrapped. `unwrap` returns the observing proxy for the standard JDBC type it exposes; for a type supported by the underlying driver, `isWrapperFor` and `unwrap` preserve the driver's own wrapper behavior and return its native handle. SQL invoked through that native vendor handle is outside this observation boundary and can bypass this histogram, including ordinary `Statement` calls made on the unwrapped connection and vendor APIs such as PostgreSQL Copy. Callers that require complete coverage by this metric must use the instrumented `DataSource` and its returned standard JDBC handles. `equals` and `hashCode` use proxy identity. Statement and result-set close behavior delegates to Hikari/the JDBC driver, statement close-on-completion is honored, and proxy handle caches are cleared when their statements or connections close. `SQLException` instances pass through unchanged, including SQLSTATE.
+
+The offline source-structure inspector uses a separate `DriverManager` connection and runs outside the hosted Core datasource path. It is not a Core service persistence route and does not emit this application's runtime metric. Production Core JPA, direct JDBC, and JDBC metadata calls use the instrumented Hikari bean. Flyway SQL is included only when Flyway shares that runtime datasource. When the optional `platform.identity.flyway-datasource` URL, username, and password are configured, Flyway uses a separate migration datasource and its SQL is outside this histogram; the metric therefore describes application persistence SQL, not all database activity or migration duration. No separate Flyway metric is added by this change.
+
+Micrometer publishes the native histogram with configured service-level buckets at 1 ms, 5 ms, 10 ms, 25 ms, 50 ms, 100 ms, 250 ms, 500 ms, 1 s, 2.5 s, 5 s, 10 s, 30 s, and 60 s. Derive p50/p95/p99 from these buckets with Prometheus `histogram_quantile`; the app does not publish client-side quantiles.
+
+For example, a service-wide p95 query latency by bounded operation is:
+
+```promql
+histogram_quantile(
+  0.95,
+  sum by (le, operation) (
+    rate(ranikun_db_query_duration_seconds_bucket{service="platform-core"}[5m])
+  )
+)
+```
 
 ## Verification and deployment boundary
 

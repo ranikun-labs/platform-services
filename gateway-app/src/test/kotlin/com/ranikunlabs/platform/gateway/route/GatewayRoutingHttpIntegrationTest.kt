@@ -2,6 +2,7 @@ package com.ranikunlabs.platform.gateway.route
 
 import com.ranikunlabs.platform.gateway.GatewayApplication
 import com.ranikunlabs.platform.gateway.blacklist.RedisBlacklistService
+import com.ranikunlabs.platform.gateway.filter.FinanceTrustedContextGatewayFilter
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.assertj.core.api.Assertions.assertThat
@@ -15,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.ApplicationContext
 import com.ranikunlabs.platform.gateway.ratelimit.OAuthFailClosedRateLimiter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
@@ -52,6 +54,9 @@ class GatewayRoutingHttpIntegrationTest {
     @Autowired
     private lateinit var webTestClient: WebTestClient
 
+    @Autowired
+    private lateinit var applicationContext: ApplicationContext
+
     @MockBean(name = "oauthFailClosedRateLimiter")
     private lateinit var oauthFailClosedRateLimiter: OAuthFailClosedRateLimiter
 
@@ -67,6 +72,11 @@ class GatewayRoutingHttpIntegrationTest {
                 org.mockito.ArgumentMatchers.anyString()
             )
         ).thenReturn(Mono.just(org.springframework.cloud.gateway.filter.ratelimit.RateLimiter.Response(true, emptyMap())))
+    }
+
+    @Test
+    fun `default Gateway context does not register the Finance reference filter`() {
+        assertThat(applicationContext.getBeansOfType(FinanceTrustedContextGatewayFilter::class.java)).isEmpty()
     }
 
     @ParameterizedTest

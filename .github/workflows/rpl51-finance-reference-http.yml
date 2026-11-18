@@ -1,0 +1,62 @@
+name: RPL-51 Finance reference Gateway HTTP test
+
+on:
+  push:
+    branches:
+      - rpl51-finance-route-http-20261118
+    paths:
+      - .github/workflows/rpl51-finance-reference-http.yml
+      - docs/testing/finance-reference-http-integration.md
+      - gateway-app/src/test/kotlin/com/ranikunlabs/platform/gateway/route/FinanceReferenceHttpIntegrationTest.kt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rpl51-finance-reference-http-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gateway-http:
+    name: Finance reference Gateway HTTP integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the pushed candidate SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Temurin JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Verify exact event SHA, base, and reviewed source blobs
+        shell: bash
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.sha }}
+          EXPECTED_BASE_SHA: e918c6d3f8835fe83d744899856dd5f43611d4bb
+          EXPECTED_TEST_BLOB: 56b20c6b660a35a6660567b367d2311dae2877c4
+          EXPECTED_DOC_BLOB: d9275f2bf2576c36458ed6babf5517094e934c3a
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/rpl51-finance-route-http-20261118"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
+          git merge-base --is-ancestor "$EXPECTED_BASE_SHA" HEAD
+          test "$(git rev-parse HEAD:gateway-app/src/test/kotlin/com/ranikunlabs/platform/gateway/route/FinanceReferenceHttpIntegrationTest.kt)" = "$EXPECTED_TEST_BLOB"
+          test "$(git rev-parse HEAD:docs/testing/finance-reference-http-integration.md)" = "$EXPECTED_DOC_BLOB"
+          expected_paths=$'docs/testing/finance-reference-http-integration.md\n.github/workflows/rpl51-finance-reference-http.yml\ngateway-app/src/test/kotlin/com/ranikunlabs/platform/gateway/route/FinanceReferenceHttpIntegrationTest.kt'
+          actual_paths="$(git diff --name-only "$EXPECTED_BASE_SHA" HEAD | sort)"
+          test "$actual_paths" = "$(printf '%s\n' "$expected_paths" | sort)"
+          printf 'SOURCE_SHA=%s\nBASE_SHA=%s\nTREE_SHA=%s\n' \
+            "$EXPECTED_HEAD_SHA" "$EXPECTED_BASE_SHA" "$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Run the Finance reference HTTP integration test
+        run: >-
+          ./gradlew --no-daemon --console=plain :gateway-app:test
+          --tests com.ranikunlabs.platform.gateway.route.FinanceReferenceHttpIntegrationTest

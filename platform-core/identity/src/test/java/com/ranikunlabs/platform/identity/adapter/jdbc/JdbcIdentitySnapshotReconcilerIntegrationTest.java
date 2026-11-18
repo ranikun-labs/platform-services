@@ -40,6 +40,21 @@ class JdbcIdentitySnapshotReconcilerIntegrationTest {
         assertThat(dump(false)).isEqualTo(sourceBefore);assertThat(dump(true)).isEqualTo(targetBefore);
         assertThat(first.toString()).doesNotContain("synthetic-login","synthetic-hash","synthetic-subject",A);
     }
+    @Test void identicalRowsFromTwoSourcesAreCountedPerSourceCandidate() throws SQLException {
+        for(boolean target:new boolean[]{false,true}) { account(target,A); credential(target,A,"synthetic-login","synthetic-hash"); oauth(target,A,"synthetic-subject"); }
+        SourceIdentity secondSource = new SourceIdentity("legacy-copy",SourceKind.PLATFORM_IDENTITY,SourceAttestation.IN_SCOPE);
+        Map<SourceIdentity,JdbcSourceConfiguration> configurations = new LinkedHashMap<>();
+        configurations.put(SOURCE,config(SOURCE));
+        // The two logical sources deliberately read the same synthetic snapshot.
+        configurations.put(secondSource,config(secondSource));
+        configurations.put(TARGET,config(TARGET));
+
+        var result = reconciler.reconcile(configurations,KEY);
+        assertThat(result.readiness().isReady()).isTrue();
+        assertThat(result.decisionCount(Decision.IDENTICAL)).isEqualTo(10);
+        assertThat(result.decisionCount(Decision.INSERT)).isZero();
+        assertThat(result.decisionCount(Decision.CONFLICT)).isZero();
+    }
     @Test void absentAccountAndCredentialAreProposedWithoutMutationOrUuidRemapping() throws SQLException {
         account(false,A);credential(false,A,"synthetic-login","synthetic-hash");
         String before=dump(true);var result=plan();

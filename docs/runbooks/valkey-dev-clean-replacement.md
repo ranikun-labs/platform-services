@@ -36,8 +36,10 @@ The repository currently defines these contracts:
 | Platform Identity OAuth state store | `oauth:state:<state>` | Store serialized state with TTL; consume atomically with `GETDEL`. A second consume must be empty. |
 | Gateway OAuth rate limiter | `request_rate_limiter.{<routeId>.<clientKey>}.tokens` and `.timestamp` | Spring Cloud Gateway Lua script updates token-bucket state. |
 
-In the local Compose definition, Gateway and Identity use host `valkey`, port
+In the local Compose definition, Gateway and Identity use host `redis`, port
 `6379`, and the default Redis database `0` on the `platform` network. The
+`valkey` service provides the `redis` network alias to preserve the existing
+client DNS contract. No separate Redis server or host port is introduced. The
 configured `platform:gateway:` and `platform:identity:` prefixes must remain
 consistent with the deployed settings, but they do not change the fixed
 blacklist, OAuth-state, or rate-limiter key contracts above. Verify the effective

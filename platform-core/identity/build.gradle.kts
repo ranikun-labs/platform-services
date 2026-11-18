@@ -22,6 +22,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("com.zaxxer:HikariCP")
+    implementation("io.micrometer:micrometer-core")
     implementation("org.springframework:spring-webmvc")
     implementation("org.springframework.security:spring-security-config")
     implementation("org.springframework.security:spring-security-web")

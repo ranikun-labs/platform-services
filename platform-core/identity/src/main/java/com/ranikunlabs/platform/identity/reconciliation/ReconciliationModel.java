@@ -207,6 +207,11 @@ public final class ReconciliationModel {
     /**
      * Summary inputs required to decide whether a reconciliation plan may proceed.
      *
+     * <p>{@link Decision#INSERT} and {@link Decision#IDENTICAL} counts are per-source row-candidate
+     * outcomes. Each source row compared with the target contributes one outcome, so the same
+     * logical row supplied by two distinct sources contributes twice. These counts are not counts
+     * of unique target rows or write operations; {@code INSERT} remains a plan classification.
+     *
      * <p>A disposable source is retained in {@code sources} as a source-level exclusion and is
      * never treated as an in-scope source by the readiness calculation. The
      * {@link Decision#EXCLUDED_SOURCE} count is independent candidate/planner accounting; no

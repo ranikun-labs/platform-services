@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "platform.identity")
 public record IdentityRuntimeProperties(
         @Valid @NotNull Datasource datasource,
+        @Valid FlywayDatasource flywayDatasource,
         @NotBlank String redisHost,
         @Min(1) @Max(65535) int redisPort,
         @NotBlank String redisKeyPrefix) {
@@ -21,5 +22,21 @@ public record IdentityRuntimeProperties(
             @NotBlank String url,
             @NotBlank String username,
             @NotBlank String password) {
+    }
+
+    /** Optional migration-only credentials; production role and secret delivery remain owner decisions. */
+    public record FlywayDatasource(String url, String username, String password) {
+
+        public boolean hasAnyValue() {
+            return hasText(url) || hasText(username) || hasText(password);
+        }
+
+        public boolean isComplete() {
+            return hasText(url) && hasText(username) && hasText(password);
+        }
+
+        private static boolean hasText(String value) {
+            return value != null && !value.isBlank();
+        }
     }
 }

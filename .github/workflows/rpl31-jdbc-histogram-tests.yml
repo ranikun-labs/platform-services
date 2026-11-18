@@ -1,0 +1,61 @@
+name: RPL-31 current-main JDBC histogram tests
+
+on:
+  push:
+    branches:
+      - closeout/rpl31-current-main-unwrap-20261111
+
+permissions:
+  contents: read
+
+jobs:
+  platform-core-jdbc-histogram:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out pushed candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Verify fixed candidate identity and one-file workflow delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate_parent="99597822346bcd2d0f05603b3ee4437691ad0d61"
+          main_sha="a01acb676ba570675ff7d8ec84536c5a6126d592"
+          source_pr31="96ae34e7fabf30ec470202ee06819e8fbf7ab7b8"
+          source_vendor_fix="737804842eeee831d9bf5193df4bd0fe941150e8"
+          candidate_tree="bd88b07726f1fb7a751389ce06ee1b7e8118825b"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD^)" = "$candidate_parent"
+          test "$(git rev-parse "$candidate_parent^{tree}")" = "$candidate_tree"
+          git merge-base --is-ancestor "$main_sha" HEAD
+          git merge-base --is-ancestor "$source_pr31" HEAD
+          git merge-base --is-ancestor "$source_vendor_fix" HEAD
+          changed_paths="$(git diff --name-only "$candidate_parent" HEAD)"
+          test "$changed_paths" = ".github/workflows/rpl31-jdbc-histogram-tests.yml"
+
+      - name: Set up Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Run Platform Core JDBC histogram integration tests
+        run: >-
+          ./gradlew -p platform-core :app:test --no-daemon --stacktrace --console=plain
+          --tests com.ranikunlabs.platform.core.PlatformCorePrometheusIntegrationTest
+          --tests com.ranikunlabs.platform.core.PlatformCoreIdentityPersistenceBootIntegrationTest
+          --tests com.ranikunlabs.platform.core.PlatformCoreVendorUnwrapCompatibilityTest
+
+      - name: Preserve targeted JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpl31-jdbc-histogram-test-results-${{ github.sha }}
+          path: platform-core/app/build/test-results/test/*.xml
+          if-no-files-found: warn
+          retention-days: 7
