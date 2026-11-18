@@ -1,0 +1,73 @@
+name: RPL-55 Identity snapshot reconciler integration
+
+on:
+  push:
+    branches:
+      - rpl55-readonly-reconcile-0149
+    paths:
+      - .github/workflows/rpl55-identity-snapshot-reconciler.yml
+      - platform-core/identity/**
+      - platform-core/build.gradle.kts
+      - platform-core/gradle/**
+      - platform-core/settings.gradle.kts
+      - build.gradle.kts
+      - settings.gradle.kts
+      - gradle/**
+      - gradlew
+
+permissions:
+  contents: read
+
+jobs:
+  identity-snapshot:
+    name: Identity snapshot reconciler integration test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out exact pushed SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Verify exact pushed SHA and branch
+        shell: bash
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$EXPECTED_HEAD_SHA"
+          test "$GITHUB_REF" = "refs/heads/rpl55-readonly-reconcile-0149"
+          printf 'SOURCE_SHA=%s\n' "$actual"
+
+      - name: Report hosted Docker API
+        run: docker version --format 'Server={{.Server.Version}} API={{.Server.APIVersion}} Minimum={{.Server.MinAPIVersion}}'
+
+      - name: Apply isolated Docker API 1.44 compatibility for Testcontainers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p platform-core/identity/src/test/resources
+          printf 'api.version=1.44\n' > platform-core/identity/src/test/resources/docker-java.properties
+          grep -qx 'api.version=1.44' platform-core/identity/src/test/resources/docker-java.properties
+
+      - name: Run identity snapshot reconciler integration tests
+        run: >-
+          ./gradlew -p platform-core :identity:test --no-daemon --stacktrace --console=plain
+          --tests com.ranikunlabs.platform.identity.adapter.jdbc.JdbcIdentitySnapshotReconcilerIntegrationTest
+
+      - name: Preserve targeted JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpl55-identity-snapshot-junit-${{ github.sha }}
+          path: platform-core/identity/build/test-results/test/TEST-com.ranikunlabs.platform.identity.adapter.jdbc.JdbcIdentitySnapshotReconcilerIntegrationTest.xml
+          if-no-files-found: warn
+          retention-days: 7
