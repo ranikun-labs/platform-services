@@ -10,7 +10,7 @@ environment configured by the shared workflow.
 
 This caller is a preparation candidate, not an enabled release path. It depends
 on `ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml` being
-published and reviewed. The caller is pinned to `f28df85ed6bdfbbb842af5055d1a40ba84b59965`; publish and retain that exact commit before enabling releases. Configure and verify the service-specific GitHub
+published and reviewed. The caller is pinned to `fdeb22805d9f26779073dc68c6f0a9a166ccb884`; publish and retain that exact commit before enabling releases. Configure and verify the service-specific GitHub
 environments, AWS OIDC trust, ECR repositories, and deploy roles described by
 the shared workflow before use. No production or automatic deployment is
 provided here. A successful local static check does not establish that GitHub,
