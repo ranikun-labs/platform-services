@@ -65,7 +65,8 @@ class IdentitySchemaPrivilegeIntegrationTest {
                         postgres.getJdbcUrl(), MIGRATOR_ROLE, MIGRATOR_PASSWORD),
                 "localhost",
                 6379,
-                "identity:");
+                "identity:",
+                false);
 
         IdentityPersistenceConfiguration configuration = new IdentityPersistenceConfiguration();
         FluentConfiguration flywayConfiguration = Flyway.configure();
@@ -135,7 +136,8 @@ class IdentitySchemaPrivilegeIntegrationTest {
                 new IdentityRuntimeProperties.FlywayDatasource(postgres.getJdbcUrl(), MIGRATOR_ROLE, ""),
                 "localhost",
                 6379,
-                "identity:");
+                "identity:",
+                false);
 
         assertThatThrownBy(() -> new IdentityPersistenceConfiguration()
                 .identityFlywayLocation(properties, new MockEnvironment()

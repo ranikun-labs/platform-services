@@ -61,6 +61,7 @@ platform:
     redis-host: ${PLATFORM_IDENTITY_REDIS_HOST:}
     redis-port: ${PLATFORM_IDENTITY_REDIS_PORT}
     redis-key-prefix: ${PLATFORM_IDENTITY_REDIS_KEY_PREFIX:}
+    redis-tls-enabled: ${PLATFORM_IDENTITY_REDIS_TLS_ENABLED:false}
     product-claims:
       enabled: ${PLATFORM_IDENTITY_PRODUCT_CLAIMS_ENABLED:false}
       base-url: ${PLATFORM_IDENTITY_PRODUCT_CLAIMS_BASE_URL:}

@@ -28,6 +28,7 @@ class IdentityRuntimePropertiesTest {
                     assertThat(properties.datasource().url()).startsWith("jdbc:postgresql://postgres:5432");
                     assertThat(properties.datasource().username()).isEqualTo("identity");
                     assertThat(properties.redisKeyPrefix()).isEqualTo("platform:identity:");
+                    assertThat(properties.redisTlsEnabled()).isFalse();
                 });
     }
 

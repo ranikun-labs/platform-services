@@ -7,6 +7,8 @@ spring:
     redis:
       host: ${PLATFORM_GATEWAY_REDIS_HOST}
       port: ${PLATFORM_GATEWAY_REDIS_PORT}
+      ssl:
+        enabled: ${PLATFORM_GATEWAY_REDIS_TLS_ENABLED:false}
   cloud:
     gateway:
       discovery:

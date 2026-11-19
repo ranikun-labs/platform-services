@@ -16,7 +16,8 @@ public record IdentityRuntimeProperties(
         @Valid FlywayDatasource flywayDatasource,
         @NotBlank String redisHost,
         @Min(1) @Max(65535) int redisPort,
-        @NotBlank String redisKeyPrefix) {
+        @NotBlank String redisKeyPrefix,
+        boolean redisTlsEnabled) {
 
     public record Datasource(
             @NotBlank String url,
