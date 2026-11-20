@@ -69,6 +69,7 @@ jobs:
           authfile=$(mktemp "${RUNNER_TEMP}/cloudflared-auth.XXXXXXXX")
           trap 'rm -f -- "$authfile"' EXIT
           chmod 600 "$authfile"
+          printf '%s\n' '{"auths":{}}' > "$authfile"
           aws ecr get-login-password --region "$AWS_REGION" | skopeo login --authfile "$authfile" --username AWS --password-stdin "$registry"
           skopeo copy --preserve-digests --authfile "$authfile" \
             "$source" \
