@@ -40,13 +40,26 @@ hostname. Test discovery, redirects, GETDEL, blacklist, and rate limiting
 against the actual managed cluster before enabling this configuration.
 
 Gateway and Identity must use the same logical cluster for the shared token
-blacklist. Identity's cluster connection does not currently configure Redis
-username or password. Use it only with an approved private cache whose access
-controls match that limitation; authenticated cluster support requires a
-separate change and validation.
+blacklist. For password or ACL authentication, inject the Identity secret as
+`PLATFORM_IDENTITY_REDIS_PASSWORD` and optionally the ACL username as
+`PLATFORM_IDENTITY_REDIS_USERNAME`. Inject the Gateway credentials as Spring
+Boot's `SPRING_DATA_REDIS_PASSWORD` and optional `SPRING_DATA_REDIS_USERNAME`.
+Use ECS secret references, never literal credentials in task definitions, logs,
+or source control. A username requires a nonblank password; an explicitly
+blank Identity credential fails startup. A password without a username uses the
+default user. When both Identity values are absent, the existing unauthenticated
+path is preserved. IAM authentication and automatic token rotation are not
+supported by Identity. Credential changes require a controlled task restart.
+
+The cache's eviction and failover behavior is a separate security requirement:
+a missing blacklist key can allow an unexpired revoked token through Gateway.
+Validate the approved durability and eviction policy for the workload.
 
 The opt-in TLS cluster integration tests use `REDIS_CLUSTER_TLS_TEST_NODES`
-and the JVM trust store. Run `:platform-core:identity:test --tests
+and the JVM trust store. For an ACL-protected fixture, also set
+`REDIS_CLUSTER_TLS_TEST_USERNAME` and `REDIS_CLUSTER_TLS_TEST_PASSWORD` for
+Core, and `SPRING_DATA_REDIS_USERNAME` and `SPRING_DATA_REDIS_PASSWORD` for
+Gateway. Use disposable test credentials only. Run `:platform-core:identity:test --tests
 '*IdentityRedisConfigurationTest'` and `:gateway-app:test --tests
 '*GatewayRedisClusterBootTest'` with a disposable, trusted cluster; without the
 variable their network-dependent cases are skipped.
