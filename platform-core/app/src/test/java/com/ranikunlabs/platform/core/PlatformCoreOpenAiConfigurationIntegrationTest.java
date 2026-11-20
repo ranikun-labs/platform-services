@@ -1,7 +1,11 @@
 package com.ranikunlabs.platform.core;
 
 import com.ranikunlabs.platform.sharedai.adapters.model.SpringAiModelGateway;
+import com.ranikunlabs.platform.sharedai.adapters.fixture.InMemoryProductToolAdapter;
+import com.ranikunlabs.platform.sharedai.adapters.fixture.InMemoryRetrieverAdapter;
 import com.ranikunlabs.platform.sharedai.ports.ModelGateway;
+import com.ranikunlabs.platform.sharedai.ports.ProductToolPort;
+import com.ranikunlabs.platform.sharedai.ports.RetrieverPort;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -10,10 +14,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Import(PlatformCoreOpenAiConfigurationIntegrationTest.PortTestConfiguration.class)
 @SpringBootTest(
         classes = PlatformCoreApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -38,6 +45,18 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "management.endpoints.web.exposure.include=health,info,env,configprops"
         })
 class PlatformCoreOpenAiConfigurationIntegrationTest {
+
+    static class PortTestConfiguration {
+        @Bean
+        ProductToolPort productToolPort() {
+            return new InMemoryProductToolAdapter();
+        }
+
+        @Bean
+        RetrieverPort retrieverPort() {
+            return new InMemoryRetrieverAdapter();
+        }
+    }
 
     private static final String API_KEY = "configuration-test-api-key";
     private static final HttpClient HTTP = HttpClient.newHttpClient();
