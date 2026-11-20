@@ -157,7 +157,8 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
                 migrationDatasource,
                 "localhost",
                 6379,
-                "identity:");
+                "identity:",
+                false);
     }
 
     private FlywaySession flyway(IdentityRuntimeProperties properties) {

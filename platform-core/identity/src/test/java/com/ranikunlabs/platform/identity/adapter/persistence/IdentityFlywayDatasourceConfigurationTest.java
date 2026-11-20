@@ -222,7 +222,8 @@ class IdentityFlywayDatasourceConfigurationTest {
                 flywayDatasource,
                 "localhost",
                 6379,
-                "identity:");
+                "identity:",
+                false);
     }
 
     private static DriverManagerDataSource runtimeDataSource() {
