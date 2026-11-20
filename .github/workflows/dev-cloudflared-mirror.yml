@@ -1,0 +1,79 @@
+name: Mirror fixed cloudflared image to DEV ECR
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  mirror:
+    if: github.repository == 'ranikun-labs/platform-services' && github.ref == 'refs/heads/main' && github.event.repository.default_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev-gateway-publish
+    permissions:
+      id-token: write
+    concurrency:
+      group: dev-gateway-cloudflared-mirror
+      cancel-in-progress: false
+    steps:
+      - name: Validate environment configuration
+        env:
+          ACCOUNT: ${{ vars.DEV_AWS_ACCOUNT_ID }}
+          REGION: ${{ vars.AWS_REGION }}
+          REPOSITORY: ${{ vars.DEV_ECR_REPOSITORY }}
+          ROLE: ${{ vars.DEV_PUBLISHER_ROLE_ARN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$ACCOUNT" == 124495093425 && "$REGION" == ap-northeast-2 ]]
+          [[ "$REPOSITORY" == ranikun/platform/gateway ]]
+          [[ "$ROLE" == arn:aws:iam::124495093425:role/* ]]
+      - name: Install registry copy tool
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends skopeo
+          skopeo --version
+      - uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ vars.DEV_PUBLISHER_ROLE_ARN }}
+          aws-region: ap-northeast-2
+          allowed-account-ids: '124495093425'
+      - name: Copy and verify immutable image
+        env:
+          AWS_REGION: ap-northeast-2
+          AWS_DEFAULT_REGION: ap-northeast-2
+        shell: bash
+        run: |
+          set -euo pipefail
+          digest='sha256:28b1b51bc44446fafe254b37cd12b024f417a4e48a4b3c136620c2b93cdb0064'
+          registry='124495093425.dkr.ecr.ap-northeast-2.amazonaws.com'
+          repository='ranikun/platform/gateway'
+          tag="cloudflared-sha256-${digest#sha256:}"
+          describe_image() {
+            aws ecr describe-images --region "$AWS_REGION" --repository-name "$repository" \
+              --image-ids "imageTag=$tag" --query 'imageDetails[0].imageDigest' --output text
+          }
+          if actual=$(describe_image 2>&1); then
+            [[ "$actual" == "$digest" ]] || { echo 'Existing tag digest mismatch' >&2; exit 1; }
+            echo "Verified existing image: \`$registry/$repository@$actual\`" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          elif [[ "$actual" != *'(ImageNotFoundException)'* ]]; then
+            printf '%s\n' "$actual" >&2
+            exit 1
+          fi
+          source="docker://docker.io/cloudflare/cloudflared@$digest"
+          skopeo inspect --config "$source" | jq -e '.os == "linux" and .architecture == "amd64"'
+          authfile=$(mktemp "${RUNNER_TEMP}/cloudflared-auth.XXXXXXXX")
+          trap 'rm -f -- "$authfile"' EXIT
+          chmod 600 "$authfile"
+          aws ecr get-login-password --region "$AWS_REGION" | skopeo login --authfile "$authfile" --username AWS --password-stdin "$registry"
+          skopeo copy --preserve-digests --authfile "$authfile" \
+            "$source" \
+            "docker://$registry/$repository:$tag"
+          actual=$(describe_image)
+          [[ "$actual" == "$digest" ]] || { echo 'Destination digest mismatch' >&2; exit 1; }
+          echo "Verified image: $registry/$repository@$actual"
+          echo "Verified image: \`$registry/$repository@$actual\`" >> "$GITHUB_STEP_SUMMARY"
