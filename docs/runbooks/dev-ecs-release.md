@@ -26,3 +26,27 @@ installations. TLS uses the clients' standard certificate and hostname
 verification; the endpoint must present a certificate trusted by the JVM and
 matching its configured host. Managed AWS Valkey connectivity, trust chain,
 and application behavior remain to be validated in DEV.
+
+## Redis Cluster configuration
+
+For a Redis Cluster deployment, set `PLATFORM_GATEWAY_REDIS_CLUSTER_NODES` and
+`PLATFORM_IDENTITY_REDIS_CLUSTER_NODES` to comma-separated bootstrap addresses,
+for example `node-a:6379,node-b:6379`. Set both TLS switches above for an
+encrypted cluster. The existing host and port settings remain required for
+configuration compatibility. Without cluster nodes each service keeps its
+standalone connection path. Every advertised cluster node must be reachable
+from the service and present a JVM-trusted certificate matching its advertised
+hostname. Test discovery, redirects, GETDEL, blacklist, and rate limiting
+against the actual managed cluster before enabling this configuration.
+
+Gateway and Identity must use the same logical cluster for the shared token
+blacklist. Identity's cluster connection does not currently configure Redis
+username or password. Use it only with an approved private cache whose access
+controls match that limitation; authenticated cluster support requires a
+separate change and validation.
+
+The opt-in TLS cluster integration tests use `REDIS_CLUSTER_TLS_TEST_NODES`
+and the JVM trust store. Run `:platform-core:identity:test --tests
+'*IdentityRedisConfigurationTest'` and `:gateway-app:test --tests
+'*GatewayRedisClusterBootTest'` with a disposable, trusted cluster; without the
+variable their network-dependent cases are skipped.

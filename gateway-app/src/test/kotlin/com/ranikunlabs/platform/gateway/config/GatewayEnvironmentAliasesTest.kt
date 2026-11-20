@@ -12,6 +12,24 @@ import com.ranikunlabs.platform.gateway.GatewayApplication
 class GatewayEnvironmentAliasesTest {
 
     @Test
+    fun `cluster nodes bind to boot Redis configuration`() {
+        val environment = requiredEnvironment()
+            .withProperty("PLATFORM_GATEWAY_REDIS_HOST", "redis")
+            .withProperty("PLATFORM_GATEWAY_REDIS_CLUSTER_NODES", "node-a:6379,node-b:6379")
+        assertThat(GatewayEnvironmentAliases.resolve(environment)["spring.data.redis.cluster.nodes"])
+            .isEqualTo("node-a:6379,node-b:6379")
+    }
+
+    @Test
+    fun `blank cluster nodes fail configuration`() {
+        val environment = requiredEnvironment()
+            .withProperty("PLATFORM_GATEWAY_REDIS_HOST", "redis")
+            .withProperty("PLATFORM_GATEWAY_REDIS_CLUSTER_NODES", "")
+        assertThatThrownBy { GatewayEnvironmentAliases.resolve(environment) }
+            .isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
     fun `canonical value is selected when legacy alias is absent`() {
         val environment = requiredEnvironment()
             .withProperty("PLATFORM_GATEWAY_REDIS_HOST", "canonical-redis")

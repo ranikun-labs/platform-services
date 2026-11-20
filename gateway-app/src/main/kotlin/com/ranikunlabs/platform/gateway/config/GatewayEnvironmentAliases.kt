@@ -15,6 +15,7 @@ object GatewayEnvironmentAliases {
         Alias("PLATFORM_GATEWAY_REDIS_HOST", "REDIS_HOST", required = true),
         Alias("PLATFORM_GATEWAY_REDIS_PORT", "REDIS_PORT", required = true),
         Alias("PLATFORM_GATEWAY_REDIS_KEY_PREFIX", null, required = true),
+        Alias("PLATFORM_GATEWAY_REDIS_CLUSTER_NODES", null, required = false),
         Alias("PLATFORM_GATEWAY_AUTH_URI", null, required = true),
         Alias("PLATFORM_GATEWAY_CARELOG_BE_URI", "CARELOG_BE_URI", required = true),
         Alias("PLATFORM_GATEWAY_CARELOG_RAG_URI", "CARELOG_RAG_URI", required = true),
@@ -52,6 +53,10 @@ object GatewayEnvironmentAliases {
             }
         }
 
+        resolved["PLATFORM_GATEWAY_REDIS_CLUSTER_NODES"]?.let { nodes ->
+            require(nodes.isNotBlank()) { "PLATFORM_GATEWAY_REDIS_CLUSTER_NODES must not be blank" }
+            resolved["spring.data.redis.cluster.nodes"] = nodes
+        }
         return resolved
     }
 
