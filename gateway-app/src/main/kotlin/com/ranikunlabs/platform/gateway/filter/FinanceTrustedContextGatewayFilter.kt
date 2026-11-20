@@ -151,7 +151,10 @@ internal object FinanceTrustedContextWire {
     const val MAX_CONTEXT_HEADER_VALUE_BYTES = 2048
 
     private const val JOURNALS_PATH = "/finance/journals"
-    private val journalId = Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+    private const val UUID_PATH = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+    private val journalId = Regex(UUID_PATH)
+    private val retrospectiveCollection = Regex("$JOURNALS_PATH/$UUID_PATH/retrospectives")
+    private val retrospectiveDetail = Regex("$JOURNALS_PATH/$UUID_PATH/retrospectives/$UUID_PATH")
 
     fun isFinanceJournalNamespace(path: String): Boolean =
         path == JOURNALS_PATH || path.startsWith("$JOURNALS_PATH/")
@@ -161,6 +164,8 @@ internal object FinanceTrustedContextWire {
         return when {
             path == JOURNALS_PATH -> method == HttpMethod.GET || method == HttpMethod.POST
             path == "$JOURNALS_PATH/deleted" -> method == HttpMethod.GET
+            retrospectiveCollection.matches(path) -> method == HttpMethod.GET || method == HttpMethod.POST
+            retrospectiveDetail.matches(path) -> method == HttpMethod.GET
             path.startsWith("$JOURNALS_PATH/") && method == HttpMethod.POST -> {
                 val entryPath = path.removePrefix("$JOURNALS_PATH/")
                 when {

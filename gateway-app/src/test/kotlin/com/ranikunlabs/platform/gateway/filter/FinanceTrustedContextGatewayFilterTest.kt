@@ -128,6 +128,30 @@ class FinanceTrustedContextGatewayFilterTest {
     }
 
     @Test
+    fun `verified auth forwards retrospective writes only for the exact collection path`() {
+        val collection = "/finance/journals/$subjectA/retrospectives"
+        val detail = "$collection/$subjectA"
+        val token = validToken(subjectA)
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+        for ((method, path) in listOf(HttpMethod.GET to collection, HttpMethod.POST to collection, HttpMethod.GET to detail)) {
+            val exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.method(method, path).header(HttpHeaders.AUTHORIZATION, "Bearer $token").build()
+            )
+            val forwarded = mutableListOf<ServerWebExchange>()
+            val chain = org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+                financeFilter.filter(verified, downstream(forwarded))
+            }
+            jwtFilter.filter(exchange, chain).block()
+            assertThat(forwarded).hasSize(1)
+            assertThat(forwarded.single().request.headers.getFirst(FinanceTrustedContextWire.SUBJECT_HEADER))
+                .isEqualTo(canonicalBase64Url(subjectA))
+        }
+        assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.POST, detail, detail)).isFalse()
+        assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.DELETE, detail, detail)).isFalse()
+        assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.GET, detail, "$detail%2F")).isFalse()
+    }
+
+    @Test
     fun `only canonical journal detail PATCH reaches Finance after verified authentication`() {
         val path = "/finance/journals/$subjectA"
         assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.PATCH, path, path)).isTrue()
