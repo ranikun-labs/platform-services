@@ -1,0 +1,58 @@
+name: Platform DEV release PR validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/dev-ecs-release.yml
+      - .github/workflows/dev-ecs-release-pr-ci.yml
+      - gateway-app/**
+      - platform-core/**
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test PR source (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [gateway, core]
+    steps:
+      - name: Check out exact PR source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Verify checkout
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Set up Java
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.service == 'gateway' && '17' || '21' }}
+      - name: Configure Testcontainers API version
+        shell: bash
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          if [ "$SERVICE" = gateway ]; then
+            mkdir -p gateway-app/src/test/resources
+            printf 'api.version=1.44\n' > gateway-app/src/test/resources/docker-java.properties
+          else
+            for module in app identity; do
+              mkdir -p "platform-core/$module/src/test/resources"
+              printf 'api.version=1.44\n' > "platform-core/$module/src/test/resources/docker-java.properties"
+            done
+          fi
+      - name: Test Gateway
+        if: matrix.service == 'gateway'
+        run: ./gradlew -p gateway-app test --no-daemon --stacktrace --console=plain
+      - name: Test Core
+        if: matrix.service == 'core'
+        run: ./gradlew -p platform-core test --no-daemon --stacktrace --console=plain
