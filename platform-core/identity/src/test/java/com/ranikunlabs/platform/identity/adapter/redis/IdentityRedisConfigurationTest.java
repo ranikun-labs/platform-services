@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class IdentityRedisConfigurationTest {
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
@@ -61,6 +62,72 @@ class IdentityRedisConfigurationTest {
     }
 
     @Test
+    void standaloneAcceptsAclCredentials() {
+        runner.withPropertyValues("PLATFORM_IDENTITY_REDIS_USERNAME=service", "PLATFORM_IDENTITY_REDIS_PASSWORD=secret")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    var config = context.getBean(LettuceConnectionFactory.class).getStandaloneConfiguration();
+                    assertThat(config.getUsername()).isEqualTo("service");
+                    assertThat(config.getPassword().get()).isEqualTo("secret".toCharArray());
+                });
+    }
+
+    @Test
+    void clusterAcceptsAclCredentials() {
+        runner.withPropertyValues("PLATFORM_IDENTITY_REDIS_CLUSTER_NODES=cluster-a:6379",
+                        "PLATFORM_IDENTITY_REDIS_USERNAME=service", "PLATFORM_IDENTITY_REDIS_PASSWORD=secret")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    var config = context.getBean(LettuceConnectionFactory.class).getClusterConfiguration();
+                    assertThat(config.getUsername()).isEqualTo("service");
+                    assertThat(config.getPassword().get()).isEqualTo("secret".toCharArray());
+                });
+    }
+
+    @Test
+    void passwordOnlyUsesDefaultUser() {
+        runner.withPropertyValues("PLATFORM_IDENTITY_REDIS_PASSWORD=secret")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    var config = context.getBean(LettuceConnectionFactory.class).getStandaloneConfiguration();
+                    assertThat(config.getUsername()).isNull();
+                    assertThat(config.getPassword().get()).isEqualTo("secret".toCharArray());
+                });
+    }
+
+    @Test
+    void passwordIsNeverEvaluatedAsAnExpression() {
+        runner.withPropertyValues("PLATFORM_IDENTITY_REDIS_PASSWORD=#{'changed'}")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context.getBean(LettuceConnectionFactory.class).getStandaloneConfiguration()
+                            .getPassword().get()).isEqualTo("#{'changed'}".toCharArray());
+                });
+    }
+
+    @Test
+    void passwordPlaceholderSyntaxRemainsLiteral() {
+        runner.withPropertyValues("PLATFORM_IDENTITY_REDIS_PASSWORD=${not-a-property}")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context.getBean(LettuceConnectionFactory.class).getStandaloneConfiguration()
+                            .getPassword().get()).isEqualTo("${not-a-property}".toCharArray());
+                });
+    }
+
+    @Test
+    void usernameWithoutPasswordFailsClosed() {
+        runner.withPropertyValues("PLATFORM_IDENTITY_REDIS_USERNAME=service")
+                .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void blankPasswordFailsClosed() {
+        runner.withPropertyValues("PLATFORM_IDENTITY_REDIS_PASSWORD=")
+                .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
     void blankClusterNodesFailStartup() {
         runner.withPropertyValues("PLATFORM_IDENTITY_REDIS_CLUSTER_NODES=")
                 .run(context -> assertThat(context).hasFailed());
@@ -78,9 +145,17 @@ class IdentityRedisConfigurationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = "REDIS_CLUSTER_TLS_TEST_NODES", matches = ".+")
     void tlsClusterExecutesGetdelAndBlacklistWithTtl() {
-        runner.withPropertyValues(
+        var clusterRunner = runner.withPropertyValues(
                 "platform.identity.redis-cluster-nodes=" + System.getenv("REDIS_CLUSTER_TLS_TEST_NODES"),
-                "platform.identity.redis-tls-enabled=true").run(context -> {
+                "platform.identity.redis-tls-enabled=true");
+        String username = System.getenv("REDIS_CLUSTER_TLS_TEST_USERNAME");
+        String password = System.getenv("REDIS_CLUSTER_TLS_TEST_PASSWORD");
+        if (username != null && password != null) {
+            clusterRunner = clusterRunner.withPropertyValues(
+                    "PLATFORM_IDENTITY_REDIS_USERNAME=" + username,
+                    "PLATFORM_IDENTITY_REDIS_PASSWORD=" + password);
+        }
+        clusterRunner.run(context -> {
             assertThat(context).hasNotFailed();
             var template = new StringRedisTemplate(context.getBean(LettuceConnectionFactory.class));
             template.afterPropertiesSet();
@@ -95,6 +170,22 @@ class IdentityRedisConfigurationTest {
             assertThat(template.opsForValue().get("blacklist:" + id)).isEqualTo("1");
             assertThat(template.getExpire("blacklist:" + id)).isBetween(1L, 60L);
             template.delete("blacklist:" + id);
+        });
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "REDIS_CLUSTER_TLS_TEST_USERNAME", matches = ".+")
+    void tlsClusterRejectsInvalidPassword() {
+        runner.withPropertyValues(
+                "platform.identity.redis-cluster-nodes=" + System.getenv("REDIS_CLUSTER_TLS_TEST_NODES"),
+                "platform.identity.redis-tls-enabled=true",
+                "PLATFORM_IDENTITY_REDIS_USERNAME=" + System.getenv("REDIS_CLUSTER_TLS_TEST_USERNAME"),
+                "PLATFORM_IDENTITY_REDIS_PASSWORD=wrong-test-password").run(context -> {
+            assertThat(context).hasNotFailed();
+            var template = new StringRedisTemplate(context.getBean(LettuceConnectionFactory.class));
+            template.afterPropertiesSet();
+            assertThatThrownBy(() -> template.opsForValue().get("invalid-auth-probe"))
+                    .isInstanceOf(org.springframework.dao.DataAccessException.class);
         });
     }
 
