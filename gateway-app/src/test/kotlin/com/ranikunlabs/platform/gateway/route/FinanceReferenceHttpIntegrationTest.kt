@@ -136,6 +136,43 @@ class FinanceReferenceHttpIntegrationTest {
     }
 
     @Test
+    fun `retrospective append and read pass through the reference gateway with verified owner`() {
+        val accessToken = referenceToken(ACCOUNT_A, "access")
+        val collection = "/finance/journals/$ACCOUNT_A/retrospectives"
+        val detail = "$collection/$ACCOUNT_B"
+        val body = """{"sourceRevision":1,"body":"synthetic reflection"}"""
+        webTestClient.post()
+            .uri(collection)
+            .contentType(MediaType.APPLICATION_JSON)
+            .headers { headers -> headers.setBearerAuth(accessToken) }
+            .header("Idempotency-Key", "synthetic-replay-key")
+            .header(FinanceTrustedContextWire.SUBJECT_HEADER, ACCOUNT_B)
+            .bodyValue(body)
+            .exchange()
+            .expectStatus().isOk
+        webTestClient.get().uri(collection)
+            .headers { it.setBearerAuth(accessToken) }
+            .exchange().expectStatus().isOk
+        webTestClient.get().uri(detail)
+            .headers { it.setBearerAuth(accessToken) }
+            .exchange().expectStatus().isOk
+        webTestClient.post().uri(detail)
+            .headers { it.setBearerAuth(accessToken) }
+            .exchange().expectStatus().isForbidden
+
+        val forwarded = SyntheticFinanceUpstream.requests.toList()
+        assertThat(forwarded.map { it.method to it.path }).containsExactly(
+            "POST" to collection, "GET" to collection, "GET" to detail,
+        )
+        assertThat(forwarded.first().body).isEqualTo(body)
+        assertThat(forwarded.first().headers["Idempotency-Key"]).containsExactly("synthetic-replay-key")
+        forwarded.forEach {
+            assertThat(it.headers[FinanceTrustedContextWire.SUBJECT_HEADER]).containsExactly(ENCODED_ACCOUNT_A)
+            assertThat(it.headers).doesNotContainKey(HttpHeaders.AUTHORIZATION)
+        }
+    }
+
+    @Test
     fun `missing bearer Core token and unsupported method are rejected before Finance upstream`() {
         webTestClient.get()
             .uri("/finance/journals/deleted")
@@ -222,6 +259,7 @@ class FinanceReferenceHttpIntegrationTest {
                         HttpHeaders.AUTHORIZATION,
                         HttpHeaders.COOKIE,
                         "X-User-Id",
+                        "Idempotency-Key",
                         "X-Finance-Attacker-Extra",
                         FinanceTrustedContextWire.VERSION_HEADER,
                         FinanceTrustedContextWire.SERVICE_ID_HEADER,
