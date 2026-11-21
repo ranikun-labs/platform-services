@@ -8,6 +8,8 @@ import com.ranikunlabs.platform.identity.application.registration.CarelogRegistr
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import javax.sql.DataSource;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,5 +64,18 @@ class CarelogRegistrationCompositionConfigurationTest {
         var runner = enabled();
         when(manager.getDataSource()).thenReturn(mock(DataSource.class));
         runner.run(ctx -> assertThat(ctx).hasFailed());
+    }
+
+    @Test void nonJpaTransactionManagerIsRejected() {
+        var environment = new MockEnvironment()
+                .withProperty("platform.identity.auth.enabled", "true")
+                .withProperty("platform.identity.persistence.enabled", "true")
+                .withProperty("platform.identity.carelog-enrollment.enabled", "true");
+        environment.setActiveProfiles("dev");
+        assertThat(org.assertj.core.api.Assertions.catchThrowable(() ->
+                new CarelogRegistrationCompositionConfiguration().carelogRegistrationStore(environment,
+                        mock(PlatformAccountJpaRepository.class), mock(PasswordCredentialJpaRepository.class),
+                        mock(PasswordEncoder.class), source, mock(PlatformTransactionManager.class))))
+                .isInstanceOf(IllegalStateException.class);
     }
 }

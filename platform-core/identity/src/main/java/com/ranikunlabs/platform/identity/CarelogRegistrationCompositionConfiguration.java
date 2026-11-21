@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.sql.DataSource;
@@ -27,9 +28,10 @@ public class CarelogRegistrationCompositionConfiguration {
     @Bean
     CarelogRegistrationStore carelogRegistrationStore(Environment environment,
             PlatformAccountJpaRepository accounts, PasswordCredentialJpaRepository credentials,
-            PasswordEncoder passwords, DataSource dataSource, JpaTransactionManager transactionManager) {
+            PasswordEncoder passwords, DataSource dataSource, PlatformTransactionManager transactionManager) {
         requireDevComposition(environment);
-        if (transactionManager.getDataSource() != dataSource) {
+        if (!(transactionManager instanceof JpaTransactionManager jpaTransactionManager)
+                || jpaTransactionManager.getDataSource() != dataSource) {
             throw new IllegalStateException("Carelog registration requires the Identity JPA datasource and transaction manager");
         }
         return new CarelogRegistrationStore(accounts, credentials, passwords, new JdbcTemplate(dataSource), transactionManager);
