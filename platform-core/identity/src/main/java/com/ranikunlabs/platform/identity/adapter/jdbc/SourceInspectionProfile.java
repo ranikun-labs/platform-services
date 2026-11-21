@@ -37,7 +37,7 @@ public record SourceInspectionProfile(
                 "platform-legacy",
                 SourceKind.PLATFORM_IDENTITY,
                 "public",
-                identityTables(),
+                Set.copyOf(IdentityDatabaseSchema.LEGACY_TABLES),
                 HistoryProfile.platformLegacy()
         );
     }
@@ -86,7 +86,7 @@ public record SourceInspectionProfile(
     }
 
     private static Set<String> carelogIdentityTables() {
-        LinkedHashSet<String> tables = new LinkedHashSet<>(IdentityDatabaseSchema.TABLES);
+        LinkedHashSet<String> tables = new LinkedHashSet<>(IdentityDatabaseSchema.LEGACY_TABLES);
         tables.add("users");
         return Collections.unmodifiableSet(tables);
     }

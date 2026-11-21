@@ -26,7 +26,9 @@ class JdbcIdentitySnapshotReconcilerIntegrationTest {
             String schema=target?"identity":"public";
             sql(target,"DROP SCHEMA IF EXISTS "+schema+" CASCADE");
             sql(target,"CREATE SCHEMA "+schema);
-            Flyway.configure().dataSource(url(target),POSTGRES.getUsername(),POSTGRES.getPassword()).schemas(schema).defaultSchema(schema).locations("classpath:db/migration").load().migrate();
+            var migration = Flyway.configure().dataSource(url(target),POSTGRES.getUsername(),POSTGRES.getPassword()).schemas(schema).defaultSchema(schema).locations("classpath:db/migration");
+            if (!target) migration.target("2");
+            migration.load().migrate();
             sql(target,"UPDATE "+schema+".product_clients SET created_at="+TS+",updated_at="+TS);
         }
     }
@@ -88,6 +90,16 @@ class JdbcIdentitySnapshotReconcilerIntegrationTest {
         for(boolean target:new boolean[]{false,true}) account(target,A);
         sql(false,"INSERT INTO public.refresh_token(refresh_token,account_id,user_id,token_expires_at,created_at,updated_at) VALUES('synthetic-opaque-token','"+A+"','legacy-mirror','2030-01-01',"+TS+","+TS+")");
         String before=dump(false);var result=plan();assertThat(result.unsupportedSourceStateCount()).isEqualTo(1);assertThat(result.readiness().isReady()).isFalse();assertThat(dump(false)).isEqualTo(before);assertThat(result.toString()).doesNotContain("synthetic-opaque-token","legacy-mirror");
+    }
+    @Test void registrationRowsAndCredentialRevisionsBlockUnsupportedReconciliation() throws SQLException {
+        for(boolean target:new boolean[]{false,true}) { account(target,A);credential(target,A,"synthetic-login","synthetic-hash"); }
+        sql(true,"INSERT INTO identity.carelog_registration_operation(operation_key,account_id,display_name,original_login_id,original_email,original_credential_revision,state) VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','"+A+"','synthetic','synthetic-login','synthetic@example.test',0,'PENDING')");
+        assertThat(plan().unsupportedSourceStateCount()).isGreaterThan(0);
+        assertThat(plan().readiness().isReady()).isFalse();
+        sql(true,"DELETE FROM identity.carelog_registration_operation");
+        sql(true,"UPDATE identity.password_credentials SET password_hash='changed-hash'");
+        assertThat(plan().unsupportedSourceStateCount()).isGreaterThan(0);
+        assertThat(plan().readiness().isReady()).isFalse();
     }
     @Test void carelogHistoryDoesNotSilentlyCertifyProductUserUuidMapping() throws SQLException {
         sql(false,"CREATE TABLE public.users(id uuid)");
