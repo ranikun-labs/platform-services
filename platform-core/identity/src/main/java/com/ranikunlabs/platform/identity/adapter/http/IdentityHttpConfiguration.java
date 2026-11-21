@@ -6,6 +6,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -20,7 +21,8 @@ import java.time.Clock;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @EnableWebSecurity
-@Import({AuthController.class, OAuthHttpResponseMapper.class, IdentityHttpExceptionHandler.class})
+@Import({AuthController.class, OAuthHttpResponseMapper.class, IdentityHttpExceptionHandler.class,
+        CarelogRegistrationHttpConfiguration.class})
 public class IdentityHttpConfiguration {
 
     private static final String AUTH_BASE_PATH = "/api/v1/auth";
@@ -59,7 +61,8 @@ public class IdentityHttpConfiguration {
             HttpSecurity http,
             IdentityBearerAuthenticationFilter bearerAuthenticationFilter,
             IdentityAuthenticationEntryPoint authenticationEntryPoint,
-            IdentityAccessDeniedHandler accessDeniedHandler
+            IdentityAccessDeniedHandler accessDeniedHandler,
+            ObjectProvider<CarelogRegistrationEnabled> registrationEnabled
     ) throws Exception {
         http
                 .securityMatcher(AUTH_BASE_PATH + "/**")
@@ -68,7 +71,11 @@ public class IdentityHttpConfiguration {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
-                .authorizeHttpRequests(authorize -> authorize
+                .authorizeHttpRequests(authorize -> {
+                    if (registrationEnabled.getIfAvailable() != null) {
+                        authorize.requestMatchers(HttpMethod.POST, CarelogRegistrationController.PATH).permitAll();
+                    }
+                    authorize
                         .requestMatchers(
                                 HttpMethod.POST,
                                 AUTH_BASE_PATH + "/login",
@@ -76,7 +83,8 @@ public class IdentityHttpConfiguration {
                                 AUTH_BASE_PATH + "/oauth/kakao/authorization",
                                 AUTH_BASE_PATH + "/oauth/kakao/exchange"
                         ).permitAll()
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated();
+                })
                 .addFilterBefore(bearerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

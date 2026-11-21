@@ -10,10 +10,22 @@ import org.springframework.http.HttpStatus
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest
 import org.springframework.mock.web.server.MockServerWebExchange
 import reactor.core.publisher.Mono
+import com.ranikunlabs.platform.gateway.config.GatewayConfig
 
 class OAuthRateLimitFailureClosedFilterTest {
 
     private val filter = OAuthRateLimitFailureClosedFilter(OAuthPublicRequestMatcher())
+
+    @Test
+    fun `maps registration limiter failure to 503 when enabled`() {
+        val enabled = OAuthRateLimitFailureClosedFilter(
+            OAuthPublicRequestMatcher(GatewayConfig(carelogRegistrationEnabled = true))
+        )
+        val exchange = exchange(HttpMethod.POST, "/api/v1/auth/carelog/registration")
+        val failure = OAuthRateLimitInfrastructureException(IllegalStateException("redis unavailable"))
+        enabled.filter(exchange, GatewayFilterChain { Mono.error(failure) }).block()
+        assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+    }
 
     @Test
     fun `maps OAuth Redis limiter failure to 503`() {

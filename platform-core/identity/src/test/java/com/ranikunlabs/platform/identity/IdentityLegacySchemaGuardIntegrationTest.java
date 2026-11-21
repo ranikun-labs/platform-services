@@ -148,6 +148,7 @@ class IdentityLegacySchemaGuardIntegrationTest {
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .locations("classpath:db/migration")
+                .target("2")
                 .cleanDisabled(false)
                 .load()
                 .migrate();
@@ -240,7 +241,7 @@ class IdentityLegacySchemaGuardIntegrationTest {
     }
 
     private void assertLegacyPublicStatePreserved() throws SQLException {
-        Set<String> expectedPublicTables = new HashSet<>(IdentityDatabaseSchema.TABLES);
+        Set<String> expectedPublicTables = new HashSet<>(IdentityDatabaseSchema.LEGACY_TABLES);
         expectedPublicTables.add(IdentityDatabaseSchema.FLYWAY_HISTORY_TABLE);
         try (Connection connection = connection()) {
             assertThat(tableNames(connection, "public"))

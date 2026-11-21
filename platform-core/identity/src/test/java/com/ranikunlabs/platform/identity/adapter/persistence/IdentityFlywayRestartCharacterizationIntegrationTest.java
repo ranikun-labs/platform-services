@@ -105,12 +105,12 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
         }
 
         List<FlywayHistoryRow> historyBeforeRestart = flywayHistoryRows();
-        assertThat(historyBeforeRestart).extracting(FlywayHistoryRow::version).containsExactly("1", "2");
+        assertThat(historyBeforeRestart).extracting(FlywayHistoryRow::version).containsExactly("1", "2", "3");
         assertThat(historyBeforeRestart)
                 .extracting(FlywayHistoryRow::description)
-                .containsExactly("identity schema", "refresh session single account");
+                .containsExactly("identity schema", "refresh session single account", "carelog registration operation");
         assertThat(historyBeforeRestart).allSatisfy(row -> {
-            assertThat(row.checksum()).as("Flyway should record each accepted V1/V2 checksum").isNotNull();
+            assertThat(row.checksum()).as("Flyway should record each accepted migration checksum").isNotNull();
             assertThat(row.success()).isTrue();
         });
 
@@ -124,6 +124,7 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
 
         assertThat(hasHistorySelectPrivilege(MIGRATOR_ROLE)).isTrue();
         assertThat(hasHistorySelectPrivilege(RUNTIME_ROLE)).isFalse();
+        assertThat(hasRegistrationPrivileges(RUNTIME_ROLE)).isTrue();
 
         assertThatCode(() -> {
             try (FlywaySession restarted = flyway(properties)) {
@@ -140,6 +141,23 @@ class IdentityFlywayRestartCharacterizationIntegrationTest {
         assertThat(refreshTokenAccountUniquenessConstraintExists()).isTrue();
         assertThat(hasHistorySelectPrivilege(MIGRATOR_ROLE)).isTrue();
         assertThat(hasHistorySelectPrivilege(RUNTIME_ROLE)).isFalse();
+        assertThat(hasRegistrationPrivileges(RUNTIME_ROLE)).isTrue();
+    }
+
+    private boolean hasRegistrationPrivileges(String role) throws SQLException {
+        try (Connection connection = adminConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT has_table_privilege(?, 'identity.carelog_registration_operation', 'SELECT') "
+                             + "AND has_table_privilege(?, 'identity.carelog_registration_operation', 'INSERT') "
+                             + "AND has_table_privilege(?, 'identity.carelog_registration_operation', 'UPDATE')")) {
+            statement.setString(1, role);
+            statement.setString(2, role);
+            statement.setString(3, role);
+            try (ResultSet result = statement.executeQuery()) {
+                result.next();
+                return result.getBoolean(1);
+            }
+        }
     }
 
     private IdentityRuntimeProperties properties(

@@ -2,6 +2,12 @@ package com.ranikunlabs.platform.identity;
 
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityDatabaseSchema;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
+import com.ranikunlabs.platform.identity.adapter.persistence.CarelogRegistrationStore;
+import com.ranikunlabs.platform.identity.application.registration.CarelogRegistrationCoordinator;
+import com.ranikunlabs.platform.identity.application.registration.CarelogRegistrationCoordinator.Outcome;
+import com.ranikunlabs.platform.identity.application.registration.CarelogRegistrationCoordinator.EnrollmentUnavailableException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import com.ranikunlabs.platform.identity.adapter.persistence.ExternalIdentityLookupJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.ProductClientReaderJpaAdapter;
@@ -254,6 +260,176 @@ class IdentityPersistenceRepositoryTest {
         assertThat(tableExists(IdentityDatabaseSchema.NAME, "platform_accounts")).isTrue();
         assertThat(tableExists("public", "platform_accounts")).isFalse();
         assertThat(accountRowCount(result.accountId())).isOne();
+    }
+
+    @Test
+    void carelogRegistrationPersistsPendingRetryAndActivatesOnlyAfterEnrollment() throws Exception {
+        var store = registrationStore();
+        var key = UUID.randomUUID().toString();
+        var login = unique("carelog-registration");
+        var calls = new AtomicInteger();
+        var coordinator = new CarelogRegistrationCoordinator(store, (account, name) -> {
+            if (calls.getAndIncrement() == 0) throw new EnrollmentUnavailableException();
+        });
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name"))
+                .isEqualTo(Outcome.PENDING);
+        var credential = passwordCredentialRepository.findByLoginId(login).orElseThrow();
+        var accountId = credential.getAccountId();
+        assertThat(platformAccountRepository.findById(accountId).orElseThrow().getStatus())
+                .isEqualTo(com.ranikunlabs.platform.identity.core.AccountStatus.INACTIVE);
+        assertThatThrownBy(() -> applicationContext.getBean(CredentialPort.class).authenticate(login, "password"))
+                .isInstanceOf(RuntimeException.class);
+        assertThat(coordinator.register(key, login, "mail@example.test", "different", "Name"))
+                .isEqualTo(Outcome.CONFLICT);
+        assertThat(calls).hasValue(1);
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name"))
+                .isEqualTo(Outcome.COMPLETED);
+        assertThat(platformAccountRepository.findById(accountId).orElseThrow().getStatus())
+                .isEqualTo(com.ranikunlabs.platform.identity.core.AccountStatus.ACTIVE);
+        assertThat(applicationContext.getBean(CredentialPort.class).authenticate(login, "password").accountId())
+                .isEqualTo(accountId);
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name"))
+                .isEqualTo(Outcome.COMPLETED);
+        assertThat(calls).hasValue(2);
+        new JdbcTemplate(dataSource).update("update identity.platform_accounts set primary_email = ? where id = ?", "changed@example.test", accountId);
+        assertThat(coordinator.register(key, login, "changed@example.test", "password", "Name"))
+                .isEqualTo(Outcome.CONFLICT);
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name"))
+                .isEqualTo(Outcome.COMPLETED);
+        passwordCredentialUpdate.updatePassword(accountId, "new-password");
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name"))
+                .isEqualTo(Outcome.CONFLICT);
+        assertThat(coordinator.register(key, login, "mail@example.test", "new-password", "Name"))
+                .isEqualTo(Outcome.CONFLICT);
+        assertThat(store.markConflict(key, accountId)).isEqualTo(Outcome.COMPLETED);
+    }
+
+    @Test
+    void carelogRegistrationRawSqlPasswordChangesAdvanceRevisionForOldReplay() throws Exception {
+        var key = UUID.randomUUID().toString();
+        var login = unique("carelog-revision");
+        var coordinator = new CarelogRegistrationCoordinator(registrationStore(), (account, name) -> { });
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name")).isEqualTo(Outcome.COMPLETED);
+        var credential = passwordCredentialRepository.findByLoginId(login).orElseThrow();
+        long original = credential.getCredentialRevision();
+        new JdbcTemplate(dataSource).update("update identity.password_credentials set password_hash = ? where account_id = ?", passwordEncoder.encode("new-password"), credential.getAccountId());
+        assertThat(passwordCredentialRepository.findById(credential.getAccountId()).orElseThrow().getCredentialRevision()).isEqualTo(original + 1);
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name")).isEqualTo(Outcome.CONFLICT);
+        assertThat(coordinator.register(key, login, "mail@example.test", "new-password", "Name")).isEqualTo(Outcome.CONFLICT);
+    }
+
+    @Test
+    void carelogRegistrationRejectsPasswordRotationDuringEnrollmentBeforeActivation() {
+        var key = UUID.randomUUID().toString();
+        var login = unique("carelog-rotation-during-enrollment");
+        var coordinator = new CarelogRegistrationCoordinator(registrationStore(),
+                (account, name) -> passwordCredentialUpdate.updatePassword(account, "new-password"));
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name"))
+                .isEqualTo(Outcome.CONFLICT);
+        var credential = passwordCredentialRepository.findByLoginId(login).orElseThrow();
+        assertThat(platformAccountRepository.findById(credential.getAccountId()).orElseThrow().getStatus())
+                .isEqualTo(com.ranikunlabs.platform.identity.core.AccountStatus.INACTIVE);
+        assertThat(coordinator.register(key, login, "mail@example.test", "password", "Name"))
+                .isEqualTo(Outcome.CONFLICT);
+        assertThat(coordinator.register(key, login, "mail@example.test", "new-password", "Name"))
+                .isEqualTo(Outcome.CONFLICT);
+    }
+
+    @Test
+    void carelogRegistrationParallelSameKeyCreatesOneInactiveAccount() throws Exception {
+        var store = registrationStore();
+        var key = UUID.randomUUID().toString();
+        var login = unique("carelog-parallel");
+        var coordinator = new CarelogRegistrationCoordinator(store, (account, name) -> { throw new EnrollmentUnavailableException(); });
+        var executor = Executors.newFixedThreadPool(2);
+        try {
+            var first = executor.submit(() -> coordinator.register(key, login, "parallel@example.test", "password", "Name"));
+            var second = executor.submit(() -> coordinator.register(key, login, "parallel@example.test", "password", "Name"));
+            assertThat(first.get(20, TimeUnit.SECONDS)).isEqualTo(Outcome.PENDING);
+            assertThat(second.get(20, TimeUnit.SECONDS)).isEqualTo(Outcome.PENDING);
+            var accountId = passwordCredentialRepository.findByLoginId(login).orElseThrow().getAccountId();
+            assertThat(new JdbcTemplate(dataSource).queryForObject("select count(*) from identity.carelog_registration_operation where operation_key = ?", Integer.class, UUID.fromString(key))).isEqualTo(1);
+            assertThat(platformAccountRepository.findById(accountId).orElseThrow().getStatus())
+                    .isEqualTo(com.ranikunlabs.platform.identity.core.AccountStatus.INACTIVE);
+        } finally {
+            executor.shutdownNow();
+            executor.awaitTermination(30, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    void carelogRegistrationRollsBackAccountAndCredentialWhenOperationInsertFails() {
+        var login = unique("carelog-rollback");
+        var email = login + "@example.test";
+        var failingJdbc = new JdbcTemplate(dataSource) {
+            @Override public int update(String sql, Object... args) {
+                if (sql.startsWith("insert into identity.carelog_registration_operation")) {
+                    throw new org.springframework.dao.DataIntegrityViolationException("synthetic insert failure");
+                }
+                return super.update(sql, args);
+            }
+        };
+        var store = new CarelogRegistrationStore(platformAccountRepository, passwordCredentialRepository,
+                passwordEncoder, failingJdbc, applicationContext.getBean(PlatformTransactionManager.class));
+        var coordinator = new CarelogRegistrationCoordinator(store, (account, name) -> { });
+        assertThatThrownBy(() -> coordinator.register(UUID.randomUUID().toString(), login, email, "password", "Name"))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThat(passwordCredentialRepository.findByLoginId(login)).isEmpty();
+        assertThat(new JdbcTemplate(dataSource).queryForObject("select count(*) from identity.platform_accounts where primary_email = ?", Integer.class, email)).isZero();
+    }
+
+    @Test
+    void carelogRegistrationConcurrentTerminalTransitionsAgreeOnDurableWinner() throws Exception {
+        var store = registrationStore();
+        var key = UUID.randomUUID().toString();
+        var login = unique("carelog-terminal-race");
+        var coordinator = new CarelogRegistrationCoordinator(store, (account, name) -> { throw new EnrollmentUnavailableException(); });
+        assertThat(coordinator.register(key, login, "race@example.test", "password", "Name")).isEqualTo(Outcome.PENDING);
+        var accountId = passwordCredentialRepository.findByLoginId(login).orElseThrow().getAccountId();
+        var executor = Executors.newFixedThreadPool(2);
+        try {
+            var success = executor.submit(() -> store.complete(key, accountId));
+            var conflict = executor.submit(() -> store.markConflict(key, accountId));
+            var result = success.get(20, TimeUnit.SECONDS);
+            assertThat(conflict.get(20, TimeUnit.SECONDS)).isEqualTo(result);
+            assertThat(result).isIn(Outcome.COMPLETED, Outcome.CONFLICT);
+            assertThat(registrationStore().complete(key, accountId)).isEqualTo(result);
+            assertThat(platformAccountRepository.findById(accountId).orElseThrow().getStatus())
+                    .isEqualTo(result == Outcome.COMPLETED
+                            ? com.ranikunlabs.platform.identity.core.AccountStatus.ACTIVE
+                            : com.ranikunlabs.platform.identity.core.AccountStatus.INACTIVE);
+        } finally {
+            executor.shutdownNow();
+            executor.awaitTermination(30, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    void carelogRegistrationConcurrentDifferentKeysForSameLoginRollsBackLoser() throws Exception {
+        var store = registrationStore();
+        var login = unique("carelog-login-race");
+        var email1 = login + "-one@example.test";
+        var email2 = login + "-two@example.test";
+        var coordinator = new CarelogRegistrationCoordinator(store, (account, name) -> { throw new EnrollmentUnavailableException(); });
+        var gate = new java.util.concurrent.CountDownLatch(1);
+        var executor = Executors.newFixedThreadPool(2);
+        try {
+            var first = executor.submit(() -> { gate.await(); return coordinator.register(UUID.randomUUID().toString(), login, email1, "password", "Name"); });
+            var second = executor.submit(() -> { gate.await(); return coordinator.register(UUID.randomUUID().toString(), login, email2, "password", "Name"); });
+            gate.countDown();
+            assertThat(java.util.List.of(first.get(20, TimeUnit.SECONDS), second.get(20, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder(Outcome.PENDING, Outcome.CONFLICT);
+            assertThat(new JdbcTemplate(dataSource).queryForObject("select count(*) from identity.password_credentials where login_id = ?", Integer.class, login)).isEqualTo(1);
+            assertThat(new JdbcTemplate(dataSource).queryForObject("select count(*) from identity.platform_accounts where primary_email in (?, ?)", Integer.class, email1, email2)).isEqualTo(1);
+        } finally {
+            executor.shutdownNow();
+            executor.awaitTermination(30, TimeUnit.SECONDS);
+        }
+    }
+
+    private CarelogRegistrationStore registrationStore() {
+        return new CarelogRegistrationStore(platformAccountRepository, passwordCredentialRepository,
+                passwordEncoder, new JdbcTemplate(dataSource), applicationContext.getBean(PlatformTransactionManager.class));
     }
 
     @Test

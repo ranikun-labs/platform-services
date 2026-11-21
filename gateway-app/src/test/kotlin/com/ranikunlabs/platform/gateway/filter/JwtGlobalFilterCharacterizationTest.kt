@@ -41,6 +41,29 @@ class JwtGlobalFilterCharacterizationTest {
         Mono.empty()
     }
 
+    @Test
+    fun `registration disabled is never forwarded including authenticated requests`() {
+        val request = exchange(HttpMethod.POST, "/api/v1/auth/carelog/registration",
+            mapOf("Authorization" to "Bearer anything"))
+        filter.filter(request, chain).block()
+        assertThat(request.response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        assertThat(capturedExchange).isNull()
+    }
+
+    @Test
+    fun `registration enabled forwards exact POST and preserves idempotency key`() {
+        val config = GatewayConfig(internalSecret = internalSecret, jwtVerificationSecret = secret,
+            carelogRegistrationEnabled = true)
+        val enabled = JwtGlobalFilter(JwtVerifier(secret), RedisBlacklistService(redisTemplate),
+            config, AuthPublicRequestMatcher(config), OAuthPublicRequestMatcher(config))
+        val request = exchange(HttpMethod.POST, "/api/v1/auth/carelog/registration",
+            mapOf("Idempotency-Key" to "test-operation"))
+        enabled.filter(request, chain).block()
+        assertThat(headerOf("Idempotency-Key")).isEqualTo("test-operation")
+        assertThat(headerOf("X-Gateway-Secret")).isEqualTo(internalSecret)
+        verifyNoInteractions(redisTemplate)
+    }
+
     @BeforeEach
     fun setUp() {
         redisTemplate = mock(ReactiveStringRedisTemplate::class.java)

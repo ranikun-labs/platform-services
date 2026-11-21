@@ -37,7 +37,8 @@ class IdentitySchemaMigrationTest {
             "password_credentials",
             "external_identities",
             "refresh_token",
-            "product_clients"
+            "product_clients",
+            "carelog_registration_operation"
     );
     private static PostgreSQLContainer<?> postgres;
 
@@ -69,7 +70,7 @@ class IdentitySchemaMigrationTest {
         var result = flyway().migrate();
 
         assertThat(result.success).isTrue();
-        assertThat(result.migrationsExecuted).isEqualTo(2);
+        assertThat(result.migrationsExecuted).isEqualTo(3);
         assertThat(flyway().migrate().migrationsExecuted).isZero();
 
         try (Connection connection = connection()) {
@@ -134,7 +135,7 @@ class IdentitySchemaMigrationTest {
 
     @Test
     void existingDevelopmentHistoryAndRowsSurviveTheSchemaProvisioningChange() throws Exception {
-        Flyway previousConfiguration = flywayConfiguration().createSchemas(true).load();
+        Flyway previousConfiguration = flywayConfiguration().createSchemas(true).target("2").load();
         assertThat(previousConfiguration.migrate().migrationsExecuted).isEqualTo(2);
 
         UUID accountId = UUID.randomUUID();
@@ -144,8 +145,7 @@ class IdentitySchemaMigrationTest {
         Map<String, Integer> checksumsBefore = migrationChecksums();
 
         Flyway currentConfiguration = flyway();
-        currentConfiguration.validate();
-        assertThat(currentConfiguration.migrate().migrationsExecuted).isZero();
+        assertThat(currentConfiguration.migrate().migrationsExecuted).isEqualTo(1);
         currentConfiguration.validate();
 
         try (Connection connection = connection();
@@ -157,7 +157,7 @@ class IdentitySchemaMigrationTest {
                 assertThat(result.getString("status")).isEqualTo("ACTIVE");
             }
         }
-        assertThat(migrationChecksums()).containsExactlyEntriesOf(checksumsBefore);
+        assertThat(migrationChecksums()).containsAllEntriesOf(checksumsBefore).containsKey("3");
     }
 
     @Test

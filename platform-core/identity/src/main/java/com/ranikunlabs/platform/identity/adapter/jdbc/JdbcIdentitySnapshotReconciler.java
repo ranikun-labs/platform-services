@@ -14,7 +14,9 @@ import java.util.*;
  * a difference is a conflict, never permission to overwrite. Source databases must be frozen by
  * the caller: individual repeatable-read sessions do not provide a cross-database atomic snapshot.
  * Refresh rows have no domain in the existing contract: any such rows block readiness rather
- * than being silently omitted. Product-owned users/Customer rows are never queried.
+ * than being silently omitted. Registration operations and nonzero credential revisions are
+ * also unsupported until a migration contract can preserve their replay invariants. Product-owned
+ * users/Customer rows are never queried.
  */
 final class JdbcIdentitySnapshotReconciler {
     ReconciliationPlanSummary reconcile(Map<SourceIdentity, JdbcSourceConfiguration> configurations,
@@ -57,6 +59,7 @@ final class JdbcIdentitySnapshotReconciler {
                 Snapshot snapshot = read(configuration, profile.schema());
                 snapshots.put(source, snapshot);
                 if (snapshot.hasRefreshRows) unsupported++;
+                if (snapshot.hasRegistrationState) unsupported++;
                 // The existing Carelog account/public-user UUID invariant cannot be certified by
                 // Identity rows alone. Do not query product users or silently bless that mapping.
                 if (source.kind() == SourceKind.CARELOG_IDENTITY) unsupported++;
@@ -111,8 +114,16 @@ final class JdbcIdentitySnapshotReconciler {
             try (Statement statement = connection.createStatement(); ResultSet result = statement.executeQuery("SELECT EXISTS(SELECT 1 FROM " + schema + ".refresh_token)")) {
                 result.next(); hasRefresh = result.getBoolean(1);
             }
+            boolean hasRegistrationState = false;
+            if (schema.equals("identity")) {
+                try (Statement statement = connection.createStatement(); ResultSet result = statement.executeQuery(
+                        "SELECT EXISTS(SELECT 1 FROM identity.carelog_registration_operation) "
+                                + "OR EXISTS(SELECT 1 FROM identity.password_credentials WHERE credential_revision <> 0)")) {
+                    result.next(); hasRegistrationState = result.getBoolean(1);
+                }
+            }
             rows.sort(Comparator.comparing(r -> r.key));
-            return new Snapshot(rows, hasRefresh);
+            return new Snapshot(rows, hasRefresh, hasRegistrationState);
         } catch (SQLException failure) {
             throw new SourceInspectionException(configuration.logicalName(), "read identity snapshot", failure);
         }
@@ -157,8 +168,8 @@ final class JdbcIdentitySnapshotReconciler {
         @Override public String toString() { return "IdentityRow[redacted]"; }
     }
     private static final class Snapshot {
-        final List<Row> rows; final Map<String,Row> byKey; final boolean hasRefreshRows;
-        Snapshot(List<Row> rows, boolean hasRefreshRows) { this.rows=List.copyOf(rows); this.hasRefreshRows=hasRefreshRows; Map<String,Row> indexed=new TreeMap<>(); for(Row row:rows) if(indexed.put(row.key,row)!=null) throw new IllegalStateException("duplicate identity key"); byKey=Collections.unmodifiableMap(indexed); }
+        final List<Row> rows; final Map<String,Row> byKey; final boolean hasRefreshRows; final boolean hasRegistrationState;
+        Snapshot(List<Row> rows, boolean hasRefreshRows, boolean hasRegistrationState) { this.rows=List.copyOf(rows); this.hasRefreshRows=hasRefreshRows; this.hasRegistrationState=hasRegistrationState; Map<String,Row> indexed=new TreeMap<>(); for(Row row:rows) if(indexed.put(row.key,row)!=null) throw new IllegalStateException("duplicate identity key"); byKey=Collections.unmodifiableMap(indexed); }
         @Override public String toString() { return "IdentitySnapshot[redacted]"; }
     }
 }

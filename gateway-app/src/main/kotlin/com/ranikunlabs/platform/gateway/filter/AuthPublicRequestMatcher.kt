@@ -11,16 +11,20 @@ import com.ranikunlabs.platform.gateway.config.GatewayConfig
 class AuthPublicRequestMatcher {
 
     private var financeReferenceEnabled: Boolean = false
+    private var carelogRegistrationEnabled: Boolean = false
 
     @Autowired
     constructor(gatewayConfig: GatewayConfig) {
         financeReferenceEnabled = gatewayConfig.financeReference.enabled
+        carelogRegistrationEnabled = gatewayConfig.carelogRegistrationEnabled
     }
 
     constructor() {}
 
     fun matches(request: ServerHttpRequest): Boolean =
         (request.method in PUBLIC_METHODS && request.uri.path in IDENTITY_AUTH_PUBLIC_PATHS) ||
+            (carelogRegistrationEnabled && request.method == HttpMethod.OPTIONS &&
+                request.uri.path == "/api/v1/auth/carelog/registration") ||
             (financeReferenceEnabled && request.method == HttpMethod.POST &&
                 request.uri.path == FINANCE_REFERENCE_LOGIN_PATH)
 

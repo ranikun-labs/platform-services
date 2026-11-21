@@ -79,6 +79,15 @@ class GatewayRoutingHttpIntegrationTest {
         assertThat(applicationContext.getBeansOfType(FinanceTrustedContextGatewayFilter::class.java)).isEmpty()
     }
 
+    @Test
+    fun `registration stays closed by default even with bearer header`() {
+        webTestClient.post().uri("/api/v1/auth/carelog/registration")
+            .header("Authorization", "Bearer arbitrary")
+            .exchange().expectStatus().isNotFound
+        assertThat(authInvocations).hasValue(0)
+        assertThat(carelogInvocations).hasValue(0)
+    }
+
     @ParameterizedTest
     @ValueSource(strings = [
         "/api/v1/auth/login",

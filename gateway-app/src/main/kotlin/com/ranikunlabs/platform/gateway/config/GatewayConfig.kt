@@ -14,6 +14,8 @@ data class GatewayConfig(
     @field:NotBlank val jwtVerificationSecret: String = "",
     @field:Valid val financeTrustedContext: FinanceTrustedContextConfig = FinanceTrustedContextConfig(),
     @field:Valid val oauthRateLimit: OAuthRateLimitConfig = OAuthRateLimitConfig(),
+    val carelogRegistrationEnabled: Boolean = false,
+    val carelogRegistrationAllowedOrigins: List<String> = emptyList(),
     @field:Valid val financeReference: FinanceReferenceJwtConfig = FinanceReferenceJwtConfig()
 )
 
@@ -46,7 +48,8 @@ data class FinanceReferenceJwtKeyConfig(
 data class OAuthRateLimitConfig(
     @field:Min(1) val trustedProxyHops: Int = 1,
     @field:Valid val authorization: RateLimitBucketConfig = RateLimitBucketConfig(5, 10),
-    @field:Valid val exchange: RateLimitBucketConfig = RateLimitBucketConfig(3, 6)
+    @field:Valid val exchange: RateLimitBucketConfig = RateLimitBucketConfig(3, 6),
+    @field:Valid val registration: RateLimitBucketConfig = RateLimitBucketConfig(2, 4)
 )
 
 data class RateLimitBucketConfig(

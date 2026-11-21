@@ -44,14 +44,23 @@ public class PlatformAccountEntity {
     protected PlatformAccountEntity() {
     }
 
-    private PlatformAccountEntity(String primaryEmail) {
+    private PlatformAccountEntity(String primaryEmail, AccountStatus status) {
         this.id = UUID.randomUUID();
-        this.status = AccountStatus.ACTIVE;
+        this.status = status;
         this.primaryEmail = primaryEmail;
     }
 
     public static PlatformAccountEntity create(String primaryEmail) {
-        return new PlatformAccountEntity(primaryEmail);
+        return new PlatformAccountEntity(primaryEmail, AccountStatus.ACTIVE);
+    }
+
+    public static PlatformAccountEntity createPending(String primaryEmail) {
+        return new PlatformAccountEntity(primaryEmail, AccountStatus.INACTIVE);
+    }
+
+    public void activatePendingRegistration() {
+        if (status != AccountStatus.INACTIVE) throw new IllegalStateException("Registration account is not pending");
+        status = AccountStatus.ACTIVE;
     }
 
     public UUID getId() {

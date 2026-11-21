@@ -63,7 +63,7 @@ public record HistoryProfile(
         return new HistoryProfile(
                 "identity",
                 "flyway_schema_history",
-                identityMigrations()
+                canonicalIdentityMigrations()
         );
     }
 
@@ -99,6 +99,12 @@ public record HistoryProfile(
                 MigrationExpectation.fromScriptName("V1__identity_schema.sql", -1454289175),
                 MigrationExpectation.fromScriptName("V2__refresh_session_single_account.sql", 1506915702)
         );
+    }
+
+    private static List<MigrationExpectation> canonicalIdentityMigrations() {
+        List<MigrationExpectation> migrations = new ArrayList<>(identityMigrations());
+        migrations.add(MigrationExpectation.fromScriptName("V3__carelog_registration_operation.sql", 1006919839));
+        return List.copyOf(migrations);
     }
 
     private static List<MigrationExpectation> carelogFreshMigrations() {

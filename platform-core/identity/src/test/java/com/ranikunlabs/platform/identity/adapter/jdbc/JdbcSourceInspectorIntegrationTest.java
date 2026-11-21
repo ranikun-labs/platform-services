@@ -61,7 +61,7 @@ class JdbcSourceInspectorIntegrationTest {
 
         assertThat(result.state()).isEqualTo(StructuralInspectionResult.StructuralState.EXPECTED);
         assertThat(result.history().state()).isEqualTo(FlywayHistoryInspection.HistoryState.EXPECTED);
-        assertThat(result.presentExpectedTables()).containsExactlyInAnyOrderElementsOf(IdentityDatabaseSchema.TABLES);
+        assertThat(result.presentExpectedTables()).containsExactlyInAnyOrderElementsOf(IdentityDatabaseSchema.LEGACY_TABLES);
         assertThat(result.databaseName()).isEqualTo(POSTGRES.getDatabaseName());
     }
 
@@ -230,6 +230,7 @@ class JdbcSourceInspectorIntegrationTest {
                 .defaultSchema(schema)
                 .createSchemas(true)
                 .cleanDisabled(false);
+        if (targetVersion == null && schema.equals("public")) targetVersion = "2";
         if (targetVersion != null) {
             configuration.target(MigrationVersion.fromVersion(targetVersion));
         }
@@ -388,7 +389,7 @@ class JdbcSourceInspectorIntegrationTest {
                     }
                 }
             }
-            for (String table : IdentityDatabaseSchema.TABLES) {
+            for (String table : IdentityDatabaseSchema.LEGACY_TABLES) {
                 try (PreparedStatement statement = connection.prepareStatement(
                         "SELECT COUNT(*) FROM public.\"" + table + "\"")) {
                     try (ResultSet result = statement.executeQuery()) {

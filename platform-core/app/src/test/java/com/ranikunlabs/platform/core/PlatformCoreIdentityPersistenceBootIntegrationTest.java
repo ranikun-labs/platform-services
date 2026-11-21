@@ -139,7 +139,8 @@ class PlatformCoreIdentityPersistenceBootIntegrationTest {
             "password_credentials",
             "external_identities",
             "refresh_token",
-            "product_clients"
+            "product_clients",
+            "carelog_registration_operation"
     );
     private static final Pattern AUTHORIZATION_URL_PATTERN =
             Pattern.compile("\\\"authorizationUrl\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
