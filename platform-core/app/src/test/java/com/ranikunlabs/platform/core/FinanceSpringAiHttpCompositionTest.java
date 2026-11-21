@@ -127,12 +127,17 @@ class FinanceSpringAiHttpCompositionTest {
         if (ready != null || done != null) {
             assertThat(ready).isNotBlank();
             assertThat(done).isNotBlank();
-            java.nio.file.Files.writeString(java.nio.file.Path.of(ready), "http://127.0.0.1:" + port);
+            var readyPath = java.nio.file.Path.of(ready).toAbsolutePath().normalize();
+            var donePath = java.nio.file.Path.of(done).toAbsolutePath().normalize();
+            assertThat(readyPath).isNotEqualTo(donePath);
+            assertThat(java.nio.file.Files.exists(readyPath)).as("ready marker must be fresh").isFalse();
+            assertThat(java.nio.file.Files.exists(donePath)).as("completion marker must be fresh").isFalse();
+            java.nio.file.Files.writeString(readyPath, "http://127.0.0.1:" + port);
             long deadline = System.nanoTime() + java.time.Duration.ofMinutes(4).toNanos();
-            while (!java.nio.file.Files.exists(java.nio.file.Path.of(done)) && System.nanoTime() < deadline) {
+            while (!java.nio.file.Files.exists(donePath) && System.nanoTime() < deadline) {
                 Thread.sleep(100);
             }
-            assertThat(java.nio.file.Files.exists(java.nio.file.Path.of(done)))
+            assertThat(java.nio.file.Files.exists(donePath))
                     .as("Finance consumer completion marker before timeout").isTrue();
         }
     }
