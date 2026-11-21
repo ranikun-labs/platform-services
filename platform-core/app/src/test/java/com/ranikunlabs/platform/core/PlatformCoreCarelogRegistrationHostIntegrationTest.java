@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -38,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /** Disposable local infrastructure; proves composition, not a deployed product enrollment. */
 @SpringBootTest(classes = PlatformCoreApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {"server.port=0", "PLATFORM_CORE_PORT=0", "PLATFORM_CORE_MANAGEMENT_PORT=0",
-                "platform.metrics.environment=test", "platform.identity.persistence.enabled=true",
+                "platform.metrics.environment=test", "test.carelog-registration-host-claims.enabled=true", "platform.identity.persistence.enabled=true",
                 "platform.identity.auth.enabled=true", "platform.identity.carelog-registration.enabled=true",
                 "platform.identity.carelog-enrollment.enabled=true", "platform.identity.redis-key-prefix=test:identity:",
                 "platform.identity.carelog-enrollment.credential=synthetic-test-only-token-1234567890",
@@ -129,6 +130,7 @@ class PlatformCoreCarelogRegistrationHostIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.accessToken").isNotEmpty());
     }
     @TestConfiguration(proxyBeanMethods = false)
+    @ConditionalOnProperty(name = "test.carelog-registration-host-claims.enabled", havingValue = "true")
     static class ClaimsStub {
         @Bean CRMIdentityProjectionPort crmIdentityProjectionPort() {
             return new CRMIdentityProjectionPort() {
