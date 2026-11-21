@@ -30,18 +30,21 @@ class CarelogRegistrationCoordinatorTest {
         assertThat(details.getValue().email()).isEqualTo("Mail@Example.test");
         assertThat(details.getValue().name()).isEqualTo("Name");
         assertThat(details.getValue().toString()).doesNotContain("User", "Mail", "Name");
-        order.verify(enrollment).ensureEnrolled(ACCOUNT, "Name");
+        var productDetails = org.mockito.ArgumentCaptor.forClass(EnrollmentDetails.class);
+        order.verify(enrollment).ensureEnrolled(eq(ACCOUNT), productDetails.capture());
+        assertThat(productDetails.getValue()).isEqualTo(new EnrollmentDetails("User", "Mail@Example.test", "Name"));
+        assertThat(productDetails.getValue().toString()).doesNotContain("User", "Mail", "Name");
         order.verify(store).complete(KEY, ACCOUNT);
     }
 
     @Test void unavailableEnrollmentKeepsPendingAndRetryCompletes() throws Exception {
         when(store.reserveOrLoad(eq(KEY), any(), anyString())).thenReturn(new Reservation(State.PENDING, ACCOUNT));
-        doThrow(new EnrollmentUnavailableException()).doNothing().when(enrollment).ensureEnrolled(ACCOUNT, "Name");
+        doThrow(new EnrollmentUnavailableException()).doNothing().when(enrollment).ensureEnrolled(eq(ACCOUNT), any(EnrollmentDetails.class));
         when(store.complete(KEY, ACCOUNT)).thenReturn(Outcome.COMPLETED);
         assertThat(coordinator.register(KEY, "User", "a@b", "password", "Name")).isEqualTo(Outcome.PENDING);
         verify(store, never()).complete(anyString(), any());
         assertThat(coordinator.register(KEY, "User", "a@b", "password", "Name")).isEqualTo(Outcome.COMPLETED);
-        verify(enrollment, times(2)).ensureEnrolled(ACCOUNT, "Name");
+        verify(enrollment, times(2)).ensureEnrolled(eq(ACCOUNT), any(EnrollmentDetails.class));
     }
 
     @Test void completedAndConflictNeverCallEnrollment() {
@@ -62,18 +65,18 @@ class CarelogRegistrationCoordinatorTest {
     @Test void authenticatedEnrollmentConflictIsDistinctFromUnavailable() throws Exception {
         when(store.reserveOrLoad(eq(KEY), any(), anyString()))
                 .thenReturn(new Reservation(State.PENDING, ACCOUNT), new Reservation(State.CONFLICT, ACCOUNT));
-        doThrow(new EnrollmentConflictException()).when(enrollment).ensureEnrolled(ACCOUNT, "Name");
+        doThrow(new EnrollmentConflictException()).when(enrollment).ensureEnrolled(eq(ACCOUNT), any(EnrollmentDetails.class));
         when(store.markConflict(KEY, ACCOUNT)).thenReturn(Outcome.CONFLICT);
         assertThat(coordinator.register(KEY, "User", "a@b", "password", "Name")).isEqualTo(Outcome.CONFLICT);
         assertThat(coordinator.register(KEY, "User", "a@b", "password", "Name")).isEqualTo(Outcome.CONFLICT);
-        verify(enrollment, times(1)).ensureEnrolled(ACCOUNT, "Name");
+        verify(enrollment, times(1)).ensureEnrolled(eq(ACCOUNT), any(EnrollmentDetails.class));
         verify(store).markConflict(KEY, ACCOUNT);
         verify(store, never()).complete(anyString(), any());
     }
 
     @Test void failedConflictWriteDoesNotClaimADurableConflict() throws Exception {
         when(store.reserveOrLoad(eq(KEY), any(), anyString())).thenReturn(new Reservation(State.PENDING, ACCOUNT));
-        doThrow(new EnrollmentConflictException()).when(enrollment).ensureEnrolled(ACCOUNT, "Name");
+        doThrow(new EnrollmentConflictException()).when(enrollment).ensureEnrolled(eq(ACCOUNT), any(EnrollmentDetails.class));
         when(store.markConflict(KEY, ACCOUNT)).thenThrow(new IllegalStateException("store unavailable"));
         assertThatThrownBy(() -> coordinator.register(KEY, "User", "a@b", "password", "Name"))
                 .isInstanceOf(IllegalStateException.class);
@@ -82,7 +85,7 @@ class CarelogRegistrationCoordinatorTest {
 
     @Test void concurrentCompletionWinsOverTerminalConflict() throws Exception {
         when(store.reserveOrLoad(eq(KEY), any(), anyString())).thenReturn(new Reservation(State.PENDING, ACCOUNT));
-        doThrow(new EnrollmentConflictException()).when(enrollment).ensureEnrolled(ACCOUNT, "Name");
+        doThrow(new EnrollmentConflictException()).when(enrollment).ensureEnrolled(eq(ACCOUNT), any(EnrollmentDetails.class));
         when(store.markConflict(KEY, ACCOUNT)).thenReturn(Outcome.COMPLETED);
         assertThat(coordinator.register(KEY, "User", "a@b", "password", "Name")).isEqualTo(Outcome.COMPLETED);
     }
@@ -96,7 +99,7 @@ class CarelogRegistrationCoordinatorTest {
                 .isInstanceOf(IllegalStateException.class);
         assertThat(coordinator.register(KEY, "User", "a@b", "password", "Name"))
                 .isEqualTo(Outcome.COMPLETED);
-        verify(enrollment, times(2)).ensureEnrolled(ACCOUNT, "Name");
+        verify(enrollment, times(2)).ensureEnrolled(eq(ACCOUNT), any(EnrollmentDetails.class));
     }
 
     @Test void trimsJavascriptWhitespaceWithoutChangingCase() throws Exception {

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Import;
 @Import({
         IdentityPersistenceConfiguration.class,
         IdentityAuthConfiguration.class,
+        CarelogRegistrationCompositionConfiguration.class,
         FinanceReferenceIdentityConfiguration.class
 })
 public class IdentityModuleConfiguration {

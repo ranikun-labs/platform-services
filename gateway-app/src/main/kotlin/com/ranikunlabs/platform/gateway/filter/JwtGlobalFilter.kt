@@ -37,6 +37,18 @@ class JwtGlobalFilter(
         val financePath = FinanceTrustedContextWire.isFinanceJournalNamespace(path)
         val strictFinanceReference = financePath && gatewayConfig.financeReference.enabled
 
+        if (path.startsWith("/api/v1/auth/carelog/registration/")) {
+            exchange.response.statusCode = HttpStatus.NOT_FOUND
+            return exchange.response.setComplete()
+        }
+        if (path == "/api/v1/auth/carelog/registration" &&
+            (!gatewayConfig.carelogRegistrationEnabled ||
+                request.method !in setOf(org.springframework.http.HttpMethod.POST, org.springframework.http.HttpMethod.OPTIONS))
+        ) {
+            exchange.response.statusCode = HttpStatus.NOT_FOUND
+            return exchange.response.setComplete()
+        }
+
         if (isInternalPath(path)) {
             exchange.response.statusCode = HttpStatus.FORBIDDEN
             return exchange.response.setComplete()
@@ -176,7 +188,8 @@ class JwtGlobalFilter(
     }
 
     private fun isInternalPath(path: String): Boolean =
-        path == "/api/v1/internal" || path.startsWith("/api/v1/internal/")
+        path == "/api/v1/internal" || path.startsWith("/api/v1/internal/") ||
+            path == "/internal/v1/identity" || path.startsWith("/internal/v1/identity/")
 
     private fun hasFinanceAccessMarkers(claims: Claims): Boolean {
         val organizationId = claims["organizationId"] as? String ?: return false

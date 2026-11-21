@@ -4,10 +4,21 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest
+import com.ranikunlabs.platform.gateway.config.GatewayConfig
 
 class OAuthPublicRequestMatcherTest {
 
     private val matcher = OAuthPublicRequestMatcher()
+
+    @Test
+    fun `registration is opt in and only exact POST is public`() {
+        val path = "/api/v1/auth/carelog/registration"
+        val enabled = OAuthPublicRequestMatcher(GatewayConfig(carelogRegistrationEnabled = true))
+        assertThat(matcher.matches(request(HttpMethod.POST, path))).isFalse()
+        assertThat(enabled.matches(request(HttpMethod.POST, path))).isTrue()
+        assertThat(enabled.matches(request(HttpMethod.OPTIONS, path))).isFalse()
+        assertThat(enabled.matches(request(HttpMethod.POST, "$path/extra"))).isFalse()
+    }
 
     @Test
     fun `allows only exact authorization POST`() {

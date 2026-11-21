@@ -78,6 +78,12 @@ class IdentityHttpSecurityConfigurationTest {
     }
 
     @Test
+    void registrationIsNotPublicByDefault() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/carelog/registration").contentType("application/json").content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void exactOAuthPostRoutesArePublicButOtherMethodsRemainProtected() throws Exception {
         when(oauthAuthorizationService.startAuthorization(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new OAuthAuthorizationService.AuthorizationUrlResult(

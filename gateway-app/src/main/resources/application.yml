@@ -15,6 +15,19 @@ spring:
         locator:
           enabled: false
       routes:
+        - id: carelog-registration
+          uri: ${PLATFORM_GATEWAY_AUTH_URI}
+          order: -30
+          predicates:
+            - Path=/api/v1/auth/carelog/registration
+            - Method=POST
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@oauthClientIpKeyResolver}"
+                rate-limiter: "#{@oauthFailClosedRateLimiter}"
+                redis-rate-limiter.replenishRate: ${platform.gateway.oauth-rate-limit.registration.replenish-rate}
+                redis-rate-limiter.burstCapacity: ${platform.gateway.oauth-rate-limit.registration.burst-capacity}
         - id: kakao-oauth-authorization
           uri: ${PLATFORM_GATEWAY_AUTH_URI}
           order: -20
@@ -61,6 +74,7 @@ server:
 
 platform:
   gateway:
+    carelog-registration-enabled: ${PLATFORM_GATEWAY_CARELOG_REGISTRATION_ENABLED:false}
     redis-host: ${PLATFORM_GATEWAY_REDIS_HOST}
     redis-port: ${PLATFORM_GATEWAY_REDIS_PORT}
     redis-key-prefix: ${PLATFORM_GATEWAY_REDIS_KEY_PREFIX}
@@ -90,6 +104,9 @@ platform:
       exchange:
         replenish-rate: 3
         burst-capacity: 6
+      registration:
+        replenish-rate: 2
+        burst-capacity: 4
   metrics:
     environment: ${PLATFORM_ENVIRONMENT:local}
 

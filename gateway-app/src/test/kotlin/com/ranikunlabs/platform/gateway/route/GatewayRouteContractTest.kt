@@ -79,6 +79,18 @@ class GatewayRouteContractTest(
     }
 
     @Test
+    fun `registration POST always selects rate limited route before general auth`() {
+        val routes = routeLocator.routes.collectList().block()!!
+        val registration = route(routes, "carelog-registration")
+        val path = "/api/v1/auth/carelog/registration"
+        assertThat(firstMatching(routes, HttpMethod.POST, path).id).isEqualTo("carelog-registration")
+        assertThat(registration.uri).isEqualTo(URI.create("http://platform-core.test:8081"))
+        assertThat(registration.matches(HttpMethod.GET, path)).isFalse()
+        assertThat(registration.matches(HttpMethod.POST, "$path/extra")).isFalse()
+        assertThat(firstMatching(routes, HttpMethod.OPTIONS, path).id).isEqualTo("platform-identity-auth")
+    }
+
+    @Test
     fun `the complete public Auth namespace selects Identity before the Carelog fallback`() {
         val routes = routeLocator.routes.collectList().block()!!
 
@@ -101,7 +113,8 @@ class GatewayRouteContractTest(
         assertThat(gatewayConfig.oauthRateLimit.exchange.burstCapacity).isEqualTo(6)
         assertThat(oauthFailClosedRateLimiter.config.keys).containsExactlyInAnyOrder(
             "kakao-oauth-authorization",
-            "kakao-oauth-exchange"
+            "kakao-oauth-exchange",
+            "carelog-registration"
         )
     }
 

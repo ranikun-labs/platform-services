@@ -32,7 +32,8 @@ public final class CarelogRegistrationCoordinator {
         UUID accountId = Objects.requireNonNull(reservation.accountId());
         try {
             // This call must run outside the store's transaction and be idempotent for accountId.
-            enrollment.ensureEnrolled(accountId, request.name());
+            enrollment.ensureEnrolled(accountId,
+                    new EnrollmentDetails(request.userId(), request.email(), request.name()));
         } catch (EnrollmentConflictException conflict) {
             return Objects.requireNonNull(store.markConflict(key, accountId));
         } catch (EnrollmentUnavailableException unavailable) {
@@ -112,6 +113,16 @@ public final class CarelogRegistrationCoordinator {
         @Override public String toString() { return "AccountDetails[redacted]"; }
     }
 
+    /** Product-facing fields only; never includes a password or hash. */
+    public record EnrollmentDetails(String userId, String email, String name) {
+        public EnrollmentDetails {
+            Objects.requireNonNull(userId);
+            Objects.requireNonNull(email);
+            Objects.requireNonNull(name);
+        }
+        @Override public String toString() { return "EnrollmentDetails[redacted]"; }
+    }
+
     /**
      * The store must atomically reserve/load and compare safely without retaining a raw password.
      * A newly reserved account and operation are durable together and the account is not
@@ -139,7 +150,7 @@ public final class CarelogRegistrationCoordinator {
          * Throw conflict only for an authenticated, definitive product conflict; ambiguous
          * transport failures and timeouts must be mapped to unavailable.
          */
-        void ensureEnrolled(UUID accountId, String name)
+        void ensureEnrolled(UUID accountId, EnrollmentDetails details)
                 throws EnrollmentUnavailableException, EnrollmentConflictException;
     }
 
