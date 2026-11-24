@@ -25,6 +25,7 @@ dependencies {
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 
     testImplementation(libs.spring.ai.client.chat)
+    testImplementation(libs.spring.ai.openai)
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test")
     testImplementation("org.springframework.data:spring-data-redis")
