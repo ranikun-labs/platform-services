@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.cloud.gateway.route.RouteLocator
-import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
@@ -71,6 +71,7 @@ class FinanceReferenceHttpIntegrationTest {
     @Autowired
     private lateinit var webTestClient: WebTestClient
 
+
     @BeforeEach
     fun resetSyntheticUpstream() {
         SyntheticFinanceUpstream.requests.clear()
@@ -82,7 +83,7 @@ class FinanceReferenceHttpIntegrationTest {
         val transitionBody = "{\"expectedRevision\":7}"
 
         webTestClient.get()
-            .uri("/finance/journals/deleted")
+            .uri("/api/finance/journals/deleted")
             .headers { headers -> headers.setBearerAuth(accessToken) }
             .header(FinanceTrustedContextWire.SUBJECT_HEADER, ACCOUNT_B)
             .header("X-User-Id", ACCOUNT_B)
@@ -92,7 +93,7 @@ class FinanceReferenceHttpIntegrationTest {
 
         listOf("delete", "restore").forEach { operation ->
             webTestClient.post()
-                .uri("/finance/journals/$ACCOUNT_A/$operation")
+                .uri("/api/finance/journals/$ACCOUNT_A/$operation")
                 .contentType(MediaType.APPLICATION_JSON)
                 .headers { headers -> headers.setBearerAuth(accessToken) }
                 .header(FinanceTrustedContextWire.SUBJECT_HEADER, ACCOUNT_B)
@@ -138,7 +139,7 @@ class FinanceReferenceHttpIntegrationTest {
     @Test
     fun `retrospective append and read pass through the reference gateway with verified owner`() {
         val accessToken = referenceToken(ACCOUNT_A, "access")
-        val collection = "/finance/journals/$ACCOUNT_A/retrospectives"
+        val collection = "/api/finance/journals/$ACCOUNT_A/retrospectives"
         val detail = "$collection/$ACCOUNT_B"
         val body = """{"sourceRevision":1,"body":"synthetic reflection"}"""
         webTestClient.post()
@@ -162,7 +163,10 @@ class FinanceReferenceHttpIntegrationTest {
 
         val forwarded = SyntheticFinanceUpstream.requests.toList()
         assertThat(forwarded.map { it.method to it.path }).containsExactly(
-            "POST" to collection, "GET" to collection, "GET" to detail,
+            // Gateway "/api/finance/**" is forwarded to upstream "/finance/**".
+            "POST" to collection.removePrefix("/api"),
+            "GET" to collection.removePrefix("/api"),
+            "GET" to detail.removePrefix("/api"),
         )
         assertThat(forwarded.first().body).isEqualTo(body)
         assertThat(forwarded.first().headers["Idempotency-Key"]).containsExactly("synthetic-replay-key")
@@ -175,18 +179,18 @@ class FinanceReferenceHttpIntegrationTest {
     @Test
     fun `missing bearer Core token and unsupported method are rejected before Finance upstream`() {
         webTestClient.get()
-            .uri("/finance/journals/deleted")
+            .uri("/api/finance/journals/deleted")
             .exchange()
             .expectStatus().isUnauthorized
 
         webTestClient.post()
-            .uri("/finance/journals/$ACCOUNT_A/delete")
+            .uri("/api/finance/journals/$ACCOUNT_A/delete")
             .headers { headers -> headers.setBearerAuth(coreAccessToken()) }
             .exchange()
             .expectStatus().isUnauthorized
 
         webTestClient.method(HttpMethod.DELETE)
-            .uri("/finance/journals/$ACCOUNT_A/delete")
+            .uri("/api/finance/journals/$ACCOUNT_A/delete")
             .headers { headers -> headers.setBearerAuth(referenceToken(ACCOUNT_A, "access")) }
             .exchange()
             .expectStatus().isForbidden
@@ -231,14 +235,6 @@ class FinanceReferenceHttpIntegrationTest {
             return RedisBlacklistService(redisTemplate)
         }
 
-        @Bean
-        fun syntheticFinanceRouteLocator(builder: RouteLocatorBuilder): RouteLocator =
-            builder.routes()
-                .route("test-only-finance-reference") { route ->
-                    route.path("/finance/**")
-                        .uri("http://127.0.0.1:${SyntheticFinanceUpstream.server.port()}")
-                }
-                .build()
     }
 
     private data class ForwardedRequest(
@@ -283,7 +279,16 @@ class FinanceReferenceHttpIntegrationTest {
         }
     }
 
-    private companion object {
+    companion object {
+        /** Production finance-be route (application.yml) forwards to this synthetic upstream. */
+        @JvmStatic
+        @DynamicPropertySource
+        fun financeBackend(registry: DynamicPropertyRegistry) {
+            registry.add("PLATFORM_GATEWAY_FINANCE_BE_URI") {
+                "http://127.0.0.1:${SyntheticFinanceUpstream.server.port()}"
+            }
+        }
+
         const val ACCOUNT_A = "9f8c1f5a-8a1a-4f9f-b9e3-2cc1d3b1a123"
         const val ACCOUNT_B = "22222222-2222-2222-2222-222222222222"
         const val ORGANIZATION_ID = "11111111-1111-1111-1111-111111111111"

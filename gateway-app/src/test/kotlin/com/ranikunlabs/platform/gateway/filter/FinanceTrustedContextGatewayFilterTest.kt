@@ -117,7 +117,7 @@ class FinanceTrustedContextGatewayFilterTest {
     @Test
     fun `malformed Finance route is rejected without forwarding`() {
         val invalidRoute = MockServerWebExchange.from(
-            MockServerHttpRequest.method(HttpMethod.POST, "/finance/journals/$subjectA").build()
+            MockServerHttpRequest.method(HttpMethod.POST, "/api/finance/journals/$subjectA").build()
         )
         val captured = mutableListOf<ServerWebExchange>()
 
@@ -129,7 +129,7 @@ class FinanceTrustedContextGatewayFilterTest {
 
     @Test
     fun `verified auth forwards retrospective writes only for the exact collection path`() {
-        val collection = "/finance/journals/$subjectA/retrospectives"
+        val collection = "/api/finance/journals/$subjectA/retrospectives"
         val detail = "$collection/$subjectA"
         val token = validToken(subjectA)
         `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
@@ -153,14 +153,14 @@ class FinanceTrustedContextGatewayFilterTest {
 
     @Test
     fun `only canonical journal detail PATCH reaches Finance after verified authentication`() {
-        val path = "/finance/journals/$subjectA"
+        val path = "/api/finance/journals/$subjectA"
         assertThat(FinanceTrustedContextWire.isSupportedRoute(HttpMethod.PATCH, path, path)).isTrue()
         listOf(
             HttpMethod.DELETE to path,
             HttpMethod.PUT to path,
-            HttpMethod.PATCH to "/finance/journals",
+            HttpMethod.PATCH to "/api/finance/journals",
             HttpMethod.PATCH to "$path/extra",
-            HttpMethod.PATCH to "/finance/journals/not-a-uuid"
+            HttpMethod.PATCH to "/api/finance/journals/not-a-uuid"
         ).forEach { (method, candidate) ->
             assertThat(FinanceTrustedContextWire.isSupportedRoute(method, candidate, candidate)).isFalse()
         }
@@ -194,7 +194,7 @@ class FinanceTrustedContextGatewayFilterTest {
     @Test
     fun `empty Bearer and missing stable subject are unauthorized only on the Finance reference route`() {
         val emptyBearer = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/finance/journals")
+            MockServerHttpRequest.get("/api/finance/journals")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer ")
                 .build()
         )
@@ -211,7 +211,7 @@ class FinanceTrustedContextGatewayFilterTest {
             .signWith(Keys.hmacShaKeyFor(jwtSecret.toByteArray(StandardCharsets.UTF_8)))
             .compact()
         val noSubject = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/finance/journals")
+            MockServerHttpRequest.get("/api/finance/journals")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $noSubjectToken")
                 .build()
         )
@@ -235,7 +235,7 @@ class FinanceTrustedContextGatewayFilterTest {
             OAuthPublicRequestMatcher()
         )
         val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/finance/journals").build()
+            MockServerHttpRequest.get("/api/finance/journals").build()
         )
         val captured = mutableListOf<ServerWebExchange>()
 
@@ -251,7 +251,7 @@ class FinanceTrustedContextGatewayFilterTest {
         `when`(redisTemplate.hasKey("blacklist:$token"))
             .thenReturn(Mono.error(DataAccessResourceFailureException("Redis unavailable")))
         val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/finance/journals")
+            MockServerHttpRequest.get("/api/finance/journals")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
                 .build()
         )
@@ -321,9 +321,9 @@ class FinanceTrustedContextGatewayFilterTest {
     @Test
     fun `deleted list and individual delete restore preserve body and verified identity`() {
         val routes = listOf(
-            HttpMethod.GET to "/finance/journals/deleted",
-            HttpMethod.POST to "/finance/journals/$subjectA/delete",
-            HttpMethod.POST to "/finance/journals/$subjectA/restore"
+            HttpMethod.GET to "/api/finance/journals/deleted",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/delete",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/restore"
         )
         routes.forEach { (method, path) ->
             val token = validToken(subjectA)
@@ -365,9 +365,9 @@ class FinanceTrustedContextGatewayFilterTest {
     @Test
     fun `delete restore and deleted list require authentication before forwarding`() {
         listOf(
-            HttpMethod.GET to "/finance/journals/deleted",
-            HttpMethod.POST to "/finance/journals/$subjectA/delete",
-            HttpMethod.POST to "/finance/journals/$subjectA/restore"
+            HttpMethod.GET to "/api/finance/journals/deleted",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/delete",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/restore"
         ).forEach { (method, path) ->
             val exchange = MockServerWebExchange.from(MockServerHttpRequest.method(method, path).build())
             val forwarded = mutableListOf<ServerWebExchange>()
@@ -382,20 +382,20 @@ class FinanceTrustedContextGatewayFilterTest {
     @Test
     fun `journal lifecycle routes reject wrong methods noncanonical ids and encoded paths`() {
         val invalid = listOf(
-            HttpMethod.POST to "/finance/journals/deleted",
-            HttpMethod.DELETE to "/finance/journals/$subjectA",
-            HttpMethod.DELETE to "/finance/journals/$subjectA/delete",
-            HttpMethod.GET to "/finance/journals/$subjectA/delete",
-            HttpMethod.PATCH to "/finance/journals/$subjectA/restore",
-            HttpMethod.PUT to "/finance/journals/$subjectA/restore",
-            HttpMethod.POST to "/finance/journals/not-a-uuid/delete",
-            HttpMethod.POST to "/finance/journals/${subjectA.uppercase()}/restore",
-            HttpMethod.POST to "/finance/journals/$subjectA/delete/",
-            HttpMethod.POST to "/finance/journals/$subjectA/restore/extra",
-            HttpMethod.POST to "/finance/journals//$subjectA/delete",
-            HttpMethod.POST to "/finance/journals/deleted/restore",
-            HttpMethod.POST to "/finance/journals/$subjectA/%64elete",
-            HttpMethod.GET to "/finance/journals/%64eleted"
+            HttpMethod.POST to "/api/finance/journals/deleted",
+            HttpMethod.DELETE to "/api/finance/journals/$subjectA",
+            HttpMethod.DELETE to "/api/finance/journals/$subjectA/delete",
+            HttpMethod.GET to "/api/finance/journals/$subjectA/delete",
+            HttpMethod.PATCH to "/api/finance/journals/$subjectA/restore",
+            HttpMethod.PUT to "/api/finance/journals/$subjectA/restore",
+            HttpMethod.POST to "/api/finance/journals/not-a-uuid/delete",
+            HttpMethod.POST to "/api/finance/journals/${subjectA.uppercase()}/restore",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/delete/",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/restore/extra",
+            HttpMethod.POST to "/api/finance/journals//$subjectA/delete",
+            HttpMethod.POST to "/api/finance/journals/deleted/restore",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/%64elete",
+            HttpMethod.GET to "/api/finance/journals/%64eleted"
         )
         invalid.forEach { (method, path) ->
             val exchange = MockServerWebExchange.from(
@@ -408,7 +408,7 @@ class FinanceTrustedContextGatewayFilterTest {
             assertThat(forwarded).isEmpty()
         }
         assertThat(FinanceTrustedContextWire.isSupportedRoute(
-            HttpMethod.POST, "/finance/journals/$subjectA/delete", "/finance/journals/$subjectA/%64elete"
+            HttpMethod.POST, "/api/finance/journals/$subjectA/delete", "/api/finance/journals/$subjectA/%64elete"
         )).isFalse()
     }
 
@@ -443,10 +443,10 @@ class FinanceTrustedContextGatewayFilterTest {
             .compact()
         `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
         val routes = listOf(
-            HttpMethod.GET to "/finance/journals/deleted",
-            HttpMethod.POST to "/finance/journals/$subjectA/delete",
-            HttpMethod.POST to "/finance/journals/$subjectA/restore",
-            HttpMethod.PATCH to "/finance/journals/$subjectA"
+            HttpMethod.GET to "/api/finance/journals/deleted",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/delete",
+            HttpMethod.POST to "/api/finance/journals/$subjectA/restore",
+            HttpMethod.PATCH to "/api/finance/journals/$subjectA"
         )
         routes.forEach { (method, path) ->
             val forwarded = mutableListOf<ServerWebExchange>()
@@ -480,7 +480,7 @@ class FinanceTrustedContextGatewayFilterTest {
         val token = validToken(verifiedSubject)
         `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
 
-        val request = MockServerHttpRequest.post("/finance/journals")
+        val request = MockServerHttpRequest.post("/api/finance/journals")
             .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
             .header(HttpHeaders.COOKIE, "session=fixture-only")
             .header("X-User-Id", forgedSubject)
@@ -539,7 +539,7 @@ class FinanceTrustedContextGatewayFilterTest {
     private fun runFinanceRequest(token: String): Pair<MockServerWebExchange, MutableList<ServerWebExchange>> {
         `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
         val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/finance/journals")
+            MockServerHttpRequest.get("/api/finance/journals")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
                 .build()
         )

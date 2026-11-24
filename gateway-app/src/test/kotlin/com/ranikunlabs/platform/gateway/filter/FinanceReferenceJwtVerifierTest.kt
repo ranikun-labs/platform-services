@@ -173,7 +173,7 @@ class FinanceReferenceJwtVerifierTest {
             .signWith(GatewayJwtKeyFactory.create(legacyKey), Jwts.SIG.HS256)
             .compact()
         val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/finance/journals")
+            MockServerHttpRequest.get("/api/finance/journals")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $coreToken")
                 .build()
         )
@@ -202,7 +202,7 @@ class FinanceReferenceJwtVerifierTest {
         )
         `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
         val exchange = MockServerWebExchange.from(
-            MockServerHttpRequest.get("/finance/journals")
+            MockServerHttpRequest.get("/api/finance/journals")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
                 .header(HttpHeaders.COOKIE, "session=forged")
                 .header("X-Finance-Subject", "forged-subject")
@@ -333,7 +333,7 @@ class FinanceReferenceJwtVerifierTest {
     private fun request(method: HttpMethod, path: String) = MockServerHttpRequest.method(method, path).build()
 
     private fun exchange(token: String) = MockServerWebExchange.from(
-        MockServerHttpRequest.get("/finance/journals")
+        MockServerHttpRequest.get("/api/finance/journals")
             .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
             .build()
     )

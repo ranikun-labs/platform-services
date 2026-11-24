@@ -22,11 +22,11 @@ class AuthPublicRequestMatcher {
     constructor() {}
 
     fun matches(request: ServerHttpRequest): Boolean =
-        (request.method in PUBLIC_METHODS && request.uri.path in IDENTITY_AUTH_PUBLIC_PATHS) ||
+        (request.method in PUBLIC_METHODS && request.uri.rawPath in IDENTITY_AUTH_PUBLIC_PATHS) ||
             (carelogRegistrationEnabled && request.method == HttpMethod.OPTIONS &&
-                request.uri.path == "/api/v1/auth/carelog/registration") ||
+                request.uri.rawPath == "/api/v1/auth/carelog/registration") ||
             (financeReferenceEnabled && request.method == HttpMethod.POST &&
-                request.uri.path == FINANCE_REFERENCE_LOGIN_PATH)
+                request.uri.rawPath == FINANCE_REFERENCE_LOGIN_PATH)
 
     private companion object {
         val PUBLIC_METHODS = setOf(HttpMethod.POST, HttpMethod.OPTIONS)

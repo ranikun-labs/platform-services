@@ -59,6 +59,16 @@ spring:
           order: -10
           predicates:
             - Path=/api/v1/auth/**
+        # Finance BE. Requests are forwarded only through the trusted-context filter; while that
+        # filter is inactive (default), JwtGlobalFilter answers every /api/finance request with 404.
+        # The URI has no default: a missing PLATFORM_GATEWAY_FINANCE_BE_URI fails startup.
+        - id: finance-be
+          uri: ${PLATFORM_GATEWAY_FINANCE_BE_URI}
+          order: -5
+          predicates:
+            - Path=/api/finance/**
+          filters:
+            - StripPrefix=1
         - id: carelog-be
           uri: ${PLATFORM_GATEWAY_CARELOG_BE_URI}
           order: 0

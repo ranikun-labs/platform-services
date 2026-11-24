@@ -150,14 +150,16 @@ internal object FinanceTrustedContextWire {
     const val MAX_SUBJECT_UTF8_BYTES = 256
     const val MAX_CONTEXT_HEADER_VALUE_BYTES = 2048
 
-    private const val JOURNALS_PATH = "/finance/journals"
+    // Gateway-facing namespace. The route strips "/api" and forwards to the upstream "/finance/**".
+    private const val GATEWAY_NAMESPACE = "/api/finance"
+    private const val JOURNALS_PATH = "$GATEWAY_NAMESPACE/journals"
     private const val UUID_PATH = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
     private val journalId = Regex(UUID_PATH)
     private val retrospectiveCollection = Regex("$JOURNALS_PATH/$UUID_PATH/retrospectives")
     private val retrospectiveDetail = Regex("$JOURNALS_PATH/$UUID_PATH/retrospectives/$UUID_PATH")
 
     fun isFinanceJournalNamespace(path: String): Boolean =
-        path == JOURNALS_PATH || path.startsWith("$JOURNALS_PATH/")
+        path == GATEWAY_NAMESPACE || path.startsWith("$GATEWAY_NAMESPACE/")
 
     fun isSupportedRoute(method: HttpMethod?, path: String, rawPath: String?): Boolean {
         if (path != rawPath) return false
