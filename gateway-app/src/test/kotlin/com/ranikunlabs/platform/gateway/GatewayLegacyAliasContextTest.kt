@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
         "REDIS_PORT=6379",
         "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
         "CARELOG_BE_URI=http://localhost:8080",
+        "PLATFORM_GATEWAY_FINANCE_BE_URI=http://localhost:8082",
         "CARELOG_RAG_URI=http://localhost:8081",
         "GATEWAY_INTERNAL_SECRET=legacy-internal-secret",
         "JWT_SECRET_KEY=platform-gateway-legacy-secret-key-long-enough"

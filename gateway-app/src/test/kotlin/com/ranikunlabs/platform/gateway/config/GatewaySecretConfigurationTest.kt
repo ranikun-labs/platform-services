@@ -38,6 +38,7 @@ class GatewaySecretConfigurationTest {
                 "--PLATFORM_GATEWAY_REDIS_PORT=6379",
                 "--PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
                 "--PLATFORM_GATEWAY_CARELOG_BE_URI=http://127.0.0.1:8080",
+                "--PLATFORM_GATEWAY_FINANCE_BE_URI=http://localhost:8082",
                 "--PLATFORM_GATEWAY_CARELOG_RAG_URI=http://127.0.0.1:8081",
                 "--PLATFORM_GATEWAY_INTERNAL_SECRET=internal-secret",
                 "--PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET=$weakSecret"

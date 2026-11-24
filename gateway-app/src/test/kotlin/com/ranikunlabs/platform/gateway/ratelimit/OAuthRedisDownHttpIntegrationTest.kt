@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
         "PLATFORM_GATEWAY_REDIS_PORT=1",
         "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
         "PLATFORM_GATEWAY_CARELOG_BE_URI=http://127.0.0.1:39153",
+        "PLATFORM_GATEWAY_FINANCE_BE_URI=http://localhost:8082",
         "PLATFORM_GATEWAY_CARELOG_RAG_URI=http://127.0.0.1:39153",
         "PLATFORM_GATEWAY_INTERNAL_SECRET=integration-secret",
         "PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET=platform-gateway-integration-secret-key-long-enough"

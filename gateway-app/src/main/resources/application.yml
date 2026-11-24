@@ -39,6 +39,13 @@ spring:
                 rate-limiter: "#{@oauthFailClosedRateLimiter}"
                 redis-rate-limiter.replenishRate: ${platform.gateway.oauth-rate-limit.exchange.replenish-rate}
                 redis-rate-limiter.burstCapacity: ${platform.gateway.oauth-rate-limit.exchange.burst-capacity}
+        - id: finance-be
+          uri: ${PLATFORM_GATEWAY_FINANCE_BE_URI}
+          order: -10
+          predicates:
+            - Path=/api/finance/**
+          filters:
+            - RewritePath=/api/finance/(?<segment>.*), /finance/${segment}
         - id: carelog-be
           uri: ${PLATFORM_GATEWAY_CARELOG_BE_URI}
           order: 0

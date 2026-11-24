@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono
         "PLATFORM_GATEWAY_REDIS_PORT=6379",
         "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
         "PLATFORM_GATEWAY_CARELOG_BE_URI=http://localhost:8080",
+        "PLATFORM_GATEWAY_FINANCE_BE_URI=http://localhost:8082",
         "PLATFORM_GATEWAY_CARELOG_RAG_URI=http://localhost:8081",
         "PLATFORM_GATEWAY_INTERNAL_SECRET=integration-secret",
         "PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET=platform-gateway-integration-secret-key-long-enough"
@@ -41,9 +42,12 @@ class GatewayRouteContractTest(
         assertThat(routes.map(Route::getId)).containsSubsequence(
             "kakao-oauth-authorization",
             "kakao-oauth-exchange",
+            "finance-be",
             "carelog-be",
             "carelog-rag"
         )
+        assertThat(route(routes, "finance-be").matches(HttpMethod.POST, "/api/finance/journals")).isTrue()
+        assertThat(route(routes, "finance-be").matches(HttpMethod.GET, "/api/v1/patients")).isFalse()
         assertThat(route(routes, "carelog-be").matches(HttpMethod.GET, "/api/v1/patients")).isTrue()
         assertThat(route(routes, "carelog-rag").matches(HttpMethod.POST, "/rag/query")).isTrue()
     }

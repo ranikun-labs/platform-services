@@ -88,6 +88,19 @@ class JwtGlobalFilterCharacterizationTest {
         verifyNoInteractions(redisTemplate)
     }
 
+    @Test
+    fun `dot-segment traversal out of a public prefix still requires a JWT`() {
+        val exchange = exchange(
+            HttpMethod.POST,
+            "/api/v1/auth/login/../../finance/journals"
+        )
+
+        filter.filter(exchange, chain).block()
+
+        assertThat(exchange.response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        verifyNoInteractions(redisTemplate)
+    }
+
     @ParameterizedTest
     @ValueSource(strings = [
         "/api/v1/auth/oauth/kakao/authorization",

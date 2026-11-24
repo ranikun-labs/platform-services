@@ -25,7 +25,10 @@ class JwtGlobalFilter(
         val path = request.uri.path
         val sanitizedExchange = exchange.withoutTrustedHeaders()
 
-        if (oauthPublicRequestMatcher.matches(request) || gatewayConfig.publicPaths.any(path::startsWith)) {
+        // Public-prefix match runs on the dot-segment-normalized path so that
+        // "/api/v1/auth/login/../../finance/journals" cannot skip JWT verification.
+        val normalizedPath = normalizeDotSegments(path)
+        if (oauthPublicRequestMatcher.matches(request) || gatewayConfig.publicPaths.any(normalizedPath::startsWith)) {
             return chain.filter(sanitizedExchange.withGatewaySecret(gatewayConfig.internalSecret))
         }
 
@@ -62,6 +65,18 @@ class JwtGlobalFilter(
     }
 
     override fun getOrder(): Int = -1
+
+    private fun normalizeDotSegments(path: String): String {
+        val segments = ArrayDeque<String>()
+        path.split('/').forEach { segment ->
+            when (segment) {
+                "", "." -> Unit
+                ".." -> if (segments.isNotEmpty()) segments.removeLast()
+                else -> segments.addLast(segment)
+            }
+        }
+        return "/" + segments.joinToString("/")
+    }
 
     private fun ServerWebExchange.withoutTrustedHeaders(): ServerWebExchange = mutate()
         .request {
