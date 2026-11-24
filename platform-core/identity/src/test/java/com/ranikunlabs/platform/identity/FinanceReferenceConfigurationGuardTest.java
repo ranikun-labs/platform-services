@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -72,14 +74,194 @@ class FinanceReferenceConfigurationGuardTest {
     }
 
     @Test
-    void rejectsSharedCarelogAuthComposition() {
-        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+    void acceptsFinanceReferenceAlongsideCarelogAuthOnlyWithDevDualAuthOptIn() {
+        MockEnvironment environment = devDualAuthEnvironment()
+                .withProperty("platform.identity.auth.enabled", "true");
+
+        assertThat(FinanceReferenceConfigurationGuard.validate(
                 new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)),
+                properties(),
+                false,
+                environment))
+                .containsExactly(java.util.UUID.fromString(ACCOUNT_ID));
+    }
+
+    @Test
+    void carelogAuthWithoutOptInKeepsOriginalSharedCompositionRejection() {
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("spring.profiles.active", "finance-reference")
+                .withProperty("platform.identity.auth.enabled", "true");
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), false, environment))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Finance identity reference cannot share the Carelog auth composition.");
+    }
+
+    @Test
+    void carelogAuthWithFlagButWithoutDevProfileIsRejectedWithClearMessage() {
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("spring.profiles.active", "finance-reference")
+                .withProperty("platform.identity.auth.enabled", "true")
+                .withProperty("platform.identity.finance-reference.dev-dual-auth.enabled", "true");
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), false, environment))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("requires the dev profile");
+    }
+
+    @Test
+    void flagWithoutDevProfileIsRejectedEvenWithoutCarelogAuth() {
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("spring.profiles.active", "finance-reference")
+                .withProperty("platform.identity.finance-reference.dev-dual-auth.enabled", "true");
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), false, environment))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("requires the dev profile");
+    }
+
+    @Test
+    void prodProfileRejectsEvenWithDevDualAuthFlag() {
+        MockEnvironment environment = devDualAuthEnvironment()
+                .withProperty("spring.profiles.active", "finance-reference,dev,prod")
+                .withProperty("platform.identity.auth.enabled", "true");
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), true, environment))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("production marker");
+    }
+
+    @Test
+    void productionEnvironmentMarkerRejectsEvenWithDevDualAuthFlag() {
+        MockEnvironment environment = devDualAuthEnvironment()
+                .withProperty("PLATFORM_ENVIRONMENT", "prod")
+                .withProperty("platform.identity.auth.enabled", "true");
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), true, environment))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("production marker");
+    }
+
+    @Test
+    void financeOnlyZeroSelectedAccountsAcceptedUnderSignupAndDevOptInWithoutCarelogAuth() {
+        assertThat(FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of()),
+                properties(),
+                true,
+                devDualAuthEnvironment()))
+                .isEmpty();
+        assertThat(FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, null),
+                properties(),
+                true,
+                devDualAuthEnvironment()))
+                .isEmpty();
+    }
+
+    @Test
+    void rejectsZeroSelectedAccountsWhenSignupEnabledWithoutOptIn() {
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of()),
                 properties(),
                 true,
                 new MockEnvironment().withProperty("spring.profiles.active", "finance-reference")))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Carelog auth composition");
+                .hasMessageContaining("1–16 selected account IDs");
+    }
+
+    @Test
+    void rejectsZeroSelectedAccountsWhenSignupDisabledEvenWithDevDualAuthOptIn() {
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of()),
+                properties(),
+                false,
+                devDualAuthEnvironment()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("1–16 selected account IDs");
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, null),
+                properties(),
+                false,
+                devDualAuthEnvironment()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("1–16 selected account IDs");
+    }
+
+    @Test
+    void rejectsMoreThanSixteenSelectedAccountsEvenWithSignupAndOptIn() {
+        List<String> seventeen = java.util.stream.IntStream.range(0, 17)
+                .mapToObj(index -> java.util.UUID.randomUUID().toString())
+                .toList();
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, seventeen),
+                properties(),
+                true,
+                devDualAuthEnvironment()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Finance identity reference requires 1–16 selected account IDs.");
+    }
+
+    @Test
+    void rejectsMoreThanSixteenSelectedAccountsWithoutSignupOrOptIn() {
+        List<String> seventeen = java.util.stream.IntStream.range(0, 17)
+                .mapToObj(index -> java.util.UUID.randomUUID().toString())
+                .toList();
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, seventeen),
+                properties(),
+                false,
+                new MockEnvironment().withProperty("spring.profiles.active", "finance-reference")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Finance identity reference requires 1–16 selected account IDs.");
+    }
+
+    @Test
+    void uppercaseDevProfileActivatesDevDualAuth() {
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("spring.profiles.active", "finance-reference,DEV")
+                .withProperty("platform.identity.finance-reference.dev-dual-auth.enabled", "true")
+                .withProperty("platform.identity.auth.enabled", "true");
+
+        assertThat(FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), false, environment))
+                .containsExactly(java.util.UUID.fromString(ACCOUNT_ID));
+    }
+
+    @Test
+    void platformEnvironmentPropertyProdRejectsEvenWithFlag() {
+        MockEnvironment environment = devDualAuthEnvironment()
+                .withProperty("platform.environment", "prod")
+                .withProperty("platform.identity.auth.enabled", "true");
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), true, environment))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("production marker");
+    }
+
+    @Test
+    void metricsEnvironmentProductionRejectsEvenWithFlag() {
+        MockEnvironment environment = devDualAuthEnvironment()
+                .withProperty("platform.metrics.environment", "production")
+                .withProperty("platform.identity.auth.enabled", "true");
+
+        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), true, environment))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("production marker");
+    }
+
+    private static MockEnvironment devDualAuthEnvironment() {
+        return new MockEnvironment()
+                .withProperty("spring.profiles.active", "finance-reference,dev")
+                .withProperty("platform.identity.finance-reference.dev-dual-auth.enabled", "true");
     }
 
     private static FinanceReferenceJwtProperties properties() {
@@ -100,6 +282,12 @@ class FinanceReferenceConfigurationGuardTest {
         @Bean
         AccountStatusPort accountStatusPort() {
             return mock(AccountStatusPort.class);
+        }
+
+        /** Stands in for the shared encoder IdentityModuleConfiguration provides in production. */
+        @Bean
+        PasswordEncoder identityPasswordEncoder() {
+            return new BCryptPasswordEncoder();
         }
     }
 }

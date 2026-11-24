@@ -110,7 +110,7 @@ class FinanceReferenceAccessServiceTest {
         UUID enrolled = UUID.fromString("77777777-7777-7777-7777-777777777777");
         FinanceReferenceEnrollmentPort enrollment = accountId -> enrolled.equals(accountId);
         FinanceReferenceAccessService service = new FinanceReferenceAccessService(
-                credentials, Set.of(SELECTED), enrollment, issuer);
+                credentials, Set.of(SELECTED), enrollment, issuer, false);
         IssuedFinanceReferenceAccessToken token = new IssuedFinanceReferenceAccessToken(
                 "public-dummy-token", Instant.parse("2026-11-06T13:00:00Z"));
         when(credentials.authenticate("dev@example.test", "test-password"))
@@ -123,5 +123,50 @@ class FinanceReferenceAccessServiceTest {
         assertThatThrownBy(() -> service.authenticate("other@example.test", "test-password"))
                 .isInstanceOf(InvalidCredentialsException.class);
         verify(issuer, never()).issue(UNSELECTED.toString());
+    }
+
+    @Test
+    void zeroSelectedAccountsWithSignupAdmitsOnlyEnrolledAccounts() {
+        CredentialPort credentials = mock(CredentialPort.class);
+        FinanceReferenceAccessTokenPort issuer = mock(FinanceReferenceAccessTokenPort.class);
+        UUID enrolled = UUID.fromString("77777777-7777-7777-7777-777777777777");
+        FinanceReferenceEnrollmentPort enrollment = accountId -> enrolled.equals(accountId);
+        FinanceReferenceAccessService service = new FinanceReferenceAccessService(
+                credentials, Set.of(), enrollment, issuer, true);
+        IssuedFinanceReferenceAccessToken token = new IssuedFinanceReferenceAccessToken(
+                "public-dummy-token", Instant.parse("2026-11-06T13:00:00Z"));
+        when(credentials.authenticate("dev@example.test", "test-password"))
+                .thenReturn(new AuthenticatedIdentity(enrolled, "dev@example.test"));
+        when(issuer.issue(enrolled.toString())).thenReturn(token);
+        when(credentials.authenticate("other@example.test", "test-password"))
+                .thenReturn(new AuthenticatedIdentity(UNSELECTED, "other@example.test"));
+
+        assertThat(service.authenticate("dev@example.test", "test-password")).isEqualTo(token);
+        assertThatThrownBy(() -> service.authenticate("other@example.test", "test-password"))
+                .isInstanceOf(InvalidCredentialsException.class);
+        verify(issuer, never()).issue(UNSELECTED.toString());
+    }
+
+    @Test
+    void zeroSelectedAccountsWithoutSignupIsRejectedAtConstruction() {
+        CredentialPort credentials = mock(CredentialPort.class);
+        FinanceReferenceAccessTokenPort issuer = mock(FinanceReferenceAccessTokenPort.class);
+        FinanceReferenceEnrollmentPort enrollment = accountId -> false;
+
+        assertThatThrownBy(() -> new FinanceReferenceAccessService(credentials, Set.of(), enrollment, issuer, false))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void moreThanSixteenSelectedAccountsIsRejectedEvenWithSignup() {
+        CredentialPort credentials = mock(CredentialPort.class);
+        FinanceReferenceAccessTokenPort issuer = mock(FinanceReferenceAccessTokenPort.class);
+        FinanceReferenceEnrollmentPort enrollment = accountId -> false;
+        Set<UUID> seventeen = java.util.stream.Stream.generate(UUID::randomUUID)
+                .limit(17)
+                .collect(java.util.stream.Collectors.toSet());
+
+        assertThatThrownBy(() -> new FinanceReferenceAccessService(credentials, seventeen, enrollment, issuer, true))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

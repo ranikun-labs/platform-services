@@ -3,12 +3,14 @@ package com.ranikunlabs.platform.identity;
 import com.ranikunlabs.platform.identity.adapter.persistence.IdentityAccountRegistrationJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.PasswordCredentialUpdateJpaAdapter;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.PasswordCredentialJpaRepository;
+import com.ranikunlabs.platform.identity.adapter.persistence.repository.ExternalIdentityJpaRepository;
 import com.ranikunlabs.platform.identity.adapter.persistence.repository.PlatformAccountJpaRepository;
 import com.ranikunlabs.platform.identity.adapter.redis.RedisTokenBlacklistAdapter;
 import com.ranikunlabs.platform.identity.adapter.security.IdentityCredentialAdapter;
 import com.ranikunlabs.platform.identity.adapter.token.IdentityJwtProperties;
 import com.ranikunlabs.platform.identity.adapter.token.JwtTokenProvider;
 import com.ranikunlabs.platform.identity.application.AuthService;
+import com.ranikunlabs.platform.identity.application.FinanceReferenceAccessService;
 import com.ranikunlabs.platform.identity.application.AuthServiceImpl;
 import com.ranikunlabs.platform.identity.application.AuthTokenIssuanceService;
 import com.ranikunlabs.platform.identity.application.port.IdentityAccountRegistrationPort;
@@ -27,7 +29,10 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import tools.jackson.databind.ObjectMapper;
+
+import java.time.Clock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -104,6 +109,49 @@ class IdentityAuthCompositionTest {
     }
 
     @Test
+    void composesFinanceReferenceSignupAlongsideCarelogAuthWithoutBeanCollisions() {
+        authContextRunner()
+                .withPropertyValues(
+                        "jwt.secret-key=" + VALID_SECRET,
+                        "spring.profiles.active=finance-reference,dev",
+                        "platform.identity.finance-reference.enabled=true",
+                        "platform.identity.finance-reference.signup.enabled=true",
+                        "platform.identity.finance-reference.dev-dual-auth.enabled=true",
+                        "platform.identity.finance-reference.jwt.signing-key=Finance-Reference-Test-Only-Public-Dummy-Key-2026",
+                        "platform.identity.finance-reference.jwt.issuer=urn:ranikunlabs:identity:finance:reference",
+                        "platform.identity.finance-reference.jwt.audience=finance-journal-reference",
+                        "platform.identity.finance-reference.jwt.access-token-ttl-seconds=300")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).hasSingleBean(Clock.class);
+                    assertThat(context).hasSingleBean(PasswordEncoder.class);
+                    assertThat(context).hasSingleBean(IdentityCredentialAdapter.class);
+                    assertThat(context).hasSingleBean(FinanceReferenceAccessService.class);
+                    assertThat(context).hasSingleBean(AuthService.class);
+                });
+    }
+
+    @Test
+    void financeReferenceBesideCarelogAuthWithoutDevDualAuthFlagFailsWithOriginalMessage() {
+        authContextRunner()
+                .withPropertyValues(
+                        "jwt.secret-key=" + VALID_SECRET,
+                        "spring.profiles.active=finance-reference,dev",
+                        "platform.identity.finance-reference.enabled=true",
+                        "platform.identity.finance-reference.signup.enabled=true",
+                        "platform.identity.finance-reference.jwt.signing-key=Finance-Reference-Test-Only-Public-Dummy-Key-2026",
+                        "platform.identity.finance-reference.jwt.issuer=urn:ranikunlabs:identity:finance:reference",
+                        "platform.identity.finance-reference.jwt.audience=finance-journal-reference",
+                        "platform.identity.finance-reference.jwt.access-token-ttl-seconds=300")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .hasStackTraceContaining(
+                                    "Finance identity reference cannot share the Carelog auth composition.");
+                });
+    }
+
+    @Test
     void foundationModeBootsWithoutJwtConfigurationWhenAuthIsDisabled() {
         foundationContextRunner().run(context -> {
             assertThat(context).hasNotFailed();
@@ -172,6 +220,11 @@ class IdentityAuthCompositionTest {
         @Bean
         PlatformAccountJpaRepository platformAccountJpaRepository() {
             return mock(PlatformAccountJpaRepository.class);
+        }
+
+        @Bean
+        ExternalIdentityJpaRepository externalIdentityJpaRepository() {
+            return mock(ExternalIdentityJpaRepository.class);
         }
 
         @Bean
