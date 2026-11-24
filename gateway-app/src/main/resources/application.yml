@@ -94,8 +94,9 @@ platform:
       - /api/v1/v3/api-docs
     internal-secret: ${PLATFORM_GATEWAY_INTERNAL_SECRET}
     jwt-verification-secret: ${PLATFORM_GATEWAY_JWT_VERIFICATION_SECRET}
+    # Default OFF. Activation needs this flag AND the explicit fixture or `dev` profile (see FinanceTrustedContextProfileGuard).
     finance-trusted-context:
-      enabled: false
+      enabled: ${PLATFORM_GATEWAY_FINANCE_TRUSTED_CONTEXT_ENABLED:false}
       service-secret: ${PLATFORM_GATEWAY_FINANCE_TRUSTED_CONTEXT_SERVICE_SECRET:}
     finance-reference:
       enabled: ${PLATFORM_GATEWAY_FINANCE_REFERENCE_ENABLED:false}

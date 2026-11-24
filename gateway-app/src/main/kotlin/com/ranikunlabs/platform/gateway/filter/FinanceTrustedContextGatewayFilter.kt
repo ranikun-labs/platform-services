@@ -21,9 +21,12 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 internal const val FINANCE_TRUSTED_CONTEXT_PROFILE = "finance-trusted-context-reference"
+internal const val FINANCE_DEV_PROFILE = "dev"
 
+// Bean exists only under the fixture or DEV profile. Activation still requires
+// platform.gateway.finance-trusted-context.enabled=true (checked in filter() and the guard).
 @Component
-@Profile(FINANCE_TRUSTED_CONTEXT_PROFILE)
+@Profile("finance-trusted-context-reference | dev")
 class FinanceTrustedContextGatewayFilter(
     private val gatewayConfig: GatewayConfig,
     private val environment: Environment
@@ -42,6 +45,12 @@ class FinanceTrustedContextGatewayFilter(
         val path = request.uri.path
         if (!FinanceTrustedContextWire.isFinanceJournalNamespace(path)) {
             return chain.filter(exchange)
+        }
+
+        // Defense in depth: default-off must stay 404 even when this bean is loaded under the dev profile.
+        if (!gatewayConfig.financeTrustedContext.enabled && !gatewayConfig.financeReference.enabled) {
+            exchange.response.statusCode = HttpStatus.NOT_FOUND
+            return exchange.response.setComplete()
         }
 
         if (!FinanceTrustedContextWire.isSupportedRoute(request.method, path, request.uri.rawPath)) {
@@ -70,7 +79,10 @@ class FinanceTrustedContextGatewayFilter(
                         "X-Public-Id",
                         "X-Gateway-Secret",
                         "X-Service-Id",
-                        "X-Service-Secret"
+                        "X-Service-Secret",
+                        // Identity-style headers Finance rejects outright; strip rather than forward.
+                        "X-Crm-User-Id",
+                        "X-Identity-User-Id"
                     ).forEach(values::remove)
                     headers.forEach { (name, value) -> values.set(name, value) }
                 }
@@ -105,6 +117,9 @@ class FinanceTrustedContextProfileGuard(
             val fixtureProfileActive = environment.activeProfiles.any {
                 it.equals(FINANCE_TRUSTED_CONTEXT_PROFILE, ignoreCase = true)
             }
+            val devProfileActive = environment.activeProfiles.any {
+                it.trim().equals(FINANCE_DEV_PROFILE, ignoreCase = true)
+            }
             val productionProfileActive = environment.activeProfiles.any(::isProductionValue)
             val productionMarker = sequenceOf(
                 environment.getProperty("PLATFORM_ENVIRONMENT"),
@@ -112,16 +127,23 @@ class FinanceTrustedContextProfileGuard(
                 environment.getProperty("platform.environment")
             ).filterNotNull().any(::isProductionValue)
 
-            require(!(fixtureProfileActive && (productionProfileActive || productionMarker))) {
+            // Production markers are fatal only when trusted context is requested (flag, fixture, or dev profile);
+            // a plain production boot without the flag is unaffected.
+            val trustedContextRequested = config.enabled || strictReferenceEnabled || fixtureProfileActive || devProfileActive
+            require(!(trustedContextRequested && (productionProfileActive || productionMarker))) {
                 "Finance trusted-context reference profile cannot run with a production marker."
             }
             if (strictReferenceEnabled) {
                 require(!config.enabled) {
                     "Finance reference JWT mode cannot be combined with Core-marker compatibility mode."
                 }
+            } else if (config.enabled) {
+                require(fixtureProfileActive || devProfileActive) {
+                    "Finance trusted-context requires its explicit fixture profile or the dev profile together with the enable flag."
+                }
             } else {
-                require(config.enabled == fixtureProfileActive) {
-                    "Finance trusted-context reference must be enabled only by its explicit fixture profile."
+                require(!fixtureProfileActive) {
+                    "Finance trusted-context fixture profile requires platform.gateway.finance-trusted-context.enabled=true."
                 }
             }
             if (config.enabled) {

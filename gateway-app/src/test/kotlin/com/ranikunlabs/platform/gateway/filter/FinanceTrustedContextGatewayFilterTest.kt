@@ -319,6 +319,160 @@ class FinanceTrustedContextGatewayFilterTest {
     }
 
     @Test
+    fun `dev profile activates trusted context only with the explicit enable flag`() {
+        val devEnvironment = devEnvironment()
+        FinanceTrustedContextProfileGuard.validate(config.financeTrustedContext, devEnvironment)
+
+        val devFilter = FinanceTrustedContextGatewayFilter(config, devEnvironment)
+        val token = validToken(subjectA)
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/api/finance/journals")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .build()
+        )
+        val forwarded = mutableListOf<ServerWebExchange>()
+        jwtFilter.filter(exchange, org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+            devFilter.filter(verified, downstream(forwarded))
+        }).block()
+
+        assertThat(exchange.response.statusCode).isNull()
+        assertThat(forwarded).hasSize(1)
+        assertVector(forwardedFinanceHeaders(forwarded.single()), subjectA)
+    }
+
+    @Test
+    fun `dev profile without the enable flag keeps Finance routes 404 at both gates`() {
+        val disabled = GatewayConfig(internalSecret = internalSecret, jwtVerificationSecret = jwtSecret)
+        FinanceTrustedContextProfileGuard.validate(disabled.financeTrustedContext, devEnvironment())
+
+        val token = validToken(subjectA)
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+        val disabledJwt = JwtGlobalFilter(
+            JwtVerifier(jwtSecret), RedisBlacklistService(redisTemplate), disabled,
+            AuthPublicRequestMatcher(), OAuthPublicRequestMatcher()
+        )
+        val viaJwt = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/api/finance/journals").header(HttpHeaders.AUTHORIZATION, "Bearer $token").build()
+        )
+        val forwardedJwt = mutableListOf<ServerWebExchange>()
+        disabledJwt.filter(viaJwt, downstream(forwardedJwt)).block()
+        assertThat(viaJwt.response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        assertThat(forwardedJwt).isEmpty()
+
+        // Even if the filter bean is loaded under dev, it must not forward while the flag is off.
+        val devFilter = FinanceTrustedContextGatewayFilter(disabled, devEnvironment())
+        val viaFilter = MockServerWebExchange.from(MockServerHttpRequest.get("/api/finance/journals").build())
+        val forwardedFilter = mutableListOf<ServerWebExchange>()
+        devFilter.filter(viaFilter, downstream(forwardedFilter)).block()
+        assertThat(viaFilter.response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        assertThat(forwardedFilter).isEmpty()
+    }
+
+    @Test
+    fun `trusted context fails startup for enable flag without fixture or dev profile and for production markers`() {
+        // Flag without an explicit profile.
+        assertThatThrownBy {
+            FinanceTrustedContextProfileGuard.validate(config.financeTrustedContext, MockEnvironment())
+        }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("explicit fixture profile")
+
+        // Fixture profile without the flag.
+        assertThatThrownBy {
+            FinanceTrustedContextProfileGuard.validate(FinanceTrustedContextConfig(), fixtureEnvironment())
+        }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("requires")
+
+        // Dev + flag + prod markers fail, for each marker source and the prod profile.
+        val prodMarkers = listOf(
+            "PLATFORM_ENVIRONMENT" to "prod",
+            "platform.metrics.environment" to "production",
+            "platform.environment" to " PRoD "
+        )
+        prodMarkers.forEach { (property, value) ->
+            val env = devEnvironment().apply { setProperty(property, value) }
+            assertThatThrownBy {
+                FinanceTrustedContextProfileGuard.validate(config.financeTrustedContext, env)
+            }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("production marker")
+        }
+        assertThatThrownBy {
+            FinanceTrustedContextProfileGuard.validate(
+                config.financeTrustedContext,
+                MockEnvironment().apply { setActiveProfiles(FINANCE_DEV_PROFILE, "production") }
+            )
+        }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("production marker")
+
+        // Plain production boot without the flag, the dev profile, or the fixture is unaffected.
+        FinanceTrustedContextProfileGuard.validate(
+            FinanceTrustedContextConfig(),
+            MockEnvironment().apply {
+                setActiveProfiles("production")
+                setProperty("PLATFORM_ENVIRONMENT", "prod")
+            }
+        )
+    }
+
+    @Test
+    fun `caller supplied identity and Finance headers are replaced on Finance and Carelog routes`() {
+        val forgedHeaders = mapOf(
+            "X-User-Id" to "attacker-user",
+            "X-Role" to "ADMIN",
+            "X-Organization-Id" to "99999999-9999-9999-9999-999999999999",
+            "X-Public-Id" to "88888888-8888-8888-8888-888888888888",
+            "X-Gateway-Secret" to "forged-gateway-secret",
+            "X-Service-Id" to "forged-service",
+            "X-Service-Secret" to "forged-service-secret",
+            "X-Crm-User-Id" to "forged-crm",
+            "X-Identity-User-Id" to "forged-identity",
+            "X-Finance-Subject" to canonicalBase64Url("attacker"),
+            "X-Finance-Service-Secret" to "forged-finance-secret",
+            "X-Finance-Service-Id" to "forged-finance-service",
+            "X-Finance-Audience" to "forged-audience",
+            "X-Finance-Context-Version" to "9",
+            "X-Finance-Extra" to "unexpected",
+            "Cookie" to "session=forged"
+        )
+        val token = validToken(subjectA)
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+
+        // Finance route: verified subject and configured proof only; no caller identity or cookie survives.
+        val financeBuilder = MockServerHttpRequest.get("/api/finance/journals")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+        forgedHeaders.forEach { (name, value) -> financeBuilder.header(name, value) }
+        val finance = MockServerWebExchange.from(financeBuilder.build())
+        val financeForwarded = mutableListOf<ServerWebExchange>()
+        jwtFilter.filter(finance, org.springframework.cloud.gateway.filter.GatewayFilterChain { verified ->
+            financeFilter.filter(verified, downstream(financeForwarded))
+        }).block()
+        assertThat(financeForwarded).hasSize(1)
+        val financeOut = financeForwarded.single().request.headers
+        assertVector(forwardedFinanceHeaders(financeForwarded.single()), subjectA)
+        listOf(
+            HttpHeaders.AUTHORIZATION, HttpHeaders.COOKIE, "X-User-Id", "X-Role", "X-Organization-Id",
+            "X-Public-Id", "X-Gateway-Secret", "X-Service-Id", "X-Service-Secret", "X-Crm-User-Id",
+            "X-Identity-User-Id", "X-Finance-Extra"
+        ).forEach { name -> assertThat(financeOut.getFirst(name)).`as`(name).isNull() }
+
+        // Carelog (non-Finance) route: identity headers are rebuilt from the verified JWT claims only.
+        val carelog = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/api/v1/users/me").apply {
+                header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                forgedHeaders.forEach { (name, value) -> header(name, value) }
+            }.build()
+        )
+        `when`(redisTemplate.hasKey("blacklist:$token")).thenReturn(Mono.just(false))
+        val carelogForwarded = mutableListOf<ServerWebExchange>()
+        jwtFilter.filter(carelog, downstream(carelogForwarded)).block()
+        assertThat(carelogForwarded).hasSize(1)
+        val carelogOut = carelogForwarded.single().request.headers
+        assertThat(carelogOut.getFirst("X-User-Id")).isEqualTo(subjectA)
+        assertThat(carelogOut.getFirst("X-Organization-Id")).isEqualTo(organizationId)
+        assertThat(carelogOut.getFirst("X-Role")).isEqualTo("MANAGER")
+        assertThat(carelogOut.getFirst("X-Public-Id")).isEqualTo(publicId)
+        assertThat(carelogOut.getFirst("X-Gateway-Secret")).isEqualTo(internalSecret)
+        listOf("X-Finance-Subject", "X-Finance-Service-Secret", "X-Service-Id", "X-Service-Secret", "X-Finance-Extra")
+            .forEach { name -> assertThat(carelogOut.getFirst(name)).`as`(name).isNull() }
+    }
+
+    @Test
     fun `deleted list and individual delete restore preserve body and verified identity`() {
         val routes = listOf(
             HttpMethod.GET to "/api/finance/journals/deleted",
@@ -612,6 +766,23 @@ class FinanceTrustedContextGatewayFilterTest {
         setActiveProfiles(FINANCE_TRUSTED_CONTEXT_PROFILE)
         setProperty("platform.metrics.environment", "local")
         setProperty("PLATFORM_ENVIRONMENT", "local")
+    }
+
+    private fun devEnvironment() = MockEnvironment().apply {
+        setActiveProfiles(FINANCE_DEV_PROFILE)
+        setProperty("platform.metrics.environment", "dev")
+        setProperty("PLATFORM_ENVIRONMENT", "dev")
+    }
+
+    private fun forwardedFinanceHeaders(exchange: ServerWebExchange): Map<String, String> {
+        val headers = exchange.request.headers
+        return listOf(
+            FinanceTrustedContextWire.VERSION_HEADER,
+            FinanceTrustedContextWire.SERVICE_ID_HEADER,
+            FinanceTrustedContextWire.SERVICE_SECRET_HEADER,
+            FinanceTrustedContextWire.AUDIENCE_HEADER,
+            FinanceTrustedContextWire.SUBJECT_HEADER
+        ).associateWith { headers.getFirst(it) ?: "" }
     }
 
     private fun writeVectorArtifact(vectorA: Map<String, String>, vectorB: Map<String, String>) {
