@@ -35,11 +35,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 /**
- * 실모델 화면 검수 전용 루프백 구성. 기본 OFF이며 SHARED_AI_LIVE_OPENAI=true일 때만 실행된다.
+ * 실모델 화면 검수 전용 루프백 구성. 기본 OFF이며 SHARED_AI_LIVE_FINANCE_HTTP=true일 때만 실행된다.
+ * 기존 LiveOpenAiSmokeTest·mock 구성 테스트와 활성화 변수와 마커 변수를 공유하지 않는다(실행 단위 호출 1회 보장).
  * HTTP 연동은 FinanceSpringAiHttpCompositionTest와 같고, ChatModel만 운영 빌더(maxRetries=0)로 만든 실모델이다.
  * Finance BE 한 프로세스가 루프백으로 소비하는 동안 열어 두고, 종료 시 Provider 호출이 정확히 1회인지 확인한다.
  */
-@EnabledIfEnvironmentVariable(named = "SHARED_AI_LIVE_OPENAI", matches = "(?i)true")
+@EnabledIfEnvironmentVariable(named = "SHARED_AI_LIVE_FINANCE_HTTP", matches = "(?i)true")
 @SpringBootTest(classes = PlatformCoreApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
             "server.address=127.0.0.1",
@@ -85,15 +86,17 @@ class FinanceLiveOpenAiHttpCompositionTest {
         OpenAiChatModel live = new OpenAiProviderConfiguration()
                 .openAiChatModel(properties, observations.getBeanProvider(ObservationRegistry.class));
 
+        AtomicInteger attempts = new AtomicInteger();
         AtomicInteger providerCalls = new AtomicInteger();
         List<String> usage = new CopyOnWriteArrayList<>();
         // 나머지 메서드는 실모델에 위임하고, call(Prompt)만 횟수를 센다.
         ChatModel counted = mock(ChatModel.class, delegatesTo(live));
         doAnswer(invocation -> {
             // 두 번째 호출은 Provider로 보내지 않고 실패시킨다(추가 과금 방지).
-            if (providerCalls.incrementAndGet() > 1) {
+            if (attempts.incrementAndGet() > 1) {
                 throw new IllegalStateException("live inspection allows exactly one provider call");
             }
+            providerCalls.incrementAndGet();
             ChatResponse response = live.call(invocation.getArgument(0, Prompt.class));
             var u = response.getMetadata().getUsage();
             usage.add("promptTokens=" + u.getPromptTokens() + " completionTokens=" + u.getCompletionTokens());
@@ -101,8 +104,18 @@ class FinanceLiveOpenAiHttpCompositionTest {
         }).when(counted).call(any(Prompt.class));
         var realGateway = new SpringAiModelGateway(ChatClient.builder(counted).build(), "openai", model, null);
         List<String> references = new CopyOnWriteArrayList<>();
-        doAnswer(invocation -> realGateway.interpret(invocation.getArgument(0, ModelRequest.class)))
-                .when(gateway).interpret(any(ModelRequest.class));
+        List<String> outcomes = new CopyOnWriteArrayList<>();
+        doAnswer(invocation -> {
+            try {
+                var result = realGateway.interpret(invocation.getArgument(0, ModelRequest.class));
+                outcomes.add("gateway=success interpretationChars=" + result.getInterpretation().length());
+                return result;
+            } catch (RuntimeException failure) {
+                // 실패 분류만 남긴다. 메시지에는 Provider 응답이 섞일 수 있어 기록하지 않는다.
+                outcomes.add("gateway=failure type=" + failure.getClass().getSimpleName());
+                throw failure;
+            }
+        }).when(gateway).interpret(any(ModelRequest.class));
         doAnswer(invocation -> {
             ExecutionContext context = invocation.getArgument(0);
             // 증거 연결용 참조만 남긴다. 질문 원문과 비밀값은 기록하지 않는다.
@@ -113,8 +126,8 @@ class FinanceLiveOpenAiHttpCompositionTest {
         }).when(productTool).readFact(any(ExecutionContext.class));
 
         // Finance BE와의 루프백 랑데부. 실모델 모드에서는 필수다.
-        Path ready = Path.of(requiredEnv("FINANCE_HTTP_READY_FILE")).toAbsolutePath().normalize();
-        Path done = Path.of(requiredEnv("FINANCE_HTTP_DONE_FILE")).toAbsolutePath().normalize();
+        Path ready = Path.of(requiredEnv("FINANCE_LIVE_READY_FILE")).toAbsolutePath().normalize();
+        Path done = Path.of(requiredEnv("FINANCE_LIVE_DONE_FILE")).toAbsolutePath().normalize();
         assertThat(ready).isNotEqualTo(done);
         assertThat(Files.exists(ready)).as("ready marker must be fresh").isFalse();
         assertThat(Files.exists(done)).as("completion marker must be fresh").isFalse();
@@ -124,10 +137,12 @@ class FinanceLiveOpenAiHttpCompositionTest {
             Thread.sleep(100);
         }
 
-        System.out.println("LIVE_EVIDENCE " + references + " providerCalls=" + providerCalls.get()
-                + " producer=openai:model:" + model + " usage=" + usage);
+        System.out.println("LIVE_EVIDENCE " + references + " attempts=" + attempts.get()
+                + " providerCalls=" + providerCalls.get() + " producer=openai:model:" + model
+                + " outcomes=" + outcomes + " usage=" + usage);
         assertThat(Files.exists(done)).as("Finance consumer completion marker before timeout").isTrue();
         assertThat(references).hasSize(1);
+        assertThat(attempts.get()).isEqualTo(1);
         assertThat(providerCalls.get()).isEqualTo(1);
     }
 
