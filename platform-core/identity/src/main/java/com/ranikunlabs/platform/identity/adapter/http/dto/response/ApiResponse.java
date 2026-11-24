@@ -32,6 +32,11 @@ public final class ApiResponse<T> {
         return ResponseEntity.status(status).body(of(status, message));
     }
 
+    public static <T> ResponseEntity<ApiResponse<T>> created(T data) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(HttpStatus.CREATED, SUCCESS_MESSAGE, data));
+    }
+
     public static ResponseEntity<Void> noContent() {
         return ResponseEntity.noContent().build();
     }

@@ -4,6 +4,7 @@ import com.ranikunlabs.platform.identity.application.FinanceReferenceAccessServi
 import com.ranikunlabs.platform.identity.application.port.AuthenticatedIdentity;
 import com.ranikunlabs.platform.identity.application.port.CredentialPort;
 import com.ranikunlabs.platform.identity.application.port.FinanceReferenceAccessTokenPort;
+import com.ranikunlabs.platform.identity.application.port.FinanceReferenceEnrollmentPort;
 import com.ranikunlabs.platform.identity.application.port.InvalidCredentialsException;
 import com.ranikunlabs.platform.identity.application.port.IssuedFinanceReferenceAccessToken;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -70,5 +72,27 @@ class FinanceReferenceAccessServiceTest {
                         UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                         UUID.randomUUID()), issuer))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void signupEnrolledAccountIsAdmittedAndUnenrolledCredentialIsRejected() {
+        CredentialPort credentials = mock(CredentialPort.class);
+        FinanceReferenceAccessTokenPort issuer = mock(FinanceReferenceAccessTokenPort.class);
+        UUID enrolled = UUID.fromString("77777777-7777-7777-7777-777777777777");
+        FinanceReferenceEnrollmentPort enrollment = accountId -> enrolled.equals(accountId);
+        FinanceReferenceAccessService service = new FinanceReferenceAccessService(
+                credentials, Set.of(SELECTED), enrollment, issuer);
+        IssuedFinanceReferenceAccessToken token = new IssuedFinanceReferenceAccessToken(
+                "public-dummy-token", Instant.parse("2026-11-06T13:00:00Z"));
+        when(credentials.authenticate("dev@example.test", "test-password"))
+                .thenReturn(new AuthenticatedIdentity(enrolled, "dev@example.test"));
+        when(issuer.issue(enrolled.toString())).thenReturn(token);
+        when(credentials.authenticate("other@example.test", "test-password"))
+                .thenReturn(new AuthenticatedIdentity(UNSELECTED, "other@example.test"));
+
+        assertThat(service.authenticate("dev@example.test", "test-password")).isEqualTo(token);
+        assertThatThrownBy(() -> service.authenticate("other@example.test", "test-password"))
+                .isInstanceOf(InvalidCredentialsException.class);
+        verify(issuer, never()).issue(UNSELECTED.toString());
     }
 }

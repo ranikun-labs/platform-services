@@ -2,6 +2,8 @@ package com.ranikunlabs.platform.identity;
 
 import com.ranikunlabs.platform.identity.adapter.http.FinanceReferenceAuthConfiguration;
 import com.ranikunlabs.platform.identity.adapter.http.FinanceReferenceAuthController;
+import com.ranikunlabs.platform.identity.adapter.persistence.FinanceReferenceAccountJpaAdapter;
+import com.ranikunlabs.platform.identity.application.port.FinanceReferenceEnrollmentPort;
 import com.ranikunlabs.platform.identity.adapter.security.IdentityCredentialAdapter;
 import com.ranikunlabs.platform.identity.adapter.token.FinanceReferenceJwtAccessTokenIssuer;
 import com.ranikunlabs.platform.identity.adapter.token.FinanceReferenceJwtProperties;
@@ -26,7 +28,9 @@ import java.util.UUID;
 @Import({
         FinanceReferenceAuthController.class,
         FinanceReferenceAuthConfiguration.class,
-        IdentityCredentialAdapter.class
+        IdentityCredentialAdapter.class,
+        FinanceReferenceAccountJpaAdapter.class,
+        FinanceReferenceSignupHttpConfiguration.class
 })
 public class FinanceReferenceIdentityConfiguration {
 
@@ -62,8 +66,10 @@ public class FinanceReferenceIdentityConfiguration {
     FinanceReferenceAccessService financeReferenceAccessService(
             CredentialPort credentials,
             Set<UUID> financeReferenceSelectedAccountIds,
+            FinanceReferenceEnrollmentPort financeReferenceEnrollment,
             FinanceReferenceJwtAccessTokenIssuer tokenIssuer
     ) {
-        return new FinanceReferenceAccessService(credentials, financeReferenceSelectedAccountIds, tokenIssuer);
+        return new FinanceReferenceAccessService(
+                credentials, financeReferenceSelectedAccountIds, financeReferenceEnrollment, tokenIssuer);
     }
 }
