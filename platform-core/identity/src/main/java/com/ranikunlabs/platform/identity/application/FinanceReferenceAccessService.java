@@ -7,6 +7,7 @@ import com.ranikunlabs.platform.identity.application.port.FinanceReferenceEnroll
 import com.ranikunlabs.platform.identity.application.port.InvalidCredentialsException;
 import com.ranikunlabs.platform.identity.application.port.IssuedFinanceReferenceAccessToken;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -49,11 +50,22 @@ public final class FinanceReferenceAccessService {
 
     public IssuedFinanceReferenceAccessToken authenticate(String userId, String password)
             throws InvalidCredentialsException {
-        AuthenticatedIdentity identity = credentials.authenticate(userId, password);
+        AuthenticatedIdentity identity = credentials.authenticate(normalizeLoginId(userId), password);
         if (identity == null || identity.accountId() == null || !isAdmitted(identity.accountId())) {
             throw new InvalidCredentialsException();
         }
         return tokenIssuer.issue(identity.accountId().toString());
+    }
+
+    /**
+     * Same trim+lowercase rule the signup path stores, so login matches the stored normalized loginId.
+     * Applied only on the Finance reference path; the shared Carelog login keeps its exact-match lookup.
+     */
+    static String normalizeLoginId(String userId) throws InvalidCredentialsException {
+        if (userId == null) {
+            throw new InvalidCredentialsException();
+        }
+        return userId.trim().toLowerCase(Locale.ROOT);
     }
 
     private boolean isAdmitted(UUID accountId) {

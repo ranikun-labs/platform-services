@@ -44,6 +44,35 @@ class FinanceReferenceAccessServiceTest {
     }
 
     @Test
+    void loginIdIsTrimmedAndLowercasedLikeSignupBeforeCredentialLookup() {
+        CredentialPort credentials = mock(CredentialPort.class);
+        FinanceReferenceAccessTokenPort issuer = mock(FinanceReferenceAccessTokenPort.class);
+        FinanceReferenceAccessService service = new FinanceReferenceAccessService(
+                credentials, Set.of(SELECTED), issuer);
+        when(credentials.authenticate("user@example.com", "test-password"))
+                .thenReturn(new AuthenticatedIdentity(SELECTED, "user@example.com"));
+        IssuedFinanceReferenceAccessToken token = new IssuedFinanceReferenceAccessToken(
+                "public-dummy-token", Instant.parse("2026-11-06T13:00:00Z"));
+        when(issuer.issue(SELECTED.toString())).thenReturn(token);
+
+        assertThat(service.authenticate("  User@Example.com ", "test-password")).isEqualTo(token);
+
+        verify(credentials).authenticate("user@example.com", "test-password");
+    }
+
+    @Test
+    void missingLoginIdIsRejectedWithoutCredentialLookup() {
+        CredentialPort credentials = mock(CredentialPort.class);
+        FinanceReferenceAccessTokenPort issuer = mock(FinanceReferenceAccessTokenPort.class);
+        FinanceReferenceAccessService service = new FinanceReferenceAccessService(
+                credentials, Set.of(SELECTED), issuer);
+
+        assertThatThrownBy(() -> service.authenticate(null, "test-password"))
+                .isInstanceOf(InvalidCredentialsException.class);
+        verifyNoInteractions(credentials, issuer);
+    }
+
+    @Test
     void validCredentialForAccountOutsideSelectedAllowlistIsRejectedBeforeIssuance() {
         CredentialPort credentials = mock(CredentialPort.class);
         FinanceReferenceAccessTokenPort issuer = mock(FinanceReferenceAccessTokenPort.class);

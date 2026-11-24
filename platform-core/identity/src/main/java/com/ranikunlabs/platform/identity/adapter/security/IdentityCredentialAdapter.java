@@ -41,7 +41,8 @@ public class IdentityCredentialAdapter implements CredentialPort {
             throws InvalidCredentialsException {
         Optional<PasswordCredentialEntity> credential = passwordCredentialRepository.findByLoginId(loginId);
         if (credential.isEmpty() || !passwordEncoder.matches(password, credential.get().getPasswordHash())) {
-            log.warn("Identity login failed for loginId={}", loginId);
+            // loginId is deliberately not logged: it is PII and the failure reason is not user-distinguishable.
+            log.warn("Identity login failed");
             throw new InvalidCredentialsException();
         }
 
