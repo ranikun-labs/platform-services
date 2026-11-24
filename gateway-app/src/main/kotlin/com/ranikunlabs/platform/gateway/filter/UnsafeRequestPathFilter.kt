@@ -29,7 +29,8 @@ class UnsafeRequestPathFilter : WebFilter {
 
     internal companion object {
         // Encoded dot, slash, backslash and semicolon forms, plus the literal semicolon and backslash.
-        private val FORBIDDEN_RAW_MARKERS = listOf("%2e", "%2f", "%5c", "%3b", ";", "\\")
+        // "%25" (encoded percent) is rejected too: it is the double-encoding vector (%252e -> %2e after one decode).
+        private val FORBIDDEN_RAW_MARKERS = listOf("%2e", "%2f", "%5c", "%3b", "%25", ";", "\\")
 
         fun isUnsafe(rawPath: String, decodedPath: String): Boolean {
             val lowered = rawPath.lowercase()

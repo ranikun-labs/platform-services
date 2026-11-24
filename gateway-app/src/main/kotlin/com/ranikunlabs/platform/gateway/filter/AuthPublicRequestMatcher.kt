@@ -26,7 +26,7 @@ class AuthPublicRequestMatcher {
             (carelogRegistrationEnabled && request.method == HttpMethod.OPTIONS &&
                 request.uri.rawPath == "/api/v1/auth/carelog/registration") ||
             (financeReferenceEnabled && request.method == HttpMethod.POST &&
-                request.uri.rawPath == FINANCE_REFERENCE_LOGIN_PATH)
+                request.uri.rawPath in FINANCE_REFERENCE_PUBLIC_PATHS)
 
     private companion object {
         val PUBLIC_METHODS = setOf(HttpMethod.POST, HttpMethod.OPTIONS)
@@ -35,5 +35,8 @@ class AuthPublicRequestMatcher {
             "/api/v1/auth/refresh"
         )
         const val FINANCE_REFERENCE_LOGIN_PATH = "/api/v1/auth/finance-reference/login"
+        const val FINANCE_REFERENCE_SIGNUP_PATH = "/api/v1/auth/finance-reference/signup"
+        // Only active when finance-reference is enabled; POST-only and exact-match.
+        val FINANCE_REFERENCE_PUBLIC_PATHS = setOf(FINANCE_REFERENCE_LOGIN_PATH, FINANCE_REFERENCE_SIGNUP_PATH)
     }
 }
