@@ -41,6 +41,17 @@ class DeterministicModelGateway : ModelGateway {
             request.scope,
             "fixture:model-interpretation",
             "fixture:deterministic-model",
-            "Reviewed ${request.productFact.value} current items using ${request.retrievedItems.size} knowledge item(s).",
+            if (request.query.startsWith(FINANCE_GENERAL_ANALYSIS_QUERY_PREFIX)) {
+                // Finance parser contract: one JSON object with exactly the five candidate fields.
+                FINANCE_GENERAL_ANALYSIS_INTERPRETATION
+            } else {
+                "Reviewed ${request.productFact.value} current items using ${request.retrievedItems.size} knowledge item(s)."
+            },
         )
+
+    private companion object {
+        const val FINANCE_GENERAL_ANALYSIS_QUERY_PREFIX = "Finance General Analysis\n"
+        const val FINANCE_GENERAL_ANALYSIS_INTERPRETATION =
+            """{"summary":"Fixture summary of the checked question.","observations":["Fixture observation from the approved evidence."],"assumptions":["Fixture assumption for the checked items."],"nextChecks":["Fixture next check to confirm the claim."],"evidenceNote":"Fixture evidence note."}"""
+    }
 }
