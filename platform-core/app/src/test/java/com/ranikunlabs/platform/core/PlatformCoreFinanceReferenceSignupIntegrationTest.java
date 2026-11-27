@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "platform.identity.finance-reference.enabled=true",
                 "platform.identity.finance-reference.signup.enabled=true",
                 "PLATFORM_ENVIRONMENT=dev",
-                "platform.identity.finance-reference.selected-account-ids[0]=33333333-3333-3333-3333-333333333333",
+                "platform.identity.finance-reference.dev-dual-auth.enabled=true",
                 "platform.identity.finance-reference.jwt.signing-key=Finance-Reference-Test-Only-Public-Dummy-Key-2026",
                 "platform.identity.finance-reference.jwt.issuer=urn:ranikunlabs:identity:finance:reference",
                 "platform.identity.finance-reference.jwt.audience=finance-journal-reference",
