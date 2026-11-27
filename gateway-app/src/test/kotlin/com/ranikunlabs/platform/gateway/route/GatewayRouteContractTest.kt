@@ -20,6 +20,7 @@ import java.net.URI
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = [
         "PLATFORM_GATEWAY_PORT=0",
+        "PLATFORM_GATEWAY_FINANCE_BE_URI=",
         "PLATFORM_GATEWAY_REDIS_HOST=localhost",
         "PLATFORM_GATEWAY_REDIS_PORT=6379",
         "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
@@ -40,6 +41,7 @@ class GatewayRouteContractTest(
     fun `preserves API and RAG routes and places auth routes before Carelog`() {
         val routes = routeLocator.routes.collectList().block()!!
 
+        assertThat(routes.map(Route::getId)).doesNotContain("finance-be")
         assertThat(routes.map(Route::getId)).containsSubsequence(
             "kakao-oauth-authorization",
             "kakao-oauth-exchange",
