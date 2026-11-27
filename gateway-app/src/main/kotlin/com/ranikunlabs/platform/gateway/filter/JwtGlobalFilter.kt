@@ -33,6 +33,8 @@ class JwtGlobalFilter(
     override fun filter(exchange: ServerWebExchange, chain: GatewayFilterChain): Mono<Void> {
         val request = exchange.request
         val path = request.uri.path
+        // Public-path decisions use the raw path, the same form routing matches on.
+        val rawPath = request.uri.rawPath.orEmpty()
         val sanitizedExchange = exchange.withoutTrustedHeaders()
         val financePath = FinanceTrustedContextWire.isFinanceJournalNamespace(path)
         val strictFinanceReference = financePath && gatewayConfig.financeReference.enabled
@@ -49,7 +51,7 @@ class JwtGlobalFilter(
             return exchange.response.setComplete()
         }
 
-        if (isInternalPath(path)) {
+        if (isInternalPath(path) || isInternalPath(rawPath)) {
             exchange.response.statusCode = HttpStatus.FORBIDDEN
             return exchange.response.setComplete()
         }
@@ -63,7 +65,7 @@ class JwtGlobalFilter(
 
         if (!financePath && (authPublicRequestMatcher.matches(request)
             || oauthPublicRequestMatcher.matches(request)
-            || gatewayConfig.publicPaths.any(path::startsWith))
+            || gatewayConfig.publicPaths.any { prefix -> isSegmentPrefix(rawPath, prefix) })
         ) {
             return chain.filter(sanitizedExchange.withGatewaySecret(gatewayConfig.internalSecret))
         }
@@ -186,6 +188,10 @@ class JwtGlobalFilter(
             .toByteArray(Charsets.UTF_8)
         return exchange.response.writeWith(Mono.just(exchange.response.bufferFactory().wrap(body)))
     }
+
+    /** True when [path] equals [prefix] or continues it after a "/" boundary (so "/x/loginX" is not "/x/login"). */
+    private fun isSegmentPrefix(path: String, prefix: String): Boolean =
+        path == prefix || path.startsWith("$prefix/")
 
     private fun isInternalPath(path: String): Boolean =
         path == "/api/v1/internal" || path.startsWith("/api/v1/internal/") ||

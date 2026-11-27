@@ -9,8 +9,8 @@ import com.ranikunlabs.platform.gateway.config.GatewayConfig
 class OAuthPublicRequestMatcher(private val gatewayConfig: GatewayConfig = GatewayConfig()) {
 
     fun matches(request: ServerHttpRequest): Boolean =
-        request.method == HttpMethod.POST && (request.uri.path in KAKAO_OAUTH_PATHS ||
-            (gatewayConfig.carelogRegistrationEnabled && request.uri.path == REGISTRATION_PATH))
+        request.method == HttpMethod.POST && (request.uri.rawPath in KAKAO_OAUTH_PATHS ||
+            (gatewayConfig.carelogRegistrationEnabled && request.uri.rawPath == REGISTRATION_PATH))
 
     private companion object {
         const val REGISTRATION_PATH = "/api/v1/auth/carelog/registration"

@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = [
         "PLATFORM_GATEWAY_PORT=0",
+        "PLATFORM_GATEWAY_FINANCE_BE_URI=",
         "PLATFORM_GATEWAY_REDIS_HOST=127.0.0.1",
         "PLATFORM_GATEWAY_REDIS_PORT=1",
         "PLATFORM_GATEWAY_REDIS_KEY_PREFIX=platform:gateway:",
@@ -77,6 +78,14 @@ class GatewayRoutingHttpIntegrationTest {
     @Test
     fun `default Gateway context does not register the Finance reference filter`() {
         assertThat(applicationContext.getBeansOfType(FinanceTrustedContextGatewayFilter::class.java)).isEmpty()
+    }
+
+    @Test
+    fun `Finance requests stay closed when the upstream is absent`() {
+        webTestClient.get().uri("/api/finance/journals/deleted")
+            .exchange().expectStatus().isNotFound
+        assertThat(authInvocations).hasValue(0)
+        assertThat(carelogInvocations).hasValue(0)
     }
 
     @Test

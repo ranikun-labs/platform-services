@@ -2,7 +2,11 @@ package com.ranikunlabs.platform.gateway.filter
 
 import com.ranikunlabs.platform.gateway.config.FinanceTrustedContextConfig
 import com.ranikunlabs.platform.gateway.config.GatewayConfig
-import org.springframework.context.annotation.Profile
+import org.springframework.context.annotation.Conditional
+import org.springframework.context.annotation.Condition
+import org.springframework.context.annotation.ConditionContext
+import org.springframework.core.type.AnnotatedTypeMetadata
+import com.ranikunlabs.platform.gateway.config.isExplicitDevEnvironment
 import org.springframework.core.Ordered
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpHeaders
@@ -21,9 +25,11 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 internal const val FINANCE_TRUSTED_CONTEXT_PROFILE = "finance-trusted-context-reference"
+internal const val FINANCE_DEV_PROFILE = "dev"
 
+// Filter remains gated by its enable flags and the profile or explicit DEV marker.
 @Component
-@Profile(FINANCE_TRUSTED_CONTEXT_PROFILE)
+@Conditional(FinanceTrustedContextCondition::class)
 class FinanceTrustedContextGatewayFilter(
     private val gatewayConfig: GatewayConfig,
     private val environment: Environment
@@ -42,6 +48,12 @@ class FinanceTrustedContextGatewayFilter(
         val path = request.uri.path
         if (!FinanceTrustedContextWire.isFinanceJournalNamespace(path)) {
             return chain.filter(exchange)
+        }
+
+        // Defense in depth: default-off must stay 404 even when this bean is loaded under the dev profile.
+        if (!gatewayConfig.financeTrustedContext.enabled && !gatewayConfig.financeReference.enabled) {
+            exchange.response.statusCode = HttpStatus.NOT_FOUND
+            return exchange.response.setComplete()
         }
 
         if (!FinanceTrustedContextWire.isSupportedRoute(request.method, path, request.uri.rawPath)) {
@@ -70,7 +82,10 @@ class FinanceTrustedContextGatewayFilter(
                         "X-Public-Id",
                         "X-Gateway-Secret",
                         "X-Service-Id",
-                        "X-Service-Secret"
+                        "X-Service-Secret",
+                        // Identity-style headers Finance rejects outright; strip rather than forward.
+                        "X-Crm-User-Id",
+                        "X-Identity-User-Id"
                     ).forEach(values::remove)
                     headers.forEach { (name, value) -> values.set(name, value) }
                 }
@@ -105,6 +120,10 @@ class FinanceTrustedContextProfileGuard(
             val fixtureProfileActive = environment.activeProfiles.any {
                 it.equals(FINANCE_TRUSTED_CONTEXT_PROFILE, ignoreCase = true)
             }
+            val devProfileActive = environment.activeProfiles.any {
+                it.trim().equals(FINANCE_DEV_PROFILE, ignoreCase = true)
+            }
+            val explicitDev = isExplicitDevEnvironment(environment)
             val productionProfileActive = environment.activeProfiles.any(::isProductionValue)
             val productionMarker = sequenceOf(
                 environment.getProperty("PLATFORM_ENVIRONMENT"),
@@ -112,16 +131,23 @@ class FinanceTrustedContextProfileGuard(
                 environment.getProperty("platform.environment")
             ).filterNotNull().any(::isProductionValue)
 
-            require(!(fixtureProfileActive && (productionProfileActive || productionMarker))) {
+            // Production markers are fatal only when trusted context is requested (flag, fixture, or dev profile);
+            // a plain production boot without the flag is unaffected.
+            val trustedContextRequested = config.enabled || strictReferenceEnabled || fixtureProfileActive || devProfileActive
+            require(!(trustedContextRequested && (productionProfileActive || productionMarker))) {
                 "Finance trusted-context reference profile cannot run with a production marker."
             }
             if (strictReferenceEnabled) {
                 require(!config.enabled) {
                     "Finance reference JWT mode cannot be combined with Core-marker compatibility mode."
                 }
+            } else if (config.enabled) {
+                require(fixtureProfileActive || devProfileActive || explicitDev) {
+                    "Finance trusted-context requires its explicit fixture profile or the dev profile, or an explicit DEV deployment marker, together with the enable flag."
+                }
             } else {
-                require(config.enabled == fixtureProfileActive) {
-                    "Finance trusted-context reference must be enabled only by its explicit fixture profile."
+                require(!fixtureProfileActive) {
+                    "Finance trusted-context fixture profile requires platform.gateway.finance-trusted-context.enabled=true."
                 }
             }
             if (config.enabled) {
@@ -150,14 +176,16 @@ internal object FinanceTrustedContextWire {
     const val MAX_SUBJECT_UTF8_BYTES = 256
     const val MAX_CONTEXT_HEADER_VALUE_BYTES = 2048
 
-    private const val JOURNALS_PATH = "/finance/journals"
+    // Gateway-facing namespace. The route strips "/api" and forwards to the upstream "/finance/**".
+    private const val GATEWAY_NAMESPACE = "/api/finance"
+    private const val JOURNALS_PATH = "$GATEWAY_NAMESPACE/journals"
     private const val UUID_PATH = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
     private val journalId = Regex(UUID_PATH)
     private val retrospectiveCollection = Regex("$JOURNALS_PATH/$UUID_PATH/retrospectives")
     private val retrospectiveDetail = Regex("$JOURNALS_PATH/$UUID_PATH/retrospectives/$UUID_PATH")
 
     fun isFinanceJournalNamespace(path: String): Boolean =
-        path == JOURNALS_PATH || path.startsWith("$JOURNALS_PATH/")
+        path == GATEWAY_NAMESPACE || path.startsWith("$GATEWAY_NAMESPACE/")
 
     fun isSupportedRoute(method: HttpMethod?, path: String, rawPath: String?): Boolean {
         if (path != rawPath) return false
@@ -225,4 +253,12 @@ internal object FinanceTrustedContextWire {
         if (encoded.isEmpty() || encoded.size > MAX_SUBJECT_UTF8_BYTES) return null
         return Base64.getUrlEncoder().withoutPadding().encodeToString(encoded)
     }
+}
+
+internal class FinanceTrustedContextCondition : Condition {
+    override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean =
+        context.environment.activeProfiles.any {
+            it.equals(FINANCE_TRUSTED_CONTEXT_PROFILE, ignoreCase = true) ||
+                it.trim().equals(FINANCE_DEV_PROFILE, ignoreCase = true)
+        } || isExplicitDevEnvironment(context.environment)
 }

@@ -44,17 +44,26 @@ public class CarelogRegistrationCompositionConfiguration {
     }
 
     private static void requireDevComposition(Environment environment) {
-        boolean dev = Arrays.stream(environment.getActiveProfiles()).anyMatch("dev"::equalsIgnoreCase);
+        String deployment = environment.getProperty("PLATFORM_ENVIRONMENT");
+        String alternate = environment.getProperty("platform.environment");
+        boolean explicitDev = isDev(deployment) || isDev(alternate);
+        boolean conflictingEnvironment = (deployment != null && !isDev(deployment))
+                || (alternate != null && !isDev(alternate));
+        boolean dev = explicitDev || Arrays.stream(environment.getActiveProfiles()).anyMatch("dev"::equalsIgnoreCase);
         boolean production = Arrays.stream(environment.getActiveProfiles()).anyMatch(CarelogRegistrationCompositionConfiguration::production)
                 || production(environment.getProperty("PLATFORM_ENVIRONMENT"))
                 || production(environment.getProperty("platform.environment"))
                 || production(environment.getProperty("platform.metrics.environment"));
-        if (!dev || production
+        if (!dev || production || conflictingEnvironment
                 || !environment.getProperty("platform.identity.auth.enabled", Boolean.class, false)
                 || !environment.getProperty("platform.identity.persistence.enabled", Boolean.class, true)
                 || !environment.getProperty("platform.identity.carelog-enrollment.enabled", Boolean.class, false)) {
             throw new IllegalStateException("Carelog registration requires DEV, Identity auth and persistence, and real enrollment");
         }
+    }
+
+    private static boolean isDev(String value) {
+        return value != null && "dev".equalsIgnoreCase(value.trim());
     }
 
     private static boolean production(String value) {

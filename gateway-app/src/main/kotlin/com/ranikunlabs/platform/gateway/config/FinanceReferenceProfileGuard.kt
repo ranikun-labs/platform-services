@@ -40,8 +40,8 @@ class FinanceReferenceProfileGuard(
                 environment.getProperty("platform.environment")
             ).filterNotNull().any(::isProductionValue)
 
-            require(referenceProfileActive) {
-                "Finance reference JWT mode requires its explicit fixture profile."
+            require(referenceProfileActive || isExplicitDevEnvironment(environment)) {
+                "Finance reference JWT mode requires its explicit fixture profile or an explicit DEV deployment marker."
             }
             require(!productionProfileActive && !productionMarker) {
                 "Finance reference JWT mode cannot run with a production marker."
@@ -66,4 +66,12 @@ class FinanceReferenceProfileGuard(
             return normalized == "prod" || normalized == "production"
         }
     }
+}
+
+internal fun isExplicitDevEnvironment(environment: Environment): Boolean {
+    val markers = listOfNotNull(
+        environment.getProperty("PLATFORM_ENVIRONMENT"),
+        environment.getProperty("platform.environment")
+    )
+    return markers.isNotEmpty() && markers.all { it.trim().equals("dev", ignoreCase = true) }
 }

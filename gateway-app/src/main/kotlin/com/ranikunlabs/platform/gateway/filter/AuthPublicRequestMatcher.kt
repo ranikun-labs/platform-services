@@ -22,11 +22,11 @@ class AuthPublicRequestMatcher {
     constructor() {}
 
     fun matches(request: ServerHttpRequest): Boolean =
-        (request.method in PUBLIC_METHODS && request.uri.path in IDENTITY_AUTH_PUBLIC_PATHS) ||
+        (request.method in PUBLIC_METHODS && request.uri.rawPath in IDENTITY_AUTH_PUBLIC_PATHS) ||
             (carelogRegistrationEnabled && request.method == HttpMethod.OPTIONS &&
-                request.uri.path == "/api/v1/auth/carelog/registration") ||
+                request.uri.rawPath == "/api/v1/auth/carelog/registration") ||
             (financeReferenceEnabled && request.method == HttpMethod.POST &&
-                request.uri.path == FINANCE_REFERENCE_LOGIN_PATH)
+                request.uri.rawPath in FINANCE_REFERENCE_PUBLIC_PATHS)
 
     private companion object {
         val PUBLIC_METHODS = setOf(HttpMethod.POST, HttpMethod.OPTIONS)
@@ -35,5 +35,8 @@ class AuthPublicRequestMatcher {
             "/api/v1/auth/refresh"
         )
         const val FINANCE_REFERENCE_LOGIN_PATH = "/api/v1/auth/finance-reference/login"
+        const val FINANCE_REFERENCE_SIGNUP_PATH = "/api/v1/auth/finance-reference/signup"
+        // Only active when finance-reference is enabled; POST-only and exact-match.
+        val FINANCE_REFERENCE_PUBLIC_PATHS = setOf(FINANCE_REFERENCE_LOGIN_PATH, FINANCE_REFERENCE_SIGNUP_PATH)
     }
 }

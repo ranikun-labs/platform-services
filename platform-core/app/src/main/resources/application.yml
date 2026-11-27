@@ -50,6 +50,17 @@ platform:
   identity:
     auth:
       enabled: ${PLATFORM_IDENTITY_AUTH_ENABLED:false}
+    # Finance reference (DEV fixture) opt-ins. All default off; signup is DEV-only and must stay false elsewhere.
+    # selected-account-ids and jwt.* are env-only (PLATFORM_IDENTITY_FINANCE_REFERENCE_SELECTED_ACCOUNT_IDS,
+    # PLATFORM_IDENTITY_FINANCE_REFERENCE_JWT_*); they are bound only when the feature is enabled.
+    finance-reference:
+      enabled: ${PLATFORM_IDENTITY_FINANCE_REFERENCE_ENABLED:false}
+      signup:
+        enabled: ${PLATFORM_IDENTITY_FINANCE_REFERENCE_SIGNUP_ENABLED:false}
+      # DEV-only: allows Carelog auth coexistence (requires PLATFORM_ENVIRONMENT=dev) and fixture-free signup admission
+      # (zero selected IDs, including with signup disabled). Rejected under prod profile or production markers.
+      dev-dual-auth:
+        enabled: ${PLATFORM_IDENTITY_FINANCE_REFERENCE_DEV_DUAL_AUTH_ENABLED:false}
     datasource:
       url: ${PLATFORM_IDENTITY_DATASOURCE_URL:}
       username: ${PLATFORM_IDENTITY_DATASOURCE_USERNAME:}

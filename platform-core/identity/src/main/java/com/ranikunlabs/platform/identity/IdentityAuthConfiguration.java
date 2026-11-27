@@ -19,8 +19,6 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Clock;
 
@@ -56,12 +54,6 @@ public class IdentityAuthConfiguration {
     @ConditionalOnMissingBean(Clock.class)
     Clock identityAuthClock() {
         return Clock.systemDefaultZone();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(PasswordEncoder.class)
-    PasswordEncoder identityPasswordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 
     @Bean

@@ -39,14 +39,29 @@ final class FinanceReferenceRequestBodyLimitFilter extends OncePerRequestFilter 
             .build();
 
     private final ObjectMapper objectMapper;
+    private final String path;
+    private final String identityField;
+    private final int maxIdentityBytes;
 
     FinanceReferenceRequestBodyLimitFilter(ObjectMapper objectMapper) {
+        this(objectMapper, FinanceReferenceAuthController.PATH, "userId", MAX_USER_ID_BYTES);
+    }
+
+    /** Exact-shape guard for a credential route: exactly one identity field plus {@code password}. */
+    FinanceReferenceRequestBodyLimitFilter(
+            ObjectMapper objectMapper,
+            String path,
+            String identityField,
+            int maxIdentityBytes
+    ) {
         this.objectMapper = objectMapper;
+        this.path = path;
+        this.identityField = identityField;
+        this.maxIdentityBytes = maxIdentityBytes;
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = FinanceReferenceAuthController.PATH;
         String requestUri = request.getRequestURI();
         boolean exactPath = path.equals(request.getServletPath())
                 || path.equals(requestUri)
@@ -114,7 +129,7 @@ final class FinanceReferenceRequestBodyLimitFilter extends OncePerRequestFilter 
                 if (!fields.add(field)) {
                     return false;
                 }
-                if ("userId".equals(field)) {
+                if (identityField.equals(field)) {
                     if (parser.nextToken() != JsonToken.VALUE_STRING) {
                         return false;
                     }
@@ -133,7 +148,7 @@ final class FinanceReferenceRequestBodyLimitFilter extends OncePerRequestFilter 
                     || password == null || password.isBlank()) {
                 return false;
             }
-            return userId.getBytes(StandardCharsets.UTF_8).length <= MAX_USER_ID_BYTES
+            return userId.getBytes(StandardCharsets.UTF_8).length <= maxIdentityBytes
                     && password.getBytes(StandardCharsets.UTF_8).length <= MAX_PASSWORD_BYTES;
         } catch (RuntimeException exception) {
             return false;
