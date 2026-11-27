@@ -7,7 +7,6 @@ import com.ranikunlabs.platform.identity.application.FinanceReferenceSignupServi
 import com.ranikunlabs.platform.identity.application.FinanceReferenceSignupService.InvalidFinanceSignupException;
 import com.ranikunlabs.platform.identity.application.port.DuplicateLoginIdException;
 
-import java.util.Locale;
 import jakarta.validation.Valid;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.CacheControl;
@@ -21,16 +20,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
 
 /**
  * Public DEV signup for Finance reference accounts. Mounted only when signup is explicitly enabled.
  *
- * <p>The 409 on an existing login id is a deliberate DEV-only trade-off: it reveals whether an email
- * is registered in the shared Identity store, which is acceptable only because signup is off by default
- * and must never be enabled outside DEV. Replacing it with a generic response (for example 202 plus an
- * out-of-band verification) is required before any non-DEV exposure; that would change this contract
- * and the signup integration test expectations together.
+ * Valid requests receive the same response whether the login ID is new or already exists.
  */
 @RestController
 public final class FinanceReferenceSignupController {
@@ -48,13 +42,12 @@ public final class FinanceReferenceSignupController {
             @Valid @RequestBody FinanceReferenceSignupRequest request
     ) {
         try {
-            UUID accountId = service.register(request.email(), request.password());
-            return withNoStore(ApiResponse.created(new FinanceReferenceSignupResponse(
-                    accountId.toString(), request.email().trim().toLowerCase(Locale.ROOT))));
+            service.register(request.email(), request.password());
+            return accepted();
         } catch (InvalidFinanceSignupException exception) {
             return error(HttpStatus.BAD_REQUEST, "Invalid Finance signup request.");
         } catch (DuplicateLoginIdException exception) {
-            return error(HttpStatus.CONFLICT, "Account already exists.");
+            return accepted();
         } catch (DataAccessException exception) {
             return error(HttpStatus.SERVICE_UNAVAILABLE, "identity_registration_unavailable");
         }
@@ -63,6 +56,10 @@ public final class FinanceReferenceSignupController {
     @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
     ResponseEntity<ApiResponse<FinanceReferenceSignupResponse>> invalidRequest(Exception ignored) {
         return error(HttpStatus.BAD_REQUEST, "Invalid Finance signup request.");
+    }
+
+    private static ResponseEntity<ApiResponse<FinanceReferenceSignupResponse>> accepted() {
+        return withNoStore(ApiResponse.error(HttpStatus.ACCEPTED, "Signup request processed."));
     }
 
     private static ResponseEntity<ApiResponse<FinanceReferenceSignupResponse>> error(HttpStatus status, String message) {

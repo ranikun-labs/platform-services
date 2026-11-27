@@ -57,8 +57,8 @@ platform:
       enabled: ${PLATFORM_IDENTITY_FINANCE_REFERENCE_ENABLED:false}
       signup:
         enabled: ${PLATFORM_IDENTITY_FINANCE_REFERENCE_SIGNUP_ENABLED:false}
-      # DEV-only: allows Carelog auth coexistence (requires the dev profile) and fixture-free signup admission
-      # (zero selected IDs with signup enabled). Rejected under prod profile or production markers.
+      # DEV-only: allows Carelog auth coexistence (requires PLATFORM_ENVIRONMENT=dev) and fixture-free signup admission
+      # (zero selected IDs, including with signup disabled). Rejected under prod profile or production markers.
       dev-dual-auth:
         enabled: ${PLATFORM_IDENTITY_FINANCE_REFERENCE_DEV_DUAL_AUTH_ENABLED:false}
     datasource:

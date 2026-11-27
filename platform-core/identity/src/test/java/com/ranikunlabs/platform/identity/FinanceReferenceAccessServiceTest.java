@@ -126,13 +126,16 @@ class FinanceReferenceAccessServiceTest {
     }
 
     @Test
-    void zeroSelectedAccountsWithSignupAdmitsOnlyEnrolledAccounts() {
+    void signupDisabledWithDevOptInAdmitsOnlyPreviouslyEnrolledAccounts() {
         CredentialPort credentials = mock(CredentialPort.class);
         FinanceReferenceAccessTokenPort issuer = mock(FinanceReferenceAccessTokenPort.class);
         UUID enrolled = UUID.fromString("77777777-7777-7777-7777-777777777777");
         FinanceReferenceEnrollmentPort enrollment = accountId -> enrolled.equals(accountId);
         FinanceReferenceAccessService service = new FinanceReferenceAccessService(
-                credentials, Set.of(), enrollment, issuer, true);
+                credentials, Set.of(), enrollment, issuer, FinanceReferenceConfigurationGuard.zeroSelectedAccountsAllowed(
+                        false, new org.springframework.mock.env.MockEnvironment()
+                                .withProperty("platform.environment", "dev")
+                                .withProperty(FinanceReferenceConfigurationGuard.DEV_DUAL_AUTH_PROPERTY, "true")));
         IssuedFinanceReferenceAccessToken token = new IssuedFinanceReferenceAccessToken(
                 "public-dummy-token", Instant.parse("2026-11-06T13:00:00Z"));
         when(credentials.authenticate("dev@example.test", "test-password"))

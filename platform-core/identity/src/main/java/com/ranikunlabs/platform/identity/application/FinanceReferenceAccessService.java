@@ -32,7 +32,7 @@ public final class FinanceReferenceAccessService {
     /**
      * Admits the selected synthetic accounts and any account enrolled through the Finance signup.
      * The selected set may be empty only when {@code zeroSelectedAllowed} is true (computed in configuration
-     * from the same rule as the configuration guard: signup enabled AND DEV dual-auth opt-in). Otherwise it
+     * from the same rule as the configuration guard: DEV dual-auth opt-in). Otherwise it
      * must hold 1–16 entries. More than 16 is always rejected.
      */
     public FinanceReferenceAccessService(

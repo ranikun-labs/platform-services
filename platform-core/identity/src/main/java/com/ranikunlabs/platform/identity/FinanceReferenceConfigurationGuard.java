@@ -39,9 +39,9 @@ public final class FinanceReferenceConfigurationGuard {
         if (!hasProfile(environment, PROFILE)) {
             throw new IllegalStateException("Finance identity reference requires its explicit profile.");
         }
-        if (environment.getProperty(DEV_DUAL_AUTH_PROPERTY, Boolean.class, false) && !hasProfile(environment, DEV_PROFILE)) {
+        if ((signupEnabled || environment.getProperty(DEV_DUAL_AUTH_PROPERTY, Boolean.class, false)) && !devEnvironment(environment)) {
             throw new IllegalStateException(
-                    "Finance identity reference dev dual-auth requires the dev profile.");
+                    "Finance identity reference signup or dev dual-auth requires the configured dev deployment environment.");
         }
         if (environment.getProperty(SHARED_AUTH_PROPERTY, Boolean.class, false)
                 && !devDualAuthActive(environment)) {
@@ -84,21 +84,29 @@ public final class FinanceReferenceConfigurationGuard {
 
     /**
      * Explicit DEV-only opt-in for running Finance reference beside the Carelog auth composition.
-     * Active only when the flag is true, the {@code dev} profile is present, and no production marker is set.
+     * Active only when the flag is true, the deployment environment is explicitly DEV, and no production marker is set.
      */
     public static boolean devDualAuthActive(Environment environment) {
         return environment.getProperty(DEV_DUAL_AUTH_PROPERTY, Boolean.class, false)
-                && hasProfile(environment, DEV_PROFILE)
+                && devEnvironment(environment)
                 && !productionEnvironment(environment);
     }
 
     /**
-     * DEV-only. Zero selected IDs is admitted only with signup AND the DEV dual-auth opt-in. This is the
+     * DEV-only. Zero selected IDs is admitted with the DEV dual-auth opt-in, including when signup is disabled. This is the
      * fixture-free signup admission path: accounts enter through Finance enrollment instead of the allowlist.
      * It applies whether or not Carelog auth is also composed, so Finance-only use is intentionally allowed here.
      */
     public static boolean zeroSelectedAccountsAllowed(boolean signupEnabled, Environment environment) {
-        return signupEnabled && devDualAuthActive(environment);
+        return devDualAuthActive(environment);
+    }
+
+    private static boolean devEnvironment(Environment environment) {
+        String configured = environment.getProperty("PLATFORM_ENVIRONMENT");
+        String alternate = environment.getProperty("platform.environment");
+        return (configured != null || alternate != null)
+                && (configured == null || "dev".equalsIgnoreCase(configured.trim()))
+                && (alternate == null || "dev".equalsIgnoreCase(alternate.trim()));
     }
 
     private static boolean productionEnvironment(Environment environment) {

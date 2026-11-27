@@ -46,10 +46,11 @@ public class FinanceReferenceAccountJpaAdapter
 
     @Override
     public UUID registerFinanceAccount(String loginId, String rawPassword) throws DuplicateLoginIdException {
+        // Perform the expensive password hash for both new and existing IDs to reduce timing leakage.
+        String encodedPasswordHash = passwordEncoder.encode(rawPassword);
         if (passwordCredentialRepository.existsByLoginId(loginId)) {
             throw new DuplicateLoginIdException();
         }
-        String encodedPasswordHash = passwordEncoder.encode(rawPassword);
         try {
             PlatformAccountEntity account = platformAccountRepository.saveAndFlush(
                     PlatformAccountEntity.create(loginId));

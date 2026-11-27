@@ -23,8 +23,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Base64;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -51,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "platform.identity.redis-key-prefix=test:finance-signup:",
                 "platform.identity.finance-reference.enabled=true",
                 "platform.identity.finance-reference.signup.enabled=true",
+                "PLATFORM_ENVIRONMENT=dev",
                 "platform.identity.finance-reference.selected-account-ids[0]=33333333-3333-3333-3333-333333333333",
                 "platform.identity.finance-reference.jwt.signing-key=Finance-Reference-Test-Only-Public-Dummy-Key-2026",
                 "platform.identity.finance-reference.jwt.issuer=urn:ranikunlabs:identity:finance:reference",
@@ -65,7 +64,6 @@ class PlatformCoreFinanceReferenceSignupIntegrationTest {
     private static final String LOGIN_PATH = FinanceReferenceAuthController.PATH;
     private static final String EMAIL = "dev.user@example.test";
     private static final String PASSWORD = "Synthetic-Pass123";
-    private static final Pattern ACCOUNT_ID = Pattern.compile("\"accountId\":\"([0-9a-f-]{36})\"");
     private static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"));
 
@@ -111,16 +109,13 @@ class PlatformCoreFinanceReferenceSignupIntegrationTest {
     @Test
     void signupCreatesSharedAccountAndTheSameCredentialLogsInThroughFinanceReference() throws Exception {
         MvcResult signup = mockMvc.perform(signup("Dev.User@Example.test", PASSWORD))
-                .andExpect(status().isCreated())
+                .andExpect(status().isAccepted())
                 .andExpect(header().string("Cache-Control", "no-store"))
-                .andExpect(jsonPath("$.data.email").value(EMAIL))
-                .andExpect(jsonPath("$.data.accountId").isNotEmpty())
+                .andExpect(jsonPath("$.data").doesNotExist())
                 .andReturn();
         String body = signup.getResponse().getContentAsString();
         assertThat(body).doesNotContain("password", "$2a$", "$2b$", PASSWORD);
-        Matcher accountMatcher = ACCOUNT_ID.matcher(body);
-        assertThat(accountMatcher.find()).isTrue();
-        String accountId = accountMatcher.group(1);
+        String accountId = scalar("SELECT account_id FROM identity.password_credentials WHERE login_id = ?", EMAIL);
 
         assertThat(scalar("SELECT password_hash FROM identity.password_credentials WHERE login_id = ?", EMAIL))
                 .startsWith("$2")
@@ -140,11 +135,13 @@ class PlatformCoreFinanceReferenceSignupIntegrationTest {
     }
 
     @Test
-    void duplicateEmailIsConflictAndLeavesNoOrphanAccount() throws Exception {
-        mockMvc.perform(signup(EMAIL, PASSWORD)).andExpect(status().isCreated());
+    void duplicateEmailHasSameResponseAndLeavesNoOrphanAccount() throws Exception {
+        String first = mockMvc.perform(signup(EMAIL, PASSWORD)).andExpect(status().isAccepted())
+                .andReturn().getResponse().getContentAsString();
 
-        mockMvc.perform(signup("DEV.USER@example.test", "Another-Pass456"))
-                .andExpect(status().isConflict());
+        String duplicate = mockMvc.perform(signup("DEV.USER@example.test", "Another-Pass456"))
+                .andExpect(status().isAccepted()).andReturn().getResponse().getContentAsString();
+        assertThat(duplicate).isEqualTo(first);
 
         assertThat(scalar("SELECT COUNT(*) FROM identity.platform_accounts WHERE primary_email = ?", EMAIL))
                 .isEqualTo("1");

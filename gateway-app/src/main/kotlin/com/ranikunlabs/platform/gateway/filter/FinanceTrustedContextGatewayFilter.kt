@@ -2,7 +2,11 @@ package com.ranikunlabs.platform.gateway.filter
 
 import com.ranikunlabs.platform.gateway.config.FinanceTrustedContextConfig
 import com.ranikunlabs.platform.gateway.config.GatewayConfig
-import org.springframework.context.annotation.Profile
+import org.springframework.context.annotation.Conditional
+import org.springframework.context.annotation.Condition
+import org.springframework.context.annotation.ConditionContext
+import org.springframework.core.type.AnnotatedTypeMetadata
+import com.ranikunlabs.platform.gateway.config.isExplicitDevEnvironment
 import org.springframework.core.Ordered
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpHeaders
@@ -23,10 +27,9 @@ import java.util.Base64
 internal const val FINANCE_TRUSTED_CONTEXT_PROFILE = "finance-trusted-context-reference"
 internal const val FINANCE_DEV_PROFILE = "dev"
 
-// Bean exists only under the fixture or DEV profile. Activation still requires
-// platform.gateway.finance-trusted-context.enabled=true (checked in filter() and the guard).
+// Filter remains gated by its enable flags and the profile or explicit DEV marker.
 @Component
-@Profile("finance-trusted-context-reference | dev")
+@Conditional(FinanceTrustedContextCondition::class)
 class FinanceTrustedContextGatewayFilter(
     private val gatewayConfig: GatewayConfig,
     private val environment: Environment
@@ -120,6 +123,7 @@ class FinanceTrustedContextProfileGuard(
             val devProfileActive = environment.activeProfiles.any {
                 it.trim().equals(FINANCE_DEV_PROFILE, ignoreCase = true)
             }
+            val explicitDev = isExplicitDevEnvironment(environment)
             val productionProfileActive = environment.activeProfiles.any(::isProductionValue)
             val productionMarker = sequenceOf(
                 environment.getProperty("PLATFORM_ENVIRONMENT"),
@@ -138,8 +142,8 @@ class FinanceTrustedContextProfileGuard(
                     "Finance reference JWT mode cannot be combined with Core-marker compatibility mode."
                 }
             } else if (config.enabled) {
-                require(fixtureProfileActive || devProfileActive) {
-                    "Finance trusted-context requires its explicit fixture profile or the dev profile together with the enable flag."
+                require(fixtureProfileActive || devProfileActive || explicitDev) {
+                    "Finance trusted-context requires its explicit fixture profile or the dev profile, or an explicit DEV deployment marker, together with the enable flag."
                 }
             } else {
                 require(!fixtureProfileActive) {
@@ -249,4 +253,12 @@ internal object FinanceTrustedContextWire {
         if (encoded.isEmpty() || encoded.size > MAX_SUBJECT_UTF8_BYTES) return null
         return Base64.getUrlEncoder().withoutPadding().encodeToString(encoded)
     }
+}
+
+internal class FinanceTrustedContextCondition : Condition {
+    override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean =
+        context.environment.activeProfiles.any {
+            it.equals(FINANCE_TRUSTED_CONTEXT_PROFILE, ignoreCase = true) ||
+                it.trim().equals(FINANCE_DEV_PROFILE, ignoreCase = true)
+        } || isExplicitDevEnvironment(context.environment)
 }

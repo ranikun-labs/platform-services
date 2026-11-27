@@ -113,7 +113,8 @@ class IdentityAuthCompositionTest {
         authContextRunner()
                 .withPropertyValues(
                         "jwt.secret-key=" + VALID_SECRET,
-                        "spring.profiles.active=finance-reference,dev",
+                        "spring.profiles.active=finance-reference",
+                        "PLATFORM_ENVIRONMENT=dev",
                         "platform.identity.finance-reference.enabled=true",
                         "platform.identity.finance-reference.signup.enabled=true",
                         "platform.identity.finance-reference.dev-dual-auth.enabled=true",
@@ -136,7 +137,8 @@ class IdentityAuthCompositionTest {
         authContextRunner()
                 .withPropertyValues(
                         "jwt.secret-key=" + VALID_SECRET,
-                        "spring.profiles.active=finance-reference,dev",
+                        "spring.profiles.active=finance-reference",
+                        "PLATFORM_ENVIRONMENT=dev",
                         "platform.identity.finance-reference.enabled=true",
                         "platform.identity.finance-reference.signup.enabled=true",
                         "platform.identity.finance-reference.jwt.signing-key=Finance-Reference-Test-Only-Public-Dummy-Key-2026",

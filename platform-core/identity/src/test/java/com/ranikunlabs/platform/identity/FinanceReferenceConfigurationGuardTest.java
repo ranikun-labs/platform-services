@@ -108,7 +108,7 @@ class FinanceReferenceConfigurationGuardTest {
         assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
                 new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), false, environment))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("requires the dev profile");
+                .hasMessageContaining("requires the configured dev deployment environment");
     }
 
     @Test
@@ -120,7 +120,7 @@ class FinanceReferenceConfigurationGuardTest {
         assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
                 new FinanceReferenceProperties(true, List.of(ACCOUNT_ID)), properties(), false, environment))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("requires the dev profile");
+                .hasMessageContaining("requires the configured dev deployment environment");
     }
 
     @Test
@@ -171,25 +171,14 @@ class FinanceReferenceConfigurationGuardTest {
                 true,
                 new MockEnvironment().withProperty("spring.profiles.active", "finance-reference")))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("1–16 selected account IDs");
+                .hasMessageContaining("configured dev deployment environment");
     }
 
     @Test
-    void rejectsZeroSelectedAccountsWhenSignupDisabledEvenWithDevDualAuthOptIn() {
-        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
-                new FinanceReferenceProperties(true, List.of()),
-                properties(),
-                false,
-                devDualAuthEnvironment()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("1–16 selected account IDs");
-        assertThatThrownBy(() -> FinanceReferenceConfigurationGuard.validate(
-                new FinanceReferenceProperties(true, null),
-                properties(),
-                false,
-                devDualAuthEnvironment()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("1–16 selected account IDs");
+    void acceptsZeroSelectedAccountsWhenSignupDisabledWithDevDualAuthOptIn() {
+        assertThat(FinanceReferenceConfigurationGuard.validate(
+                new FinanceReferenceProperties(true, List.of()), properties(), false, devDualAuthEnvironment()))
+                .isEmpty();
     }
 
     @Test
@@ -223,9 +212,10 @@ class FinanceReferenceConfigurationGuardTest {
     }
 
     @Test
-    void uppercaseDevProfileActivatesDevDualAuth() {
+    void configuredDevEnvironmentActivatesDualAuthWithoutDevProfile() {
         MockEnvironment environment = new MockEnvironment()
-                .withProperty("spring.profiles.active", "finance-reference,DEV")
+                .withProperty("spring.profiles.active", "finance-reference")
+                .withProperty("platform.environment", "DEV")
                 .withProperty("platform.identity.finance-reference.dev-dual-auth.enabled", "true")
                 .withProperty("platform.identity.auth.enabled", "true");
 
@@ -260,7 +250,8 @@ class FinanceReferenceConfigurationGuardTest {
 
     private static MockEnvironment devDualAuthEnvironment() {
         return new MockEnvironment()
-                .withProperty("spring.profiles.active", "finance-reference,dev")
+                .withProperty("spring.profiles.active", "finance-reference")
+                .withProperty("PLATFORM_ENVIRONMENT", "dev")
                 .withProperty("platform.identity.finance-reference.dev-dual-auth.enabled", "true");
     }
 
