@@ -18,13 +18,22 @@ class CarelogRegistrationHttpConfiguration {
     @Bean
     CarelogRegistrationEnabled carelogRegistrationEnabled(Environment environment,
                                                              CarelogRegistrationCoordinator coordinator) {
-        boolean dev = Arrays.stream(environment.getActiveProfiles()).anyMatch("dev"::equalsIgnoreCase);
+        String deployment = environment.getProperty("PLATFORM_ENVIRONMENT");
+        String alternate = environment.getProperty("platform.environment");
+        boolean explicitDev = isDev(deployment) || isDev(alternate);
+        boolean conflictingEnvironment = (deployment != null && !isDev(deployment))
+                || (alternate != null && !isDev(alternate));
+        boolean dev = explicitDev || Arrays.stream(environment.getActiveProfiles()).anyMatch("dev"::equalsIgnoreCase);
         boolean production = Arrays.stream(environment.getActiveProfiles()).anyMatch(CarelogRegistrationHttpConfiguration::production)
                 || production(environment.getProperty("PLATFORM_ENVIRONMENT"))
                 || production(environment.getProperty("platform.environment"))
                 || production(environment.getProperty("platform.metrics.environment"));
-        if (!dev || production) throw new IllegalStateException("Carelog registration requires an explicit nonproduction dev profile");
+        if (!dev || production || conflictingEnvironment) throw new IllegalStateException("Carelog registration requires an explicit nonproduction dev environment or profile");
         return new CarelogRegistrationEnabled();
+    }
+
+    private static boolean isDev(String value) {
+        return value != null && "dev".equalsIgnoreCase(value.trim());
     }
 
     private static boolean production(String value) {

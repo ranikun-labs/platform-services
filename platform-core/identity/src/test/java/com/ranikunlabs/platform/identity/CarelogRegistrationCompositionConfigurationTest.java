@@ -53,6 +53,26 @@ class CarelogRegistrationCompositionConfigurationTest {
             assertThat(ctx.getBean(CarelogEnrollment.class).getClass().getSimpleName()).isEqualTo("CarelogEnrollmentHttpAdapter");
         });
     }
+    @Test void explicitDevDeploymentBuildsGraphWithoutDevProfile() {
+        enabled().withInitializer(ctx -> ctx.getEnvironment().setActiveProfiles("finance-reference"))
+                .withPropertyValues("PLATFORM_ENVIRONMENT=dev")
+                .run(ctx -> {
+                    assertThat(ctx).hasNotFailed();
+                    assertThat(ctx).hasSingleBean(CarelogRegistrationCoordinator.class);
+                });
+        enabled().withInitializer(ctx -> ctx.getEnvironment().setActiveProfiles("finance-reference"))
+                .withPropertyValues("platform.environment=dev")
+                .run(ctx -> assertThat(ctx).hasNotFailed());
+    }
+    @Test void contradictoryOrProductionMarkersFailClosedEvenWithDevDeployment() {
+        enabled().withPropertyValues("PLATFORM_ENVIRONMENT=dev", "platform.environment=staging")
+                .run(ctx -> assertThat(ctx).hasFailed());
+        enabled().withPropertyValues("PLATFORM_ENVIRONMENT=dev", "platform.metrics.environment=production")
+                .run(ctx -> assertThat(ctx).hasFailed());
+        enabled().withPropertyValues("PLATFORM_ENVIRONMENT=dev")
+                .withInitializer(ctx -> ctx.getEnvironment().setActiveProfiles("prod"))
+                .run(ctx -> assertThat(ctx).hasFailed());
+    }
     @Test void missingEnrollmentOrBadOriginFailsClosed() {
         enabled().withPropertyValues("platform.identity.carelog-enrollment.enabled=false").run(ctx -> assertThat(ctx).hasFailed());
         enabled().withPropertyValues("platform.identity.carelog-enrollment.base-url=http://not-loopback.example.test").run(ctx -> assertThat(ctx).hasFailed());
