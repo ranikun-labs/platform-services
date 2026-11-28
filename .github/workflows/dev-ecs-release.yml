@@ -113,7 +113,7 @@ jobs:
             else
               [[ "$BEFORE" =~ ^[0-9a-f]{40}$ ]]
               git cat-file -e "$BEFORE^{commit}"
-              git diff --name-only -z "$BEFORE" "$GITHUB_SHA" > "$RUNNER_TEMP/changed-paths"
+              git diff --name-only --no-renames -z "$BEFORE" "$GITHUB_SHA" > "$RUNNER_TEMP/changed-paths"
               gateway=false core=false
               while IFS= read -r -d '' path; do
                 case "$path" in
