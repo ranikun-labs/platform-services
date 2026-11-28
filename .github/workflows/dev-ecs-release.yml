@@ -75,7 +75,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@fdeb22805d9f26779073dc68c6f0a9a166ccb884
+    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@4cf8bfedd7454be3a314b22a165d2555fc096fe2
     with:
       service: ${{ inputs.service }}
       dockerfile: ${{ inputs.service == 'gateway' && 'gateway-app/Dockerfile' || 'platform-core/app/Dockerfile' }}
@@ -180,13 +180,14 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@fdeb22805d9f26779073dc68c6f0a9a166ccb884
+    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@4cf8bfedd7454be3a314b22a165d2555fc096fe2
     with:
       service: gateway
       dockerfile: ${{ 'gateway' == 'gateway' && 'gateway-app/Dockerfile' || 'platform-core/app/Dockerfile' }}
       context: ${{ 'gateway' == 'gateway' && 'gateway-app' || 'platform-core' }}
       deploy_enabled: ${{ needs.select-push.outputs.deploy == 'true' }}
       test_sha: ${{ github.sha }}
+      require_current_dev_tip: true
   test-push-core:
     needs: select-push
     if: contains(fromJSON(needs.select-push.outputs.services), 'core')
@@ -232,10 +233,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@fdeb22805d9f26779073dc68c6f0a9a166ccb884
+    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@4cf8bfedd7454be3a314b22a165d2555fc096fe2
     with:
       service: core
       dockerfile: ${{ 'core' == 'gateway' && 'gateway-app/Dockerfile' || 'platform-core/app/Dockerfile' }}
       context: ${{ 'core' == 'gateway' && 'gateway-app' || 'platform-core' }}
       deploy_enabled: ${{ needs.select-push.outputs.deploy == 'true' }}
       test_sha: ${{ github.sha }}
+      require_current_dev_tip: true
