@@ -75,7 +75,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@21c6d66f326e9a99f29df304e5f21c43dfb88ec4
+    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@256163926b5fcbf188c48fbcac98417196033061
     with:
       service: ${{ inputs.service }}
       dockerfile: ${{ inputs.service == 'gateway' && 'gateway-app/Dockerfile' || 'platform-core/app/Dockerfile' }}
@@ -180,7 +180,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@21c6d66f326e9a99f29df304e5f21c43dfb88ec4
+    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@256163926b5fcbf188c48fbcac98417196033061
     with:
       service: gateway
       dockerfile: ${{ 'gateway' == 'gateway' && 'gateway-app/Dockerfile' || 'platform-core/app/Dockerfile' }}
@@ -234,7 +234,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@21c6d66f326e9a99f29df304e5f21c43dfb88ec4
+    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@256163926b5fcbf188c48fbcac98417196033061
     with:
       service: core
       dockerfile: ${{ 'core' == 'gateway' && 'gateway-app/Dockerfile' || 'platform-core/app/Dockerfile' }}
