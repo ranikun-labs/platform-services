@@ -1,6 +1,8 @@
 name: Platform services DEV release
 
 on:
+  push:
+    branches: [dev]
   workflow_dispatch:
     inputs:
       service:
@@ -20,6 +22,7 @@ permissions:
 
 jobs:
   test:
+    if: github.event_name == 'workflow_dispatch'
     name: Test selected service at dispatch SHA
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -79,3 +82,160 @@ jobs:
       context: ${{ inputs.service == 'gateway' && 'gateway-app' || 'platform-core' }}
       deploy_enabled: ${{ inputs.deploy }}
       test_sha: ${{ needs.test.outputs.test_sha }}
+
+  # Protect this environment and restrict it to dev before enabling either variable.
+  # DEV_PUSH_PUBLISH_ENABLED=true enables publish; DEV_PUSH_DEPLOY_ENABLED=true also enables deploy.
+  select-push:
+    if: github.event_name == 'push' && github.repository == 'ranikun-labs/platform-services' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment: dev-push-release-control
+    outputs:
+      services: ${{ steps.select.outputs.services }}
+      deploy: ${{ steps.select.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select changed services
+        id: select
+        env:
+          BEFORE: ${{ github.event.before }}
+          PUBLISH_ENABLED: ${{ vars.DEV_PUSH_PUBLISH_ENABLED }}
+          DEPLOY_ENABLED: ${{ vars.DEV_PUSH_DEPLOY_ENABLED }}
+        run: |
+          set -euo pipefail
+          services=()
+          if [[ "$PUBLISH_ENABLED" == true ]]; then
+            if [[ "$BEFORE" =~ ^0+$ ]]; then
+              services=(gateway core)
+            else
+              [[ "$BEFORE" =~ ^[0-9a-f]{40}$ ]]
+              git cat-file -e "$BEFORE^{commit}"
+              git diff --name-only -z "$BEFORE" "$GITHUB_SHA" > "$RUNNER_TEMP/changed-paths"
+              gateway=false core=false
+              while IFS= read -r -d '' path; do
+                case "$path" in
+                  gateway-app/*) gateway=true ;;
+                  platform-core/*) core=true ;;
+                  .github/workflows/dev-ecs-release.yml|gradlew|gradlew.bat|gradle/*|build.gradle.kts|settings.gradle.kts) gateway=true; core=true ;;
+                esac
+              done < "$RUNNER_TEMP/changed-paths"
+              [[ "$gateway" != true ]] || services+=(gateway)
+              [[ "$core" != true ]] || services+=(core)
+            fi
+          fi
+          if ((${#services[@]})); then
+            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -sc .)
+          else
+            json='[]'
+          fi
+          echo "services=$json" >> "$GITHUB_OUTPUT"
+          [[ "$DEPLOY_ENABLED" == true ]] && deploy=true || deploy=false
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+
+  test-push-gateway:
+    needs: select-push
+    if: contains(fromJSON(needs.select-push.outputs.services), 'gateway')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: ${{ 'gateway' == 'gateway' && '17' || '21' }}
+      - name: Configure Testcontainers API version
+        env:
+          SERVICE: gateway
+        run: |
+          if [ "$SERVICE" = gateway ]; then
+            mkdir -p gateway-app/src/test/resources
+            printf 'api.version=1.44\n' > gateway-app/src/test/resources/docker-java.properties
+          else
+            for module in app identity; do
+              mkdir -p "platform-core/$module/src/test/resources"
+              printf 'api.version=1.44\n' > "platform-core/$module/src/test/resources/docker-java.properties"
+            done
+          fi
+      - name: Test selected service
+        env:
+          SERVICE: gateway
+        run: |
+          set -euo pipefail
+          if [[ "$SERVICE" == gateway ]]; then
+            ./gradlew -p gateway-app test --no-daemon --stacktrace --console=plain
+          else
+            ./gradlew -p platform-core test --no-daemon --stacktrace --console=plain
+          fi
+
+  release-push-gateway:
+    needs: [select-push, test-push-gateway]
+    if: needs.test-push-gateway.result == 'success'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@fdeb22805d9f26779073dc68c6f0a9a166ccb884
+    with:
+      service: gateway
+      dockerfile: ${{ 'gateway' == 'gateway' && 'gateway-app/Dockerfile' || 'platform-core/app/Dockerfile' }}
+      context: ${{ 'gateway' == 'gateway' && 'gateway-app' || 'platform-core' }}
+      deploy_enabled: ${{ needs.select-push.outputs.deploy == 'true' }}
+      test_sha: ${{ github.sha }}
+  test-push-core:
+    needs: select-push
+    if: contains(fromJSON(needs.select-push.outputs.services), 'core')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: ${{ 'core' == 'gateway' && '17' || '21' }}
+      - name: Configure Testcontainers API version
+        env:
+          SERVICE: core
+        run: |
+          if [ "$SERVICE" = gateway ]; then
+            mkdir -p gateway-app/src/test/resources
+            printf 'api.version=1.44\n' > gateway-app/src/test/resources/docker-java.properties
+          else
+            for module in app identity; do
+              mkdir -p "platform-core/$module/src/test/resources"
+              printf 'api.version=1.44\n' > "platform-core/$module/src/test/resources/docker-java.properties"
+            done
+          fi
+      - name: Test selected service
+        env:
+          SERVICE: core
+        run: |
+          set -euo pipefail
+          if [[ "$SERVICE" == gateway ]]; then
+            ./gradlew -p gateway-app test --no-daemon --stacktrace --console=plain
+          else
+            ./gradlew -p platform-core test --no-daemon --stacktrace --console=plain
+          fi
+
+  release-push-core:
+    needs: [select-push, test-push-core]
+    if: needs.test-push-core.result == 'success'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ranikun-labs/platform-infra/.github/workflows/dev-ecs-release.yml@fdeb22805d9f26779073dc68c6f0a9a166ccb884
+    with:
+      service: core
+      dockerfile: ${{ 'core' == 'gateway' && 'gateway-app/Dockerfile' || 'platform-core/app/Dockerfile' }}
+      context: ${{ 'core' == 'gateway' && 'gateway-app' || 'platform-core' }}
+      deploy_enabled: ${{ needs.select-push.outputs.deploy == 'true' }}
+      test_sha: ${{ github.sha }}
