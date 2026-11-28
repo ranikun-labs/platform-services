@@ -47,6 +47,11 @@ RUN apt-get update \
     && apt-get install --no-install-recommends --yes curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Official AWS RDS ap-northeast-2 trust bundle; checksum pins the reviewed CA set.
+COPY app/docker/rds-ap-northeast-2-bundle.pem /etc/platform/rds-ca-bundle.pem
+RUN echo "913fb5b814f17af79d4c1622584a8d0ceddf5b0d76fe353d0c7d1186cdd6b229  /etc/platform/rds-ca-bundle.pem" | sha256sum -c - \
+    && chmod 0444 /etc/platform/rds-ca-bundle.pem
+
 WORKDIR /app
 COPY --from=build /workspace/app/build/libs/*.jar app.jar
 

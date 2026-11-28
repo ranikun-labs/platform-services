@@ -52,6 +52,23 @@ public class IdentityPersistenceConfiguration {
     }
 
     @Bean
+    DataSource dataSource(IdentityRuntimeProperties properties, Environment environment) {
+        validateRuntimeOnly(properties, environment);
+        return dataSource(properties);
+    }
+
+    static void validateRuntimeOnly(IdentityRuntimeProperties properties, Environment environment) {
+        if (!environment.getProperty("platform.identity.runtime-only", Boolean.class, false)) {
+            return;
+        }
+        if (!Boolean.FALSE.equals(environment.getProperty("spring.flyway.enabled", Boolean.class))) {
+            throw new IllegalStateException("Identity runtime-only mode requires spring.flyway.enabled=false");
+        }
+        if (properties.flywayDatasource() != null && properties.flywayDatasource().hasAnyValue()) {
+            throw new IllegalStateException("Identity runtime-only mode forbids migration datasource credentials");
+        }
+    }
+
     DataSource dataSource(IdentityRuntimeProperties properties) {
         IdentityRuntimeProperties.Datasource datasource = properties.datasource();
         return DataSourceBuilder.create()
